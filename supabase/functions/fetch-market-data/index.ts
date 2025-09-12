@@ -7,39 +7,16 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// 메인 로직 함수
+// 메인 로직 함수 (Refactored)
 async function fetchAndStoreMarketData(supabaseClient, apiAuthHeader) {
     let itemsProcessed = 0;
     const lostArkApiBase = 'https://developer-lostark.game.onstove.com';
-    const optionsResponse = await fetch(`${lostArkApiBase}/markets/options`, {
-        headers: {
-            'accept': 'application/json',
-            'authorization': apiAuthHeader
-        }
-    });
-    if (!optionsResponse.ok) {
-        throw new Error(`Failed to fetch market options. Status: ${optionsResponse.status} ${optionsResponse.statusText}`);
-    }
-    let responseData;
-    try {
-        responseData = await optionsResponse.json();
-    } catch (e) {
-        // If parsing fails, get the raw text for logging.
-        const responseText = await optionsResponse.text();
-        console.error("Failed to parse market options JSON. Response text:", responseText);
-        throw new Error(`Failed to parse market options response as JSON: ${e.message}`);
-    }
-    console.log("Received market options data:", responseData);
-    if (!Array.isArray(responseData)) {
-        const dataType = typeof responseData;
-        const keys = dataType === 'object' && responseData !== null ? Object.keys(responseData).join(', ') : '';
-        console.error("API response for market options is not an array. Type:", dataType, "Keys:", keys);
-        throw new Error(`Failed to process market options: unexpected data structure from API. Expected array, got ${dataType}. Keys: [${keys}]`);
-    }
-    const allCategories = responseData.flatMap((group)=>group.Categories || []);
-    const categoryCodesToFetch = allCategories.map((c)=>c.Code).slice(0, 2);
-    console.log(`Found ${allCategories.length} total categories. Fetching first ${categoryCodesToFetch.length}...`);
-    for (const categoryCode of categoryCodesToFetch){
+    const categoryCode = 40000; // CategoryCode를 40000으로 고정
+
+    // PageNo를 1부터 9까지 반복
+    for (let pageNo = 1; pageNo <= 9; pageNo++) {
+        console.log(`[Edge] Fetching page ${pageNo} for category ${categoryCode}...`);
+
         const marketResponse = await fetch(`${lostArkApiBase}/markets/items`, {
             method: 'POST',
             headers: {
@@ -50,16 +27,30 @@ async function fetchAndStoreMarketData(supabaseClient, apiAuthHeader) {
             body: JSON.stringify({
                 "Sort": "GRADE",
                 "CategoryCode": categoryCode,
-                "PageNo": 1,
+                "PageNo": pageNo,
                 "SortCondition": "ASC"
             })
         });
-        if (!marketResponse.ok) continue;
+
+        if (!marketResponse.ok) {
+            console.error(`[Edge] Failed to fetch page ${pageNo} for category ${categoryCode}. Status: ${marketResponse.status} ${marketResponse.statusText}`);
+            continue; // 다음 페이지로 건너뛰기
+        }
+
         const marketData = await marketResponse.json();
         const itemsFromApi = marketData.Items || [];
+
+        // 아이템이 더 이상 없으면 반복 중단
+        if (itemsFromApi.length === 0) {
+            console.log(`[Edge] No more items found on page ${pageNo}. Stopping pagination for category ${categoryCode}.`);
+            break;
+        }
+
+        // 아이템 처리 로직
         for (const apiItem of itemsFromApi){
             const { Id: itemCode, Name: itemName, CurrentMinPrice: itemPrice, Grade: itemGrade, Icon: itemIcon } = apiItem;
             if (!itemCode || !itemName || itemPrice === undefined) continue;
+
             const { data: itemData, error: upsertError } = await supabaseClient.from('items').upsert({
                 item_code: itemCode,
                 item_name: itemName,
@@ -69,16 +60,32 @@ async function fetchAndStoreMarketData(supabaseClient, apiAuthHeader) {
             }, {
                 onConflict: 'item_code'
             }).select('id').single();
-            if (upsertError) continue;
+
+            if (upsertError) {
+                console.error(`[Edge] Upsert error for item ${itemCode}: ${upsertError.message}`);
+                continue;
+            }
+            if (!itemData) {
+                console.error(`[Edge] No data returned from upsert for item ${itemCode}`);
+                continue;
+            }
+
             const { error: priceError } = await supabaseClient.from('price_history').insert({
                 item_id: itemData.id,
                 price: itemPrice
             });
-            if (!priceError) itemsProcessed++;
+
+            if (priceError) {
+                console.error(`[Edge] Price insert error for item ID ${itemData.id}: ${priceError.message}`);
+                continue;
+            }
+
+            itemsProcessed++;
         }
     }
     return itemsProcessed;
 }
+
 // 메인 핸들러
 serve(async (req)=>{
     if (req.method === 'OPTIONS') return new Response('ok', {
