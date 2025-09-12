@@ -232,3 +232,27 @@ p.description {
 .result-container strong {
     color: #ff9f0a;
 }
+
+.result-container h2 {
+    font-size: 1.2rem;
+    color: #0a84ff;
+    margin-top: 0;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #3a3a3c;
+}
+
+.result-container hr {
+    border: none;
+    height: 1px;
+    background-color: #3a3a3c;
+    margin: 20px 0;
+}
+
+.text-profit {
+    color: #30d158; /* Green */
+}
+
+.text-loss {
+    color: #ff453a; /* Red */
+}

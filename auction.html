@@ -11,20 +11,36 @@
         <h1>경매 분배금 계산기</h1>
         <div class="calculator-container">
             <div class="input-group">
-                <label for="auction-price">경매가</label>
-                <input type="number" id="auction-price" placeholder="경매 낙찰가 입력">
+                <label for="market-price">시장가</label>
+                <input type="number" id="market-price" placeholder="아이템의 시장가 입력">
+            </div>
+            <div class="input-group">
+                <label for="auction-price">입찰가</label>
+                <input type="number" id="auction-price" placeholder="입찰할 금액 입력">
             </div>
             <div class="input-group">
                 <label>인원수</label>
                 <div class="radio-group">
-                    <input type="radio" id="party-8" name="party-size" value="8" checked>
-                    <label for="party-8">8인</label>
                     <input type="radio" id="party-4" name="party-size" value="4">
                     <label for="party-4">4인</label>
+                    <input type="radio" id="party-8" name="party-size" value="8" checked>
+                    <label for="party-8">8인</label>
+                    <input type="radio" id="party-16" name="party-size" value="16">
+                    <label for="party-16">16인</label>
                 </div>
             </div>
+             <div class="input-group">
+                <label for="profit-margin">원하는 이익률 (%)</label>
+                <input type="number" id="profit-margin" placeholder="예: 10" value="10">
+            </div>
             <button id="calculate-btn">계산하기</button>
-            <div id="result" class="result-container"></div>
+            <div id="result" class="result-container" style="display: none;">
+                <h2>입찰가 분석</h2>
+                <div id="bid-analysis"></div>
+                <hr>
+                <h2>입찰 추천</h2>
+                <div id="bidding-suggestion"></div>
+            </div>
         </div>
     </main>
     <script src="script.js" type="module"></script>
