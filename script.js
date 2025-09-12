@@ -15,66 +15,50 @@ if (gridContainer) {
     // ... (existing code for category pages)
 }
 
-// Auction calculator logic
-const calculateBtn = document.getElementById('calculate-btn');
-if (calculateBtn) {
+// New auction calculator logic
+const resultTable = document.getElementById('result-table');
+if (resultTable) {
     const marketPriceInput = document.getElementById('market-price');
-    const auctionPriceInput = document.getElementById('auction-price');
-    const profitMarginInput = document.getElementById('profit-margin');
-    const resultDiv = document.getElementById('result');
-    const bidAnalysisDiv = document.getElementById('bid-analysis');
-    const biddingSuggestionDiv = document.getElementById('bidding-suggestion');
+    const partySizeRadios = document.querySelectorAll('input[name="party-size"]');
+    const tableBody = resultTable.querySelector('tbody');
 
-    calculateBtn.addEventListener('click', () => {
+    const PROFIT_MARGINS = [
+        { label: '손익분기점', value: 0 },
+        { label: '10% 이익', value: 10 },
+        { label: '25% 이익', value: 25 },
+        { label: '50% 이익', value: 50 },
+    ];
+
+    function calculateAndDisplay() {
         const marketPrice = parseFloat(marketPriceInput.value);
-        const auctionPrice = parseFloat(auctionPriceInput.value);
-        const profitMargin = parseFloat(profitMarginInput.value) || 0;
         const partySize = document.querySelector('input[name="party-size"]:checked').value;
 
-        const actualCostMultiplier = 1 - (0.95 / partySize);
+        tableBody.innerHTML = '';
 
-        // --- Bidding Suggestion ---
         if (isNaN(marketPrice) || marketPrice <= 0) {
-            biddingSuggestionDiv.innerHTML = '<p>유효한 시장가를 입력해주세요.</p>';
-        } else {
-            const netMarketValue = marketPrice * 0.95;
+            const row = tableBody.insertRow();
+            const cell = row.insertCell();
+            cell.colSpan = 2;
+            cell.textContent = '시장가를 입력해주세요.';
+            return;
+        }
 
-            const breakEvenBid = netMarketValue / actualCostMultiplier;
+        const actualCostMultiplier = 1 - (0.95 / partySize);
+        const netMarketValue = marketPrice * 0.95;
 
-            const desiredCost = netMarketValue / (1 + (profitMargin / 100));
+        PROFIT_MARGINS.forEach(margin => {
+            const desiredCost = netMarketValue / (1 + (margin.value / 100));
             const recommendedBid = desiredCost / actualCostMultiplier;
 
-            biddingSuggestionDiv.innerHTML = `
-                <p>손익분기점 입찰가: <strong>${Math.floor(breakEvenBid).toLocaleString()}</strong> 골드</p>
-                <p>${profitMargin}% 이익을 위한 추천 입찰가: <strong>${Math.floor(recommendedBid).toLocaleString()}</strong> 골드</p>
-            `;
-        }
+            const row = tableBody.insertRow();
+            row.insertCell().textContent = margin.label;
+            row.insertCell().textContent = `${Math.floor(recommendedBid).toLocaleString()} 골드`;
+        });
+    }
 
-        // --- Bid Analysis ---
-        if (isNaN(auctionPrice) || auctionPrice <= 0) {
-            bidAnalysisDiv.innerHTML = '<p>입찰가를 입력하면 상세 분석을 볼 수 있습니다.</p>';
-        } else {
-            const perPersonDistribution = (auctionPrice * 0.95) / partySize;
-            const actualCost = auctionPrice * actualCostMultiplier;
+    marketPriceInput.addEventListener('input', calculateAndDisplay);
+    partySizeRadios.forEach(radio => radio.addEventListener('change', calculateAndDisplay));
 
-            let profitAnalysis = '';
-            if (!isNaN(marketPrice) && marketPrice > 0) {
-                const netMarketValue = marketPrice * 0.95;
-                const profit = netMarketValue - actualCost;
-                const profitPercentage = (profit / actualCost) * 100;
-                profitAnalysis = `
-                    <p>예상 이익 (시장 수수료 5% 제외): <strong class="${profit > 0 ? 'text-profit' : 'text-loss'}">${Math.floor(profit).toLocaleString()}</strong> 골드</p>
-                    <p>예상 이익률: <strong class="${profit > 0 ? 'text-profit' : 'text-loss'}">${profitPercentage.toFixed(2)}%</strong></p>
-                `;
-            }
-
-            bidAnalysisDiv.innerHTML = `
-                <p>인당 분배금: <strong>${Math.floor(perPersonDistribution).toLocaleString()}</strong> 골드</p>
-                <p>낙찰자 실 부담금: <strong>${Math.ceil(actualCost).toLocaleString()}</strong> 골드</p>
-                ${profitAnalysis}
-            `;
-        }
-
-        resultDiv.style.display = 'block';
-    });
+    // Initial calculation on page load
+    calculateAndDisplay();
 }
