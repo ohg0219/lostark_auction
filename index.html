@@ -42,8 +42,15 @@
         }
         #grid-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
             gap: 20px;
+        }
+
+        /* For tablets and wider screens, make cards wider */
+        @media (min-width: 768px) {
+            #grid-container {
+                grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+            }
         }
         .item-card {
             background-color: #2c2c2e;
