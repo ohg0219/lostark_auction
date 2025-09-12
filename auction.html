@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>경매 분배금 계산기</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main>
+        <h1>경매 분배금 계산기</h1>
+        <div class="calculator-container">
+            <div class="input-group">
+                <label for="auction-price">경매가</label>
+                <input type="number" id="auction-price" placeholder="경매 낙찰가 입력">
+            </div>
+            <div class="input-group">
+                <label>인원수</label>
+                <div class="radio-group">
+                    <input type="radio" id="party-8" name="party-size" value="8" checked>
+                    <label for="party-8">8인</label>
+                    <input type="radio" id="party-4" name="party-size" value="4">
+                    <label for="party-4">4인</label>
+                </div>
+            </div>
+            <button id="calculate-btn">계산하기</button>
+            <div id="result" class="result-container"></div>
+        </div>
+    </main>
+    <script src="script.js" type="module"></script>
+</body>
+</html>

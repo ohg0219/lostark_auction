@@ -117,3 +117,30 @@ if (gridContainer) {
 
     initialLoad();
 }
+
+// Auction calculator logic
+const calculateBtn = document.getElementById('calculate-btn');
+if (calculateBtn) {
+    const auctionPriceInput = document.getElementById('auction-price');
+    const resultDiv = document.getElementById('result');
+
+    calculateBtn.addEventListener('click', () => {
+        const auctionPrice = parseFloat(auctionPriceInput.value);
+        const partySize = document.querySelector('input[name="party-size"]:checked').value;
+
+        if (isNaN(auctionPrice) || auctionPrice <= 0) {
+            resultDiv.innerHTML = '<p>유효한 경매가를 입력해주세요.</p>';
+            return;
+        }
+
+        const totalToDistribute = auctionPrice * 0.95;
+        const perPersonDistribution = totalToDistribute / partySize;
+        const actualCost = auctionPrice - perPersonDistribution;
+
+        resultDiv.innerHTML = `
+            <p>총 분배금 (수수료 5% 제외): <strong>${Math.floor(totalToDistribute).toLocaleString()}</strong> 골드</p>
+            <p>인당 분배금: <strong>${Math.floor(perPersonDistribution).toLocaleString()}</strong> 골드</p>
+            <p>낙찰자 실 부담금: <strong>${Math.ceil(actualCost).toLocaleString()}</strong> 골드</p>
+        `;
+    });
+}
