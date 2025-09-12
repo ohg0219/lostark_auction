@@ -8,12 +8,9 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const gridContainer = document.getElementById('grid-container');
 const statusDiv = document.getElementById('status');
 const categoryFilter = document.getElementById('category-filter');
-const gradeFilter = document.getElementById('grade-filter');
-const sortByNameBtn = document.getElementById('sort-by-name');
 const sortByPriceBtn = document.getElementById('sort-by-price');
 
 let allItems = [];
-let currentSort = 'price'; // 'name' or 'price'
 let sortDirection = 'desc'; // 'asc' or 'desc'
 const gradeOrder = ["일반", "고급", "희귀", "영웅", "전설", "유물", "고대", "에스더"];
 const gradeColors = {
@@ -27,75 +24,23 @@ const gradeColors = {
     "에스더": "#14c5b9"
 };
 
-function updateGradeFilter() {
-    const selectedCategory = categoryFilter.value;
-    const relevantItems = selectedCategory === 'all'
-        ? allItems
-        : allItems.filter(item => item.category_code == selectedCategory);
-
-    const availableGrades = [...new Set(relevantItems.map(item => item.grade).filter(Boolean))];
-    availableGrades.sort((a, b) => gradeOrder.indexOf(a) - gradeOrder.indexOf(b));
-
-    const currentGrade = gradeFilter.value;
-    gradeFilter.innerHTML = '<option value="all">모든 등급</option>';
-
-    availableGrades.forEach(grade => {
-        const option = document.createElement('option');
-        option.value = grade;
-        option.textContent = grade;
-        gradeFilter.appendChild(option);
-    });
-
-    // 이전 선택을 유지하려고 시도
-    if (availableGrades.includes(currentGrade)) {
-        gradeFilter.value = currentGrade;
-    } else {
-        gradeFilter.value = 'all';
-    }
-}
-
 function updateButtonUI() {
-    sortByNameBtn.textContent = '이름순';
     sortByPriceBtn.textContent = '가격순';
-
     const directionIndicator = sortDirection === 'asc' ? '▲' : '▼';
-
-    if (currentSort === 'name') {
-        sortByNameBtn.textContent += ` ${directionIndicator}`;
-    } else { // price
-        sortByPriceBtn.textContent += ` ${directionIndicator}`;
-    }
+    sortByPriceBtn.textContent += ` ${directionIndicator}`;
 }
 
 function renderItems() {
     const selectedCategory = categoryFilter.value;
-    const selectedGrade = gradeFilter.value;
 
     const filteredItems = allItems.filter(item => {
         const categoryMatch = selectedCategory === 'all' || item.category_code == selectedCategory;
-        const gradeMatch = selectedGrade === 'all' || item.grade === selectedGrade;
-        return categoryMatch && gradeMatch;
+        return categoryMatch;
     });
 
     // 정렬 로직
     filteredItems.sort((a, b) => {
-        let aValue, bValue;
-
-        if (currentSort === 'name') {
-            aValue = a.item_name;
-            bValue = b.item_name;
-        } else { // price
-            aValue = a.price;
-            bValue = b.price;
-        }
-
-        if (aValue < bValue) {
-            return sortDirection === 'asc' ? -1 : 1;
-        }
-        if (aValue > bValue) {
-            return sortDirection === 'asc' ? 1 : -1;
-        }
-        return 0;
+        return sortDirection === 'asc' ? a.price - b.price : b.price - a.price;
     });
 
     gridContainer.innerHTML = '';
@@ -146,7 +91,6 @@ async function initialLoad() {
             return;
         }
 
-        updateGradeFilter();
         renderItems();
         updateButtonUI();
 
@@ -156,30 +100,10 @@ async function initialLoad() {
     }
 }
 
-categoryFilter.addEventListener('change', () => {
-    updateGradeFilter();
-    renderItems();
-});
-gradeFilter.addEventListener('change', renderItems);
-
-sortByNameBtn.addEventListener('click', () => {
-    if (currentSort === 'name') {
-        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-        currentSort = 'name';
-        sortDirection = 'asc';
-    }
-    renderItems();
-    updateButtonUI();
-});
+categoryFilter.addEventListener('change', renderItems);
 
 sortByPriceBtn.addEventListener('click', () => {
-    if (currentSort === 'price') {
-        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-        currentSort = 'price';
-        sortDirection = 'desc'; // 기본 가격순은 내림차순
-    }
+    sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
     renderItems();
     updateButtonUI();
 });
