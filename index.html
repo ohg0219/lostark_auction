@@ -131,19 +131,45 @@
         const gradeFilter = document.getElementById('grade-filter');
 
         let allItems = [];
+        const gradeOrder = ["일반", "고급", "희귀", "영웅", "전설", "유물", "고대", "에스더"];
+
+        function updateGradeFilter() {
+            const selectedCategory = categoryFilter.value;
+            const relevantItems = selectedCategory === 'all'
+                ? allItems
+                : allItems.filter(item => item.category_code == selectedCategory);
+
+            const availableGrades = [...new Set(relevantItems.map(item => item.grade).filter(Boolean))];
+            availableGrades.sort((a, b) => gradeOrder.indexOf(a) - gradeOrder.indexOf(b));
+
+            const currentGrade = gradeFilter.value;
+            gradeFilter.innerHTML = '<option value="all">모든 등급</option>';
+
+            availableGrades.forEach(grade => {
+                const option = document.createElement('option');
+                option.value = grade;
+                option.textContent = grade;
+                gradeFilter.appendChild(option);
+            });
+
+            // 이전 선택을 유지하려고 시도
+            if (availableGrades.includes(currentGrade)) {
+                gradeFilter.value = currentGrade;
+            } else {
+                gradeFilter.value = 'all';
+            }
+        }
 
         function renderItems() {
             const selectedCategory = categoryFilter.value;
             const selectedGrade = gradeFilter.value;
 
-            // 필터링 로직
             const filteredItems = allItems.filter(item => {
                 const categoryMatch = selectedCategory === 'all' || item.category_code == selectedCategory;
                 const gradeMatch = selectedGrade === 'all' || item.grade === selectedGrade;
                 return categoryMatch && gradeMatch;
             });
 
-            // 그리드 클리어
             gridContainer.innerHTML = '';
 
             if (filteredItems.length === 0) {
@@ -183,6 +209,7 @@
                     return;
                 }
 
+                updateGradeFilter();
                 renderItems();
 
             } catch (error) {
@@ -191,11 +218,12 @@
             }
         }
 
-        // 이벤트 리스너 추가
-        categoryFilter.addEventListener('change', renderItems);
+        categoryFilter.addEventListener('change', () => {
+            updateGradeFilter();
+            renderItems();
+        });
         gradeFilter.addEventListener('change', renderItems);
 
-        // 페이지가 로드되면 데이터 표시 함수 실행
         document.addEventListener('DOMContentLoaded', initialLoad);
     </script>
 </body>
