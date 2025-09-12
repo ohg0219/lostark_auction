@@ -7,10 +7,11 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const gridContainer = document.getElementById('grid-container');
 const statusDiv = document.getElementById('status');
-const categoryFilter = document.getElementById('category-filter');
+const categoryButtonsContainer = document.getElementById('category-buttons');
 const sortByPriceBtn = document.getElementById('sort-by-price');
 
 let allItems = [];
+let selectedCategory = 'all';
 let sortDirection = 'desc'; // 'asc' or 'desc'
 const gradeOrder = ["일반", "고급", "희귀", "영웅", "전설", "유물", "고대", "에스더"];
 const gradeColors = {
@@ -31,11 +32,12 @@ function updateButtonUI() {
 }
 
 function renderItems() {
-    const selectedCategory = categoryFilter.value;
-
     const filteredItems = allItems.filter(item => {
-        const categoryMatch = selectedCategory === 'all' || item.category_code == selectedCategory;
-        return categoryMatch;
+        if (selectedCategory === 'all') return true;
+        if (selectedCategory === 'refining') {
+            return item.category_code === 50010 || item.category_code === 50020;
+        }
+        return item.category_code == selectedCategory;
     });
 
     // 정렬 로직
@@ -100,7 +102,18 @@ async function initialLoad() {
     }
 }
 
-categoryFilter.addEventListener('change', renderItems);
+categoryButtonsContainer.addEventListener('click', (event) => {
+    if (event.target.tagName === 'BUTTON') {
+        selectedCategory = event.target.dataset.category;
+
+        // Active 클래스 관리
+        const buttons = categoryButtonsContainer.querySelectorAll('button');
+        buttons.forEach(button => button.classList.remove('active'));
+        event.target.classList.add('active');
+
+        renderItems();
+    }
+});
 
 sortByPriceBtn.addEventListener('click', () => {
     sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
