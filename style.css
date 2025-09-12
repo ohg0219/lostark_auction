@@ -19,17 +19,30 @@ h1 {
     gap: 16px;
     margin-bottom: 24px;
 }
-.filters select, .filters button {
+#category-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.filters button {
     padding: 8px 12px;
     border-radius: 8px;
     border: 1px solid #3a3a3c;
     background-color: #2c2c2e;
     color: #f2f2f7;
     font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
 }
 
-.filters button {
-    cursor: pointer;
+.filters button:hover {
+    background-color: #3a3a3c;
+}
+
+.filters button.active {
+    background-color: #0a84ff;
+    color: white;
+    border-color: #0a84ff;
 }
 #status {
     text-align: center;
