@@ -44,6 +44,19 @@ function updateGradeFilter() {
     }
 }
 
+function updateButtonUI() {
+    sortByNameBtn.textContent = '이름순';
+    sortByPriceBtn.textContent = '가격순';
+
+    const directionIndicator = sortDirection === 'asc' ? '▲' : '▼';
+
+    if (currentSort === 'name') {
+        sortByNameBtn.textContent += ` ${directionIndicator}`;
+    } else { // price
+        sortByPriceBtn.textContent += ` ${directionIndicator}`;
+    }
+}
+
 function renderItems() {
     const selectedCategory = categoryFilter.value;
     const selectedGrade = gradeFilter.value;
@@ -122,6 +135,7 @@ async function initialLoad() {
 
         updateGradeFilter();
         renderItems();
+        updateButtonUI();
 
     } catch (error) {
         console.error('데이터를 불러오는 데 실패했습니다:', error);
@@ -143,6 +157,7 @@ sortByNameBtn.addEventListener('click', () => {
         sortDirection = 'asc';
     }
     renderItems();
+    updateButtonUI();
 });
 
 sortByPriceBtn.addEventListener('click', () => {
@@ -153,6 +168,7 @@ sortByPriceBtn.addEventListener('click', () => {
         sortDirection = 'desc'; // 기본 가격순은 내림차순
     }
     renderItems();
+    updateButtonUI();
 });
 
 
