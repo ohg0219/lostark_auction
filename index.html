@@ -48,40 +48,55 @@
         .item-card {
             background-color: #2c2c2e;
             border-radius: 12px;
-            padding: 16px;
+            padding: 12px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
             transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
         }
         .item-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 8px 20px rgba(0,132,255,0.3);
         }
+        .card-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .card-top-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            overflow: hidden;
+        }
         .item-icon {
-            width: 64px;
-            height: 64px;
+            width: 48px;
+            height: 48px;
             border-radius: 8px;
             background-color: #3a3a3c;
-            margin-bottom: 12px;
+            flex-shrink: 0;
+        }
+        .item-details {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            overflow: hidden;
         }
         .item-name {
             font-weight: 600;
-            font-size: 1rem;
-            margin-bottom: 4px;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .item-grade {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: #8e8e93;
-            margin-bottom: 12px;
         }
         .item-price {
-            font-size: 1.2rem;
+            font-size: 1rem;
             font-weight: bold;
             color: #ff9f0a;
-            margin-bottom: 4px;
+            white-space: nowrap;
         }
         .item-price::before {
             content: '💰 ';
@@ -89,6 +104,7 @@
         .last-updated {
             font-size: 0.75rem;
             color: #636366;
+            text-align: right;
         }
     </style>
 </head>
@@ -187,11 +203,17 @@
                 const formattedDate = new Date(item.last_updated).toLocaleString('ko-KR');
 
                 card.innerHTML = `
-                    <img class="item-icon" src="${item.icon_path}" alt="${item.item_name} 아이콘" onerror="this.style.display='none'"/>
-                    <div class="item-name">${item.item_name}</div>
-                    <div class="item-grade">등급: ${item.grade || '정보 없음'}</div>
-                    <div class="item-price">${formattedPrice}</div>
-                    <div class="last-updated">최종 업데이트: ${formattedDate}</div>
+                    <div class="card-top-row">
+                        <div class="card-top-left">
+                            <img class="item-icon" src="${item.icon_path}" alt="${item.item_name} 아이콘" onerror="this.style.display='none'"/>
+                            <div class="item-details">
+                                <div class="item-name" title="${item.item_name}">${item.item_name}</div>
+                                <div class="item-grade">등급: ${item.grade || '정보 없음'}</div>
+                            </div>
+                        </div>
+                        <div class="item-price">${formattedPrice}</div>
+                    </div>
+                    <div class="last-updated">${formattedDate}</div>
                 `;
                 gridContainer.appendChild(card);
             });
