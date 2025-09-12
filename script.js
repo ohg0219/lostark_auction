@@ -9,8 +9,12 @@ const gridContainer = document.getElementById('grid-container');
 const statusDiv = document.getElementById('status');
 const categoryFilter = document.getElementById('category-filter');
 const gradeFilter = document.getElementById('grade-filter');
+const sortByNameBtn = document.getElementById('sort-by-name');
+const sortByPriceBtn = document.getElementById('sort-by-price');
 
 let allItems = [];
+let currentSort = 'price'; // 'name' or 'price'
+let sortDirection = 'desc'; // 'asc' or 'desc'
 const gradeOrder = ["일반", "고급", "희귀", "영웅", "전설", "유물", "고대", "에스더"];
 
 function updateGradeFilter() {
@@ -50,8 +54,26 @@ function renderItems() {
         return categoryMatch && gradeMatch;
     });
 
-    // Sort items by price in descending order
-    filteredItems.sort((a, b) => b.price - a.price);
+    // 정렬 로직
+    filteredItems.sort((a, b) => {
+        let aValue, bValue;
+
+        if (currentSort === 'name') {
+            aValue = a.item_name;
+            bValue = b.item_name;
+        } else { // price
+            aValue = a.price;
+            bValue = b.price;
+        }
+
+        if (aValue < bValue) {
+            return sortDirection === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+            return sortDirection === 'asc' ? 1 : -1;
+        }
+        return 0;
+    });
 
     gridContainer.innerHTML = '';
 
@@ -112,6 +134,27 @@ categoryFilter.addEventListener('change', () => {
     renderItems();
 });
 gradeFilter.addEventListener('change', renderItems);
+
+sortByNameBtn.addEventListener('click', () => {
+    if (currentSort === 'name') {
+        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSort = 'name';
+        sortDirection = 'asc';
+    }
+    renderItems();
+});
+
+sortByPriceBtn.addEventListener('click', () => {
+    if (currentSort === 'price') {
+        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSort = 'price';
+        sortDirection = 'desc'; // 기본 가격순은 내림차순
+    }
+    renderItems();
+});
+
 
 // DOM is available when a deferred module script runs.
 initialLoad();
