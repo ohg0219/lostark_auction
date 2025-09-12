@@ -20,6 +20,20 @@
             text-align: center;
             color: #0a84ff;
         }
+        .filters {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .filters select {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #3a3a3c;
+            background-color: #2c2c2e;
+            color: #f2f2f7;
+            font-size: 1rem;
+        }
         #status {
             text-align: center;
             font-size: 1.2rem;
@@ -81,6 +95,24 @@
 <body>
     <main>
         <h1>로스트아크 현재 시세</h1>
+        <div class="filters">
+            <select id="category-filter">
+                <option value="all">모든 카테고리</option>
+                <option value="40000">각인서</option>
+                <option value="230000">젬</option>
+            </select>
+            <select id="grade-filter">
+                <option value="all">모든 등급</option>
+                <option value="일반">일반</option>
+                <option value="고급">고급</option>
+                <option value="희귀">희귀</option>
+                <option value="영웅">영웅</option>
+                <option value="전설">전설</option>
+                <option value="유물">유물</option>
+                <option value="고대">고대</option>
+                <option value="에스더">에스더</option>
+            </select>
+        </div>
         <div id="status">데이터를 불러오는 중...</div>
         <div id="grid-container"></div>
     </main>
@@ -93,43 +125,65 @@
 
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        async function displayMarketData() {
-            const gridContainer = document.getElementById('grid-container');
-            const statusDiv = document.getElementById('status');
+        const gridContainer = document.getElementById('grid-container');
+        const statusDiv = document.getElementById('status');
+        const categoryFilter = document.getElementById('category-filter');
+        const gradeFilter = document.getElementById('grade-filter');
 
+        let allItems = [];
+
+        function renderItems() {
+            const selectedCategory = categoryFilter.value;
+            const selectedGrade = gradeFilter.value;
+
+            // 필터링 로직
+            const filteredItems = allItems.filter(item => {
+                const categoryMatch = selectedCategory === 'all' || item.category_code == selectedCategory;
+                const gradeMatch = selectedGrade === 'all' || item.grade === selectedGrade;
+                return categoryMatch && gradeMatch;
+            });
+
+            // 그리드 클리어
+            gridContainer.innerHTML = '';
+
+            if (filteredItems.length === 0) {
+                statusDiv.innerHTML = '선택한 조건에 맞는 아이템이 없습니다.';
+                statusDiv.style.display = 'block';
+            } else {
+                statusDiv.style.display = 'none';
+            }
+
+            filteredItems.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'item-card';
+
+                const formattedPrice = item.price.toLocaleString('ko-KR');
+                const formattedDate = new Date(item.last_updated).toLocaleString('ko-KR');
+
+                card.innerHTML = `
+                    <img class="item-icon" src="${item.icon_path}" alt="${item.item_name} 아이콘" onerror="this.style.display='none'"/>
+                    <div class="item-name">${item.item_name}</div>
+                    <div class="item-grade">등급: ${item.grade || '정보 없음'}</div>
+                    <div class="item-price">${formattedPrice}</div>
+                    <div class="last-updated">최종 업데이트: ${formattedDate}</div>
+                `;
+                gridContainer.appendChild(card);
+            });
+        }
+
+        async function initialLoad() {
             try {
-                // 이전에 만든 데이터베이스 함수(RPC) 호출
                 const { data, error } = await supabase.rpc('get_latest_prices');
+                if (error) throw error;
 
-                if (error) {
-                    throw error;
-                }
+                allItems = data;
 
-                if (data.length === 0) {
+                if (allItems.length === 0) {
                     statusDiv.innerHTML = '표시할 데이터가 없습니다. Edge Function을 먼저 실행하여 데이터를 수집해주세요.';
                     return;
                 }
 
-                statusDiv.style.display = 'none'; // 로딩 메시지 숨기기
-
-                data.forEach(item => {
-                    const card = document.createElement('div');
-                    card.className = 'item-card';
-
-                    // 가격을 콤마로 포맷팅
-                    const formattedPrice = item.price.toLocaleString('ko-KR');
-                    // 날짜/시간을 보기 좋게 포맷팅
-                    const formattedDate = new Date(item.last_updated).toLocaleString('ko-KR');
-
-                    card.innerHTML = `
-                        <img class="item-icon" src="${item.icon_path}" alt="${item.item_name} 아이콘" onerror="this.style.display='none'"/>
-                        <div class="item-name">${item.item_name}</div>
-                        <div class="item-grade">등급: ${item.grade || '정보 없음'}</div>
-                        <div class="item-price">${formattedPrice}</div>
-                        <div class="last-updated">최종 업데이트: ${formattedDate}</div>
-                    `;
-                    gridContainer.appendChild(card);
-                });
+                renderItems();
 
             } catch (error) {
                 console.error('데이터를 불러오는 데 실패했습니다:', error);
@@ -137,8 +191,12 @@
             }
         }
 
+        // 이벤트 리스너 추가
+        categoryFilter.addEventListener('change', renderItems);
+        gradeFilter.addEventListener('change', renderItems);
+
         // 페이지가 로드되면 데이터 표시 함수 실행
-        document.addEventListener('DOMContentLoaded', displayMarketData);
+        document.addEventListener('DOMContentLoaded', initialLoad);
     </script>
 </body>
 </html>

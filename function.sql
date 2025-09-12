@@ -6,7 +6,8 @@ RETURNS TABLE (
     icon_path TEXT,
     grade TEXT,
     price INTEGER,
-    last_updated TIMESTAMPTZ
+    last_updated TIMESTAMPTZ,
+    category_code INTEGER
 ) AS $$
 BEGIN
     RETURN QUERY
@@ -15,7 +16,8 @@ BEGIN
         i.icon_path,
         i.grade,
         p.price,
-        p.timestamp AS last_updated
+        p.timestamp AS last_updated,
+        i.category_code
     FROM
         items i
     JOIN
