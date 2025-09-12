@@ -50,6 +50,9 @@ function renderItems() {
         return categoryMatch && gradeMatch;
     });
 
+    // Sort items by price in descending order
+    filteredItems.sort((a, b) => b.price - a.price);
+
     gridContainer.innerHTML = '';
 
     if (filteredItems.length === 0) {

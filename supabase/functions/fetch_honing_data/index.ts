@@ -10,7 +10,7 @@ const corsHeaders = {
 async function fetchAndStoreMarketData(supabaseClient, apiAuthHeader) {
     let itemsProcessed = 0;
     const lostArkApiBase = 'https://developer-lostark.game.onstove.com';
-    const categoryCode = 50010; // CategoryCode를 50010으로 고정
+    const categoryCode = 50000; // CategoryCode를 50000으로 고정
     // PageNo를 1부터 9까지 반복
     for (let pageNo = 1; pageNo <= 9; pageNo++) {
         console.log(`[Edge] Fetching page ${pageNo} for category ${categoryCode}...`);
@@ -24,7 +24,6 @@ async function fetchAndStoreMarketData(supabaseClient, apiAuthHeader) {
             body: JSON.stringify({
                 "Sort": "GRADE",
                 "CategoryCode": categoryCode,
-                "ItemTier": 4,
                 "PageNo": pageNo,
                 "SortCondition": "ASC"
             })
