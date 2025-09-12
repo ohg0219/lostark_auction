@@ -16,6 +16,16 @@ let allItems = [];
 let currentSort = 'price'; // 'name' or 'price'
 let sortDirection = 'desc'; // 'asc' or 'desc'
 const gradeOrder = ["일반", "고급", "희귀", "영웅", "전설", "유물", "고대", "에스더"];
+const gradeColors = {
+    "일반": "#a5a5a5",
+    "고급": "#6bbd00",
+    "희귀": "#00b0fa",
+    "영웅": "#ba00f9",
+    "전설": "#f99200",
+    "유물": "#fa5d00",
+    "고대": "#B3956C",
+    "에스더": "#14c5b9"
+};
 
 function updateGradeFilter() {
     const selectedCategory = categoryFilter.value;
@@ -102,15 +112,18 @@ function renderItems() {
         card.className = 'item-card';
 
         const formattedPrice = item.price.toLocaleString('ko-KR');
-        const formattedDate = new Date(item.last_updated).toLocaleString('ko-KR');
+        const formattedDate = new Date(item.last_updated).toLocaleString('ko-KR', {
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', hour12: false
+        });
+        const itemColor = gradeColors[item.grade] || '#f2f2f7';
 
         card.innerHTML = `
             <div class="card-top-row">
                 <div class="card-top-left">
                     <img class="item-icon" src="${item.icon_path}" alt="${item.item_name} 아이콘" onerror="this.style.display='none'"/>
                     <div class="item-details">
-                        <div class="item-name" title="${item.item_name}">${item.item_name}</div>
-                        <div class="item-grade">등급: ${item.grade || '정보 없음'}</div>
+                        <div class="item-name" title="${item.item_name}" style="color: ${itemColor};">${item.item_name}</div>
                     </div>
                 </div>
                 <div class="item-price">${formattedPrice}</div>
