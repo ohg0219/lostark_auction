@@ -19,13 +19,17 @@ h1 {
     gap: 16px;
     margin-bottom: 24px;
 }
-.filters select {
+.filters select, .filters button {
     padding: 8px 12px;
     border-radius: 8px;
     border: 1px solid #3a3a3c;
     background-color: #2c2c2e;
     color: #f2f2f7;
     font-size: 1rem;
+}
+
+.filters button {
+    cursor: pointer;
 }
 #status {
     text-align: center;
