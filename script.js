@@ -33,8 +33,11 @@ function updateButtonUI() {
 
 function renderItems() {
     const filteredItems = allItems.filter(item => {
-        const categoryMatch = selectedCategory === 'all' || item.category_code == selectedCategory;
-        return categoryMatch;
+        if (selectedCategory === 'all') return true;
+        if (selectedCategory === 'refining') {
+            return item.category_code === 50010 || item.category_code === 50020;
+        }
+        return item.category_code == selectedCategory;
     });
 
     // 정렬 로직
