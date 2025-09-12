@@ -17,12 +17,24 @@ async function fetchAndStoreMarketData(supabaseClient, apiAuthHeader) {
             'authorization': apiAuthHeader
         }
     });
-    if (!optionsResponse.ok) throw new Error('Failed to fetch market options.');
-    const responseData = await optionsResponse.json();
-    console.log(responseData);
+    if (!optionsResponse.ok) {
+        throw new Error(`Failed to fetch market options. Status: ${optionsResponse.status} ${optionsResponse.statusText}`);
+    }
+    let responseData;
+    try {
+        responseData = await optionsResponse.json();
+    } catch (e) {
+        // If parsing fails, get the raw text for logging.
+        const responseText = await optionsResponse.text();
+        console.error("Failed to parse market options JSON. Response text:", responseText);
+        throw new Error(`Failed to parse market options response as JSON: ${e.message}`);
+    }
+    console.log("Received market options data:", responseData);
     if (!Array.isArray(responseData)) {
-        console.error("API response for market options is not an array:", responseData);
-        throw new Error('Failed to process market options: unexpected data structure from API.');
+        const dataType = typeof responseData;
+        const keys = dataType === 'object' && responseData !== null ? Object.keys(responseData).join(', ') : '';
+        console.error("API response for market options is not an array. Type:", dataType, "Keys:", keys);
+        throw new Error(`Failed to process market options: unexpected data structure from API. Expected array, got ${dataType}. Keys: [${keys}]`);
     }
     const allCategories = responseData.flatMap((group)=>group.Categories || []);
     const categoryCodesToFetch = allCategories.map((c)=>c.Code).slice(0, 2);
