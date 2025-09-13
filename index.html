@@ -5,9 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>로스트아크 시세 정보</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <style>
+        #add-to-home-screen-btn {
+            display: none;
+            margin: 15px auto;
+            padding: 10px 20px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
     <main>
+        <button id="add-to-home-screen-btn">홈 화면에 추가</button>
         <h1>로스트아크 시세 정보</h1>
         <p class="description">확인하고 싶은 카테고리를 선택하세요.</p>
         <div id="category-navigation">
