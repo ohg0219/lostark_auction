@@ -113,12 +113,14 @@ function renderPriceChart(historyData) {
     const labels = historyData.map(d => new Date(d.history_date).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }));
     const prices = historyData.map(d => d.closing_price);
 
+    // Register the datalabels plugin
+    Chart.register(ChartDataLabels);
+
     new Chart(priceChartCanvas, {
         type: 'line',
         data: {
             labels: labels,
             datasets: [{
-                label: '일자별 마감 시세 (골드)',
                 data: prices,
                 borderColor: '#007bff',
                 backgroundColor: 'rgba(0, 123, 255, 0.1)',
@@ -140,18 +142,34 @@ function renderPriceChart(historyData) {
                 }
             },
             plugins: {
+                // Hide the default legend
+                legend: {
+                    display: false
+                },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            let label = context.dataset.label || '';
-                            if (label) {
-                                label += ': ';
-                            }
+                            let label = '가격: ';
                             if (context.parsed.y !== null) {
                                 label += context.parsed.y.toLocaleString('ko-KR') + ' 골드';
                             }
                             return label;
                         }
+                    }
+                },
+                // Configure the datalabels plugin
+                datalabels: {
+                    align: 'end',
+                    anchor: 'end',
+                    color: '#e0e0e0',
+                    font: {
+                        weight: 'bold'
+                    },
+                    formatter: function(value, context) {
+                        return value.toLocaleString('ko-KR');
+                    },
+                    padding: {
+                        top: 4
                     }
                 }
             }
