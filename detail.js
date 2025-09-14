@@ -21,13 +21,11 @@ const gradeColors = {
     "에스더": "#14c5b9"
 };
 
+// Corrected and simplified category map
 const categoryMap = {
-    "10000": "engraving.html",
-    "210000": "engraving.html",
+    "40000": "engraving.html",
     "refining": "honing.html",
-    "50010": "honing.html",
-    "50020": "honing.html",
-    "220000": "jewels.html",
+    "210000": "jewels.html",
     "230000": "gems.html"
 };
 
@@ -38,11 +36,11 @@ function getCategoryPage(categoryCode) {
 
 async function loadItemDetails() {
     const params = new URLSearchParams(window.location.search);
-    const itemName = params.get('itemName');
+    const itemId = params.get('itemId');
     const category = params.get('category');
 
-    if (!itemName) {
-        itemDetailContainer.innerHTML = '<p>아이템 이름을 찾을 수 없습니다.</p>';
+    if (!itemId) {
+        itemDetailContainer.innerHTML = '<p>아이템 ID를 찾을 수 없습니다.</p>';
         return;
     }
 
@@ -51,9 +49,9 @@ async function loadItemDetails() {
     backToListBtn.href = listPage;
 
     try {
-        // Fetch item details
+        // Fetch item details by ID
         const { data: itemData, error: itemError } = await supabase
-            .rpc('get_item_details', { p_item_name: itemName })
+            .rpc('get_item_details_by_id', { p_item_id: itemId })
             .single();
 
         if (itemError) throw itemError;
@@ -64,9 +62,9 @@ async function loadItemDetails() {
 
         renderItemDetails(itemData);
 
-        // Fetch price history
+        // Fetch price history by ID
         const { data: historyData, error: historyError } = await supabase
-            .rpc('get_item_price_history', { p_item_name: itemName });
+            .rpc('get_item_price_history_by_id', { p_item_id: itemId });
 
         if (historyError) throw historyError;
 
