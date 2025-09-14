@@ -48,6 +48,12 @@ if (gridContainer) {
         }
 
         currentItems.forEach(item => {
+            const pageCategory = document.body.dataset.pageCategory;
+
+            const link = document.createElement('a');
+            link.className = 'item-link';
+            link.href = `detail.html?itemName=${encodeURIComponent(item.item_name)}&category=${pageCategory}`;
+
             const card = document.createElement('div');
             card.className = 'item-card';
 
@@ -82,7 +88,8 @@ if (gridContainer) {
                 </div>
                 <div class="last-updated">${formattedDate}</div>
             `;
-            gridContainer.appendChild(card);
+            link.appendChild(card);
+            gridContainer.appendChild(link);
         });
     }
 

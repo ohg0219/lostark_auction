@@ -104,3 +104,62 @@ WHERE p.rn = 1
 ORDER BY i.item_name;
 END;
 $$ LANGUAGE plpgsql;
+
+-- 특정 아이템의 최신 정보와 가격을 조회하는 함수
+CREATE OR REPLACE FUNCTION get_item_details(p_item_name TEXT)
+RETURNS TABLE (
+    item_name TEXT,
+    icon_path TEXT,
+    grade TEXT,
+    price INTEGER,
+    last_updated TIMESTAMPTZ,
+    category_code INTEGER
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        i.item_name,
+        i.icon_path,
+        i.grade,
+        p.price,
+        p.timestamp AS last_updated,
+        i.category_code
+    FROM items i
+    JOIN (
+        SELECT
+            ph.item_id,
+            ph.price,
+            ph.timestamp,
+            ROW_NUMBER() OVER(PARTITION BY ph.item_id ORDER BY ph.timestamp DESC) as rn
+        FROM price_history ph
+    ) p ON i.id = p.item_id
+    WHERE p.rn = 1 AND i.item_name = p_item_name;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 특정 아이템의 일자별 마지막 가격을 조회하는 함수 (최근 30일)
+CREATE OR REPLACE FUNCTION get_item_price_history(p_item_name TEXT)
+RETURNS TABLE (
+    history_date DATE,
+    closing_price INTEGER
+) AS $$
+BEGIN
+    RETURN QUERY
+    WITH daily_prices AS (
+        SELECT
+            (ph.timestamp AT TIME ZONE 'Asia/Seoul')::DATE AS history_date,
+            ph.price,
+            ROW_NUMBER() OVER(PARTITION BY (ph.timestamp AT TIME ZONE 'Asia/Seoul')::DATE ORDER BY ph.timestamp DESC) as rn
+        FROM price_history ph
+        JOIN items i ON ph.item_id = i.id
+        WHERE i.item_name = p_item_name
+          AND ph.timestamp >= NOW() - INTERVAL '30 days'
+    )
+    SELECT
+        dp.history_date,
+        dp.price AS closing_price
+    FROM daily_prices dp
+    WHERE dp.rn = 1
+    ORDER BY dp.history_date ASC;
+END;
+$$ LANGUAGE plpgsql;
