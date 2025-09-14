@@ -58,6 +58,15 @@ if (gridContainer) {
             });
             const itemColor = gradeColors[item.grade] || '#f2f2f7';
 
+            let priceChangeHTML = '';
+            if (item.price_change !== 0) {
+                const direction = item.change_direction;
+                const sign = direction === 'up' ? '+' : '';
+                const arrow = direction === 'up' ? '▲' : '▼';
+                const formattedChange = item.price_change.toLocaleString('ko-KR');
+                priceChangeHTML = `<div class="price-change ${direction}">(${sign}${formattedChange} ${arrow})</div>`;
+            }
+
             card.innerHTML = `
                 <div class="card-top-row">
                     <div class="card-top-left">
@@ -66,7 +75,10 @@ if (gridContainer) {
                             <div class="item-name" title="${item.item_name}" style="color: ${itemColor};">${item.item_name}</div>
                         </div>
                     </div>
-                    <div class="item-price">${formattedPrice}</div>
+                    <div class="price-container">
+                        <div class="item-price">${formattedPrice}</div>
+                        ${priceChangeHTML}
+                    </div>
                 </div>
                 <div class="last-updated">${formattedDate}</div>
             `;
@@ -84,16 +96,23 @@ if (gridContainer) {
 
         try {
             statusDiv.innerHTML = '데이터를 불러오는 중...';
-            const { data, error } = await supabase.rpc('get_latest_prices');
+
+            let categoryCodes;
+            if (pageCategory === 'refining') {
+                categoryCodes = [50010, 50020];
+            } else {
+                // The pageCategory from body.dataset is a string, but the database function expects integers.
+                const numericCategory = parseInt(pageCategory, 10);
+                if (isNaN(numericCategory)) {
+                    throw new Error("Invalid category code: " + pageCategory);
+                }
+                categoryCodes = [numericCategory];
+            }
+
+            const { data, error } = await supabase.rpc('get_latest_prices_by_category', { p_category_codes: categoryCodes });
             if (error) throw error;
 
-            // Filter items based on the page's category
-            currentItems = data.filter(item => {
-                if (pageCategory === 'refining') {
-                    return item.category_code === 50010 || item.category_code === 50020;
-                }
-                return item.category_code == pageCategory;
-            });
+            currentItems = data;
 
             if (currentItems.length === 0) {
                 statusDiv.innerHTML = '표시할 데이터가 없습니다. Edge Function을 먼저 실행하여 데이터를 수집해주세요.';
