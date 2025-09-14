@@ -260,3 +260,28 @@ p.description {
 #result-table tr:last-child td {
     border-bottom: none;
 }
+
+/* Make item cards proper links */
+.item-link {
+    text-decoration: none;
+    color: inherit;
+    display: block; /* Ensures the link takes up the full grid cell space */
+}
+
+/* Detail Page Specific Styles */
+.item-card-detail {
+    background-color: #2c2c2e;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.chart-container {
+    background-color: #2c2c2e;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    height: 400px; /* Give the chart a fixed height */
+    max-height: 60vh; /* Ensure it doesn't take up too much vertical space */
+}
