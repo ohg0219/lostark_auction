@@ -141,6 +141,11 @@ p.description {
     font-size: 0.75rem;
     color: #8e8e93;
 }
+.price-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
 .item-price {
     font-size: 1rem;
     font-weight: bold;
@@ -149,6 +154,16 @@ p.description {
 }
 .item-price::before {
     content: '💰 ';
+}
+.price-change {
+    font-size: 0.8rem;
+    margin-top: 4px;
+}
+.price-change.up {
+    color: #ff4d4f; /* A nice red */
+}
+.price-change.down {
+    color: #4d94ff; /* A nice blue */
 }
 .last-updated {
     font-size: 0.75rem;
