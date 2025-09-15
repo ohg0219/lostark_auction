@@ -199,18 +199,50 @@ p.description {
     background-color: #1c1c1e;
     color: #f2f2f7;
     font-size: 1rem;
+    box-sizing: border-box; /* Fix overflow issue */
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-group input[type="number"]:focus {
+    outline: none;
+    border-color: #0a84ff;
+    box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.25);
 }
 
 .radio-group {
     display: flex;
-    gap: 16px;
+    gap: 4px;
+    border: 1px solid #3a3a3c;
+    border-radius: 8px;
+    padding: 4px;
+    background-color: #1c1c1e;
+}
+
+.radio-group input[type="radio"] {
+    display: none; /* Hide the actual radio button */
 }
 
 .radio-group label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    flex: 1;
+    text-align: center;
+    padding: 8px 12px;
+    border-radius: 6px;
     cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    color: #8e8e93;
+    display: block; /* Ensure label takes full space */
+}
+
+/* Style for the selected button */
+.radio-group input[type="radio"]:checked + label {
+    background-color: #3a3a3c;
+    color: #f2f2f7;
+    font-weight: 600;
+}
+
+/* Hover effect for non-selected buttons */
+.radio-group input[type="radio"]:not(:checked) + label:hover {
+    background-color: #2c2c2e;
 }
 
 #calculate-btn {
@@ -266,6 +298,31 @@ p.description {
     text-decoration: none;
     color: inherit;
     display: block; /* Ensures the link takes up the full grid cell space */
+}
+
+/* Toast Popup */
+.toast-popup {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #0a84ff;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 24px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, transform 0.3s;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.toast-popup.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(-20px);
 }
 
 /* Detail Page Specific Styles */
