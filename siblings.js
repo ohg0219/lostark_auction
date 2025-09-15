@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tableBody.innerHTML = '';
 
             if (siblings === null || siblings.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">형제 캐릭터 정보가 없거나 캐릭터를 찾을 수 없습니다.</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">캐릭터 정보가 없거나 캐릭터를 찾을 수 없습니다.</td></tr>';
                 return;
             }
 
