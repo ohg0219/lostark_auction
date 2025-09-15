@@ -43,7 +43,7 @@ BEGIN
             FROM price_history ph
             JOIN items i ON ph.item_id = i.id
             WHERE i.category_code = ANY(p_category_codes)
-              AND ph.timestamp < date_trunc('day', now()) -- Before today
+              AND ph.timestamp < (date_trunc('day', now() AT TIME ZONE 'Asia/Seoul') AT TIME ZONE 'Asia/Seoul') -- Before today (KST)
         ) p
         WHERE p.rn = 1
     )
