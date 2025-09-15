@@ -4,6 +4,19 @@ if (resultTable) {
     const marketPriceInput = document.getElementById('market-price');
     const partySizeRadios = document.querySelectorAll('input[name="party-size"]');
     const tableBody = resultTable.querySelector('tbody');
+    const toastPopup = document.getElementById('toast-popup');
+    let toastTimer;
+
+    function showToast() {
+        // Clear any existing timer
+        if (toastTimer) {
+            clearTimeout(toastTimer);
+        }
+        toastPopup.classList.add('show');
+        toastTimer = setTimeout(() => {
+            toastPopup.classList.remove('show');
+        }, 2000); // Hide after 2 seconds
+    }
 
     function calculateAndDisplay() {
         const marketPrice = parseFloat(marketPriceInput.value);
@@ -46,12 +59,25 @@ if (resultTable) {
             { label: '선점', value: preemption }
         ];
 
-        // auction.html의 aF테이블 헤더("이익률", "추천 입찰가")에 맞춰 결과 표시
+        // 결과 표시 및 클립보드 복사 이벤트 추가
         results.forEach(result => {
             const row = tableBody.insertRow();
+            row.style.cursor = 'pointer'; // Make it look clickable
+
             row.insertCell().textContent = result.label;
             const valueCell = row.insertCell();
-            valueCell.textContent = `${Math.floor(result.value).toLocaleString()} G`;
+            const value = Math.floor(result.value);
+            valueCell.textContent = `${value.toLocaleString()} G`;
+
+            row.addEventListener('click', () => {
+                // 클립보드 복사를 시도하고, 실패하더라도 에러만 콘솔에 기록합니다.
+                navigator.clipboard.writeText(value).catch(err => {
+                    console.error('클립보드 복사 실패:', err);
+                    // 사용자에게는 실패 피드백을 주지 않지만, 개발자는 알 수 있습니다.
+                });
+                // 사용자의 클릭에 대한 피드백으로 토스트 팝업을 즉시 표시합니다.
+                showToast();
+            });
         });
     }
 
@@ -60,7 +86,6 @@ if (resultTable) {
     partySizeRadios.forEach(radio => radio.addEventListener('change', calculateAndDisplay));
 
     // 페이지 로드 시 기본값으로 초기 계산 실행
-    // auction.html에 기본값이 설정되어 있으므로, 페이지가 로드될 때 바로 계산 결과를 표시합니다.
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', calculateAndDisplay);
     } else {
