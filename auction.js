@@ -26,10 +26,6 @@ if (resultTable) {
 
         if (isNaN(marketPrice) || marketPrice <= 0) {
             const row = tableBody.insertRow();
-            const cell = row.insertCell();
-            cell.colSpan = 2;
-            cell.textContent = '유효한 시장가를 입력해주세요.';
-            cell.style.textAlign = 'center';
             return;
         }
 

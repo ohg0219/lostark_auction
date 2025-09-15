@@ -187,7 +187,6 @@ p.description {
 
 .input-group label {
     display: block;
-    margin-bottom: 8px;
     color: #8e8e93;
 }
 
@@ -210,6 +209,7 @@ p.description {
 }
 
 .radio-group {
+    width: 100%;
     display: flex;
     gap: 4px;
     border: 1px solid #3a3a3c;
