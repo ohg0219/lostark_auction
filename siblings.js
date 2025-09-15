@@ -10,16 +10,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const characterNameInput = document.getElementById('character-name');
     const searchButton = document.getElementById('search-button');
     const tableBody = document.querySelector('#result-table tbody');
+    const serverNameElement = document.getElementById('server-name');
 
     const search = async () => {
         const characterName = characterNameInput.value.trim();
 
+        // Clear previous results
+        tableBody.innerHTML = '';
+        serverNameElement.textContent = '';
+
         if (!characterName) {
-            tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">캐릭터명을 입력해주세요.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">캐릭터명을 입력해주세요.</td></tr>';
             return;
         }
 
-        tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">검색 중...</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">검색 중...</td></tr>';
 
         try {
             // Supabase Edge Function 호출
@@ -28,30 +33,39 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (error) {
-                // Edge Function 자체에서 반환한 에러 메시지를 사용하려고 시도
                 let errorMessage = error.message;
                 try {
-                    // context는 종종 JSON 문자열로 된 추가 정보를 포함
                     const context = JSON.parse(error.context);
-                    if (context.error) {
-                        errorMessage = context.error;
-                    }
-                } catch (e) {
-                    // 파싱 실패 시 원래 에러 메시지 사용
-                }
+                    if (context.error) errorMessage = context.error;
+                } catch (e) { /* 파싱 실패 시 원래 에러 메시지 사용 */ }
                 throw new Error(errorMessage);
             }
 
-            tableBody.innerHTML = ''; // 기존 내용 지우기
+            tableBody.innerHTML = '';
 
             if (siblings === null || siblings.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">형제 캐릭터 정보가 없거나 캐릭터를 찾을 수 없습니다.</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">형제 캐릭터 정보가 없거나 캐릭터를 찾을 수 없습니다.</td></tr>';
                 return;
             }
 
+            // 1. 서버 이름 추출 및 표시
+            const serverName = siblings[0].ServerName;
+            serverNameElement.textContent = `서버: ${serverName}`;
+
+            // 2. 데이터 정렬
+            siblings.sort((a, b) => {
+                const itemLevelA = parseFloat(a.ItemAvgLevel.replace(/,/g, ''));
+                const itemLevelB = parseFloat(b.ItemAvgLevel.replace(/,/g, ''));
+
+                if (itemLevelB !== itemLevelA) {
+                    return itemLevelB - itemLevelA; // 아이템 레벨 내림차순
+                }
+                return b.CharacterName.localeCompare(a.CharacterName); // 캐릭터명 내림차순
+            });
+
+            // 3. 테이블 렌더링
             siblings.forEach(char => {
                 const row = tableBody.insertRow();
-                row.insertCell().textContent = char.ServerName;
                 row.insertCell().textContent = char.CharacterName;
                 row.insertCell().textContent = char.CharacterLevel;
                 row.insertCell().textContent = char.CharacterClassName;
@@ -60,7 +74,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error('Error fetching sibling data:', error);
-            tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center;">오류: ${error.message}</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">오류: ${error.message}</td></tr>`;
+            serverNameElement.textContent = ''; // 오류 발생 시 서버 이름도 지움
         }
     };
 
