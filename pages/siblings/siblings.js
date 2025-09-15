@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             // 데이터 로드
             const [levelBracketsRes, siblingsRes] = await Promise.all([
-                fetch('level_dungeons.json'),
+                fetch('../../data/level_dungeons.json'),
                 supabase.functions.invoke('fetch-siblings', { body: { characterName } })
             ]);
 
