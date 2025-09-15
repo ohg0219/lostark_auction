@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>원정대 검색</title>
+    <link rel="stylesheet" href="style.css?v=1757912465">
+</head>
+<body>
+    <main>
+        <h1>원정대 검색</h1>
+        <div class="calculator-container">
+            <div class="input-group">
+                <label for="character-name">캐릭터명</label>
+                <input type="text" id="character-name" placeholder="캐릭터명 입력">
+                <button id="search-button">검색</button>
+            </div>
+            <div class="result-container">
+                <h2 id="server-name" class="server-title"></h2>
+                <table id="result-table">
+                    <thead>
+                        <tr>
+                            <th>캐릭터명</th>
+                            <th>레벨</th>
+                            <th>클래스</th>
+                            <th>아이템 레벨</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Results will be inserted here by siblings.js -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    <script src="siblings.js?v=1757912465" type="module"></script>
+</body>
+</html>
