@@ -90,13 +90,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 row.insertCell().textContent = char.ItemAvgLevel;
 
                 let gold = 0;
-                if (index < 6) {
-                    gold = calculateCharacterGold(char.ItemAvgLevel, levelBrackets);
+                const itemLevel = parseFloat(char.ItemAvgLevel.replace(/,/g, ''));
+                const bracket = levelBrackets.find(b => itemLevel >= b.minLevel && itemLevel <= b.maxLevel);
+
+                if (index < 6 && bracket) {
+                    gold = bracket.totalGold;
                     totalExpeditionGold += gold;
                 }
 
                 const goldCell = row.insertCell();
-                goldCell.textContent = gold.toLocaleString(); // 숫자를 쉼표 형식으로 변환
+                goldCell.textContent = gold.toLocaleString();
+
+                // 행 클릭 이벤트 추가 (골드 획득 가능 캐릭터만)
+                if (bracket && bracket.dungeons) {
+                    row.style.cursor = 'pointer';
+                    row.addEventListener('click', () => {
+                        const nextRow = row.nextSibling;
+                        // 이미 상세 정보가 열려있으면 닫기
+                        if (nextRow && nextRow.classList.contains('dungeon-details')) {
+                            nextRow.remove();
+                        } else {
+                            // 다른 상세 정보가 열려있으면 먼저 닫기
+                            const existingDetails = tableBody.querySelector('.dungeon-details');
+                            if (existingDetails) {
+                                existingDetails.remove();
+                            }
+                            // 새로운 상세 정보 열기
+                            const detailsRow = tableBody.insertRow(row.sectionRowIndex + 1);
+                            detailsRow.classList.add('dungeon-details');
+                            const detailsCell = detailsRow.insertCell();
+                            detailsCell.colSpan = 5;
+                            detailsCell.innerHTML = `<div style="padding: 10px; background-color: #f9f9f9; color: #333; border-left: 3px solid #4CAF50;"><strong>추천 던전:</strong> ${bracket.dungeons.join(', ')}</div>`;
+                        }
+                    });
+                }
             });
 
             // 4. 총 골드 표시
