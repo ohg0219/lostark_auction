@@ -24,7 +24,7 @@ serve(async (req) => {
     }
 
     // Lost Ark API 키 가져오기
-    const lostarkApiKey = Deno.env.get('LOSTARK_API_KEY');
+    const lostarkApiKey = Deno.env.get('LOSTARK_CHARACTERS_SIBLINGS');
     if (!lostarkApiKey) {
       throw new Error('LOSTARK_API_KEY가 설정되지 않았습니다.');
     }
