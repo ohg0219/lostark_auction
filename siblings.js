@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 1. 서버 이름 추출 및 표시
             const serverName = siblings[0].ServerName;
-            serverNameElement.textContent = `서버: ${serverName}`;
+            serverNameElement.textContent = `${serverName} 서버`;
 
             // 2. 데이터 정렬
             siblings.sort((a, b) => {
