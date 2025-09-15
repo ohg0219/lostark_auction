@@ -1,3 +1,11 @@
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+// Supabase 클라이언트 초기화
+const SUPABASE_URL = 'https://ojyiduiquzldbnimulvp.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qeWlkdWlxdXpsZGJuaW11bHZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2MzkxMTIsImV4cCI6MjA3MzIxNTExMn0.VRNMrbQSXZtWLPNuW-Sn522G1pmhT4AkhX0RJgANqZ4';
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+
 document.addEventListener('DOMContentLoaded', () => {
     const characterNameInput = document.getElementById('character-name');
     const searchButton = document.getElementById('search-button');
@@ -15,15 +23,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // Supabase Edge Function 호출
-            // 로컬 개발 환경이나 실제 배포 환경에 따라 URL을 적절히 수정해야 할 수 있습니다.
-            const response = await fetch(`/api/fetch-siblings?characterName=${encodeURIComponent(characterName)}`);
+            const { data: siblings, error } = await supabase.functions.invoke('fetch-siblings', {
+                body: { characterName: characterName },
+            });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || `서버 오류: ${response.status}`);
+            if (error) {
+                // Edge Function 자체에서 반환한 에러 메시지를 사용하려고 시도
+                let errorMessage = error.message;
+                try {
+                    // context는 종종 JSON 문자열로 된 추가 정보를 포함
+                    const context = JSON.parse(error.context);
+                    if (context.error) {
+                        errorMessage = context.error;
+                    }
+                } catch (e) {
+                    // 파싱 실패 시 원래 에러 메시지 사용
+                }
+                throw new Error(errorMessage);
             }
-
-            const siblings = await response.json();
 
             tableBody.innerHTML = ''; // 기존 내용 지우기
 

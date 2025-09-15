@@ -13,8 +13,8 @@ serve(async (req) => {
   }
 
   try {
-    const url = new URL(req.url);
-    const characterName = url.searchParams.get('characterName');
+    // 요청 본문에서 characterName 가져오기
+    const { characterName } = await req.json();
 
     if (!characterName) {
       return new Response(JSON.stringify({ error: '캐릭터명이 필요합니다.' }), {
@@ -42,11 +42,19 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-        const errorData = await response.json();
-        return new Response(JSON.stringify({ error: errorData.Message || `API 요청 실패. Status: ${response.status}` }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: response.status,
-        });
+        const errorData = await response.text(); // API가 JSON이 아닌 텍스트를 반환할 수 있음
+        try {
+            const parsedError = JSON.parse(errorData);
+            return new Response(JSON.stringify({ error: parsedError.Message || `API 요청 실패. Status: ${response.status}` }), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                status: response.status,
+            });
+        } catch (e) {
+            return new Response(JSON.stringify({ error: errorData || `API 요청 실패. Status: ${response.status}` }), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                status: response.status,
+            });
+        }
     }
 
     const data = await response.json();
