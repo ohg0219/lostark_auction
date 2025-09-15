@@ -1,0 +1,85 @@
+[
+  {
+    "name": "혼돈의상아탑",
+    "difficulty": "하드",
+    "minLevel": 1620,
+    "gates": [
+      {
+        "name": "1관문",
+        "gain_gold": 1400
+      },
+      {
+        "name": "2관문",
+        "gain_gold": 2000
+      },
+      {
+        "name": "3관문",
+        "gain_gold": 3800
+      }
+    ]
+  },
+  {
+    "name": "카멘",
+    "difficulty": "하드",
+    "minLevel": 1630,
+    "gates": [
+      {
+        "name": "1관문",
+        "gain_gold": 2000
+      },
+      {
+        "name": "2관문",
+        "gain_gold": 2400
+      },
+      {
+        "name": "3관문",
+        "gain_gold": 3600
+      }
+    ]
+  },
+  {
+    "name": "베히모스",
+    "difficulty": "노말",
+    "minLevel": 1640,
+    "gates": [
+      {
+        "name": "1관문",
+        "gain_gold": 2800
+      },
+      {
+        "name": "2관문",
+        "gain_gold": 6000
+      }
+    ]
+  },
+  {
+    "name": "서막:에키드나",
+    "difficulty": "하드",
+    "minLevel": 1640,
+    "gates": [
+      {
+        "name": "1관문",
+        "gain_gold": 2800
+      },
+      {
+        "name": "2관문",
+        "gain_gold": 6000
+      }
+    ]
+  },
+  {
+    "name": "1막:에기르",
+    "difficulty": "노말",
+    "minLevel": 1660,
+    "gates": [
+      {
+        "name": "1관문",
+        "gain_gold": 4750
+      },
+      {
+        "name": "2관문",
+        "gain_gold": 10750
+      }
+    ]
+  }
+]
