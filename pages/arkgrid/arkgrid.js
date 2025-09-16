@@ -23,6 +23,14 @@ const ARKGRID_GRADE_DATA = {
     ancient: { name: '고대', willpower: 17, activationPoints: [10, 14, 17, 18, 19, 20] }
 };
 
+const GRADE_COLORS = {
+    "none": "#a5a5a5",
+    "heroic": "#ba00f9",
+    "legendary": "#f99200",
+    "relic": "#fa5d00",
+    "ancient": "#B3956C",
+};
+
 const MAX_GEMS_PER_CORE = 4;
 
 // --- DOM Elements ---
@@ -57,36 +65,132 @@ function init() {
 
 // --- Functions ---
 
+function createCustomDropdown(id, defaultText, items, onSelect) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'custom-select-wrapper';
+    wrapper.id = id;
+    wrapper.dataset.value = 'none';
+
+    const trigger = document.createElement('div');
+    trigger.className = 'custom-select-trigger';
+    trigger.innerHTML = `<span>${defaultText}</span>`;
+
+    const options = document.createElement('div');
+    options.className = 'custom-options';
+
+    // Default option
+    const defaultOption = document.createElement('div');
+    defaultOption.className = 'custom-option';
+    defaultOption.dataset.value = 'none';
+    defaultOption.innerHTML = `<span>${defaultText}</span>`;
+    defaultOption.addEventListener('click', () => {
+        onSelect(wrapper, { value: 'none', text: defaultText, icon: null });
+    });
+    options.appendChild(defaultOption);
+
+    // Other options
+    items.forEach(item => {
+        const option = document.createElement('div');
+        option.className = 'custom-option';
+        option.dataset.value = item.id;
+        option.innerHTML = item.icon ? `<img src="${item.icon}" alt="${item.name}"><span>${item.name}</span>` : `<span>${item.name}</span>`;
+        option.addEventListener('click', () => {
+             if (!option.classList.contains('disabled')) {
+                onSelect(wrapper, { value: item.id, text: item.name, icon: item.icon });
+            }
+        });
+        options.appendChild(option);
+    });
+
+    trigger.addEventListener('click', () => {
+        // Close other dropdowns
+        document.querySelectorAll('.custom-options').forEach(opt => {
+            if (opt !== options) opt.style.display = 'none';
+        });
+        options.style.display = options.style.display === 'block' ? 'none' : 'block';
+    });
+
+    wrapper.append(trigger, options);
+    return wrapper;
+}
+
 function createCoreSlot(type, id) {
     const slotId = `${type}-${id}`;
     const slot = document.createElement('div');
     slot.className = 'core-slot';
     slot.id = `slot-${slotId}`;
 
-    // 1. Core Selection Controls
     const controls = document.createElement('div');
     controls.className = 'core-controls';
 
-    // Core Type Dropdown
-    const typeSelect = document.createElement('select');
-    typeSelect.id = `type-${slotId}`;
-    typeSelect.innerHTML = '<option value="none">코어 종류</option>' + ARKGRID_CORE_TYPES[type].map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-    typeSelect.addEventListener('change', () => updateCoreTypeOptions(type));
+    const gradeDataForDropdown = Object.keys(ARKGRID_GRADE_DATA).map(key => ({ id: key, name: ARKGRID_GRADE_DATA[key].name }));
 
-    // Grade Dropdown
-    const gradeSelect = document.createElement('select');
-    gradeSelect.id = `grade-${slotId}`;
-    gradeSelect.innerHTML = Object.keys(ARKGRID_GRADE_DATA).map(key => `<option value="${key}">${ARKGRID_GRADE_DATA[key].name}</option>`).join('');
+    // --- Create all 3 dropdowns ---
+    const targetSelectWrapper = createCustomDropdown(`target-${slotId}`, '목표 포인트', [], (tWrapper, tSelected) => {
+        tWrapper.dataset.value = tSelected.value;
+        tWrapper.querySelector('.custom-select-trigger').innerHTML = `<span>${tSelected.text}</span>`;
+        tWrapper.querySelector('.custom-options').style.display = 'none';
+    });
+    targetSelectWrapper.classList.add('disabled');
 
-    // Target Point Input
-    const targetInput = document.createElement('input');
-    targetInput.type = 'number';
-    targetInput.id = `target-${slotId}`;
-    targetInput.placeholder = '목표 P';
 
-    controls.append(typeSelect, gradeSelect, targetInput);
+    const gradeSelectWrapper = createCustomDropdown(`grade-${slotId}`, '등급', gradeDataForDropdown, (gWrapper, gSelected) => {
+        gWrapper.dataset.value = gSelected.value;
+        gWrapper.querySelector('.custom-select-trigger').innerHTML = `<span>${gSelected.text}</span>`;
+        gWrapper.querySelector('.custom-options').style.display = 'none';
 
-    // 2. Gem Sockets
+        const willpower = ARKGRID_GRADE_DATA[gSelected.value]?.willpower || 0;
+        const activationPoints = ARKGRID_GRADE_DATA[gSelected.value]?.activationPoints || [];
+
+        document.getElementById(`info-${slotId}`).textContent = willpower > 0 ? `공급 의지력: ${willpower}` : '';
+        slot.style.borderColor = GRADE_COLORS[gSelected.value] || '#4a4a7e';
+
+        const targetOptions = activationPoints.map(p => ({ id: p, name: p }));
+
+        // Find existing target dropdown to replace
+        const oldTargetDropdown = document.getElementById(`target-${slotId}`);
+        const newTargetDropdown = createCustomDropdown(`target-${slotId}`, '목표 포인트', targetOptions, (tWrapper, tSelected) => {
+            tWrapper.dataset.value = tSelected.value;
+            tWrapper.querySelector('.custom-select-trigger').innerHTML = `<span>${tSelected.text}</span>`;
+            tWrapper.querySelector('.custom-options').style.display = 'none';
+        });
+
+        oldTargetDropdown.replaceWith(newTargetDropdown);
+
+        if (gSelected.value === 'none' || activationPoints.length === 0) {
+            newTargetDropdown.classList.add('disabled');
+        } else {
+            newTargetDropdown.classList.remove('disabled');
+        }
+    });
+    gradeSelectWrapper.classList.add('disabled');
+
+
+    const coreTypeSelectWrapper = createCustomDropdown(`type-${slotId}`, '코어 종류', ARKGRID_CORE_TYPES[type], (cWrapper, cSelected) => {
+        cWrapper.dataset.value = cSelected.value;
+        cWrapper.querySelector('.custom-select-trigger').innerHTML = cSelected.icon ? `<img src="${cSelected.icon}" alt="${cSelected.text}"><span>${cSelected.text}</span>` : `<span>${cSelected.text}</span>`;
+        cWrapper.querySelector('.custom-options').style.display = 'none';
+
+        updateCoreTypeOptions(type);
+
+        if (cSelected.value === 'none') {
+            gradeSelectWrapper.classList.add('disabled');
+            gradeSelectWrapper.dataset.value = 'none';
+            gradeSelectWrapper.querySelector('.custom-select-trigger').innerHTML = `<span>등급</span>`;
+        } else {
+            gradeSelectWrapper.classList.remove('disabled');
+        }
+
+        // Reset grade dropdown by clicking its "none" option
+        gradeSelectWrapper.querySelector('.custom-option[data-value="none"]').click();
+    });
+
+    controls.append(coreTypeSelectWrapper, gradeSelectWrapper, targetSelectWrapper);
+
+    const infoDisplay = document.createElement('div');
+    infoDisplay.className = 'core-info';
+    infoDisplay.id = `info-${slotId}`;
+
     const sockets = document.createElement('div');
     sockets.className = 'gem-sockets';
     sockets.id = `sockets-${slotId}`;
@@ -96,7 +200,11 @@ function createCoreSlot(type, id) {
         sockets.appendChild(socket);
     }
 
-    slot.append(controls, sockets);
+    const summaryDisplay = document.createElement('div');
+    summaryDisplay.className = 'result-summary';
+    summaryDisplay.id = `summary-${slotId}`;
+
+    slot.append(controls, infoDisplay, sockets, summaryDisplay);
     return slot;
 }
 
@@ -156,39 +264,49 @@ function renderGemLists() {
 
 
 function updateCoreTypeOptions(type) {
-    const selected = [];
+    const selectedValues = [];
     for (let i = 1; i <= 3; i++) {
-        const currentVal = document.getElementById(`type-${type}-${i}`).value;
-        if (currentVal !== 'none') {
-            selected.push(currentVal);
+        const wrapper = document.getElementById(`type-${type}-${i}`);
+        if (wrapper.dataset.value !== 'none') {
+            selectedValues.push(wrapper.dataset.value);
         }
     }
 
     for (let i = 1; i <= 3; i++) {
-        const dropdown = document.getElementById(`type-${type}-${i}`);
-        const currentValue = dropdown.value;
-        for (const option of dropdown.options) {
-            if (option.value !== 'none' && option.value !== currentValue) {
-                option.disabled = selected.includes(option.value);
+        const wrapper = document.getElementById(`type-${type}-${i}`);
+        const currentValue = wrapper.dataset.value;
+        const options = wrapper.querySelectorAll('.custom-option');
+        options.forEach(option => {
+            const optionValue = option.dataset.value;
+            if (optionValue !== 'none' && optionValue !== currentValue) {
+                if (selectedValues.includes(optionValue)) {
+                    option.classList.add('disabled');
+                } else {
+                    option.classList.remove('disabled');
+                }
             }
-        }
+        });
     }
 }
+
+
 
 function calculate() {
     let availableOrderGems = [...orderGems];
     let availableChaosGems = [...chaosGems];
 
-    ['chaos', 'order'].forEach(type => {
+    ['order', 'chaos'].forEach(type => {
         for (let i = 1; i <= 3; i++) {
             const slotId = `${type}-${i}`;
-            const typeId = document.getElementById(`type-${slotId}`).value;
-            const gradeId = document.getElementById(`grade-${slotId}`).value;
-            const targetPoint = parseInt(document.getElementById(`target-${slotId}`).value, 10) || 0;
+            const typeId = document.getElementById(`type-${slotId}`).dataset.value;
+            const gradeId = document.getElementById(`grade-${slotId}`).dataset.value;
+            const targetPoint = parseInt(document.getElementById(`target-${slotId}`).dataset.value, 10) || 0;
 
-            // Clear previous results
+            const slotElement = document.getElementById(`slot-${slotId}`);
+            slotElement.classList.remove('target-failed');
+
             const socketContainer = document.getElementById(`sockets-${slotId}`);
-            socketContainer.innerHTML = ''; // Clear old gems
+            socketContainer.innerHTML = '';
              for (let j = 0; j < MAX_GEMS_PER_CORE; j++) {
                 const socket = document.createElement('div');
                 socket.className = 'gem-socket';
@@ -208,54 +326,64 @@ function calculate() {
             const availableGems = type === 'order' ? availableOrderGems : availableChaosGems;
             const result = findBestGemCombination(core, availableGems, targetPoint);
 
-            if (result.achieved) {
+            if (result.points > -1) {
+                const usedGemIds = result.gems.map(g => g.id);
                 if (type === 'order') {
-                    availableOrderGems = availableOrderGems.filter(gem => !result.gems.some(usedGem => usedGem.id === gem.id));
+                    availableOrderGems = availableOrderGems.filter(gem => !usedGemIds.includes(gem.id));
                 } else {
-                    availableChaosGems = availableChaosGems.filter(gem => !result.gems.some(usedGem => usedGem.id === gem.id));
+                    availableChaosGems = availableChaosGems.filter(gem => !usedGemIds.includes(gem.id));
                 }
             }
-            renderResult(slotId, result);
+            renderResult(slotId, core, result);
         }
     });
 }
 
-function renderResult(slotId, result) {
+function renderResult(slotId, core, result) {
     const socketContainer = document.getElementById(`sockets-${slotId}`);
+    const summaryEl = document.getElementById(`summary-${slotId}`);
 
     if (!result.achieved) {
-        const firstSocket = socketContainer.firstChild;
-        if(firstSocket) firstSocket.textContent = '실패';
+        const slotElement = document.getElementById(`slot-${slotId}`);
+        slotElement.classList.add('target-failed');
+    }
+
+    if (result.points <= -1) {
+        summaryEl.textContent = '';
         return;
     }
 
     result.gems.forEach((gem, index) => {
         if (socketContainer.children[index]) {
             const socket = socketContainer.children[index];
-            socket.textContent = `P${gem.point}/W${gem.willpower}`;
-            // You can add more styling here, e.g., based on gem points
+            socket.innerHTML = `의지력: ${gem.willpower}<br>포인트: ${gem.point}`;
         }
     });
+
+    summaryEl.innerHTML = `의지력: ${result.willpower} / ${core.willpower}<br>포인트: ${result.points}`;
 }
 
 function findBestGemCombination(core, availableGems, targetPoint) {
-    let bestCombination = {
-        gems: [],
-        points: 0,
-        willpower: Infinity, // 최소화 대상
-        achieved: false
-    };
+    let bestAchieved = { gems: [], points: 0, willpower: Infinity, achieved: false };
+    let bestOverall = { gems: [], points: -1, willpower: 0 };
 
-    const sortedGems = [...availableGems].sort((a, b) => {
-        if (a.willpower !== b.willpower) return a.willpower - b.willpower;
-        return b.point - a.point;
-    });
+    const sortedGems = [...availableGems].sort((a, b) => b.point - a.point);
 
     function find(startIndex, currentGems, currentWillpower, currentPoints) {
-        if (currentPoints >= targetPoint) {
-            if (currentWillpower < bestCombination.willpower ||
-               (currentWillpower === bestCombination.willpower && currentPoints > bestCombination.points)) {
-                bestCombination = {
+        // Update bestOverall combination (highest points)
+        if (currentPoints > bestOverall.points) {
+            bestOverall = {
+                gems: [...currentGems],
+                points: currentPoints,
+                willpower: currentWillpower
+            };
+        }
+
+        // Check for and update bestAchieved combination
+        if (targetPoint > 0 && currentPoints >= targetPoint) {
+            if (currentWillpower < bestAchieved.willpower ||
+               (currentWillpower === bestAchieved.willpower && currentPoints > bestAchieved.points)) {
+                bestAchieved = {
                     gems: [...currentGems],
                     points: currentPoints,
                     willpower: currentWillpower,
@@ -273,8 +401,6 @@ function findBestGemCombination(core, availableGems, targetPoint) {
             const newWillpower = currentWillpower + newGem.willpower;
 
             if (newWillpower <= core.willpower) {
-                if (newWillpower >= bestCombination.willpower) continue;
-
                 currentGems.push(newGem);
                 find(i + 1, currentGems, newWillpower, currentPoints + newGem.point);
                 currentGems.pop();
@@ -283,5 +409,11 @@ function findBestGemCombination(core, availableGems, targetPoint) {
     }
 
     find(0, [], 0, 0);
-    return bestCombination;
+
+    if (bestAchieved.achieved) {
+        return bestAchieved;
+    } else {
+        // Return the best combination found, marking that it didn't meet the target
+        return { ...bestOverall, achieved: false };
+    }
 }
