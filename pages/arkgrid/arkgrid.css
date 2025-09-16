@@ -4,7 +4,7 @@ body {
 }
 
 main {
-    width: 1200px;
+    width: 1000px;
     margin: 20px auto;
     padding: 20px;
     background-color: #2a2a4e;
@@ -58,7 +58,7 @@ h1, h2, h3 {
 /* Custom Dropdown */
 .custom-select-wrapper {
     position: relative;
-    width: 150px;
+    width: 145px;
     font-size: 14px;
 }
 .custom-select-trigger {
@@ -70,6 +70,7 @@ h1, h2, h3 {
     border-radius: 4px;
     cursor: pointer;
     gap: 8px;
+    height: 15px;
 }
 .custom-select-trigger img {
     width: 24px;
