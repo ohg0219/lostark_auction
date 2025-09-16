@@ -27,6 +27,15 @@
             flex-direction: column;
             gap: 5px;
         }
+        .core-input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+        .target-point-input {
+            width: 100px;
+        }
         .gem-lists {
             display: flex;
             gap: 20px;
@@ -60,67 +69,49 @@
                     <div id="order-cores">
                         <h3>질서 코어</h3>
                         <div class="core-input-group">
-                            <label for="order-core-1">코어 1 등급:</label>
-                            <select id="order-core-1" class="core-selector" data-core-type="order">
-                                <option value="none">선택 안함</option>
-                                <option value="heroic">영웅</option>
-                                <option value="legendary">전설</option>
-                                <option value="relic">유물</option>
-                                <option value="ancient">고대</option>
+                            <label for="order-core-1">코어 1:</label>
+                            <select id="order-core-1" class="core-selector" data-core-type="order" data-core-id="1">
+                                <option value="none">선택 안함</option><option value="heroic">영웅</option><option value="legendary">전설</option><option value="relic">유물</option><option value="ancient">고대</option>
                             </select>
+                            <input type="number" id="order-core-1-target" class="target-point-input" placeholder="목표 포인트">
                         </div>
                         <div class="core-input-group">
-                            <label for="order-core-2">코어 2 등급:</label>
-                            <select id="order-core-2" class="core-selector" data-core-type="order">
-                                <option value="none">선택 안함</option>
-                                <option value="heroic">영웅</option>
-                                <option value="legendary">전설</option>
-                                <option value="relic">유물</option>
-                                <option value="ancient">고대</option>
+                            <label for="order-core-2">코어 2:</label>
+                            <select id="order-core-2" class="core-selector" data-core-type="order" data-core-id="2">
+                                <option value="none">선택 안함</option><option value="heroic">영웅</option><option value="legendary">전설</option><option value="relic">유물</option><option value="ancient">고대</option>
                             </select>
+                            <input type="number" id="order-core-2-target" class="target-point-input" placeholder="목표 포인트">
                         </div>
                         <div class="core-input-group">
-                            <label for="order-core-3">코어 3 등급:</label>
-                            <select id="order-core-3" class="core-selector" data-core-type="order">
-                                <option value="none">선택 안함</option>
-                                <option value="heroic">영웅</option>
-                                <option value="legendary">전설</option>
-                                <option value="relic">유물</option>
-                                <option value="ancient">고대</option>
+                            <label for="order-core-3">코어 3:</label>
+                            <select id="order-core-3" class="core-selector" data-core-type="order" data-core-id="3">
+                                <option value="none">선택 안함</option><option value="heroic">영웅</option><option value="legendary">전설</option><option value="relic">유물</option><option value="ancient">고대</option>
                             </select>
+                            <input type="number" id="order-core-3-target" class="target-point-input" placeholder="목표 포인트">
                         </div>
                     </div>
                     <div id="chaos-cores">
                         <h3>혼돈 코어</h3>
                         <div class="core-input-group">
-                            <label for="chaos-core-1">코어 1 등급:</label>
-                            <select id="chaos-core-1" class="core-selector" data-core-type="chaos">
-                                <option value="none">선택 안함</option>
-                                <option value="heroic">영웅</option>
-                                <option value="legendary">전설</option>
-                                <option value="relic">유물</option>
-                                <option value="ancient">고대</option>
+                            <label for="chaos-core-1">코어 1:</label>
+                            <select id="chaos-core-1" class="core-selector" data-core-type="chaos" data-core-id="1">
+                                <option value="none">선택 안함</option><option value="heroic">영웅</option><option value="legendary">전설</option><option value="relic">유물</option><option value="ancient">고대</option>
                             </select>
+                            <input type="number" id="chaos-core-1-target" class="target-point-input" placeholder="목표 포인트">
                         </div>
                         <div class="core-input-group">
-                            <label for="chaos-core-2">코어 2 등급:</label>
-                            <select id="chaos-core-2" class="core-selector" data-core-type="chaos">
-                                <option value="none">선택 안함</option>
-                                <option value="heroic">영웅</option>
-                                <option value="legendary">전설</option>
-                                <option value="relic">유물</option>
-                                <option value="ancient">고대</option>
+                            <label for="chaos-core-2">코어 2:</label>
+                            <select id="chaos-core-2" class="core-selector" data-core-type="chaos" data-core-id="2">
+                                <option value="none">선택 안함</option><option value="heroic">영웅</option><option value="legendary">전설</option><option value="relic">유물</option><option value="ancient">고대</option>
                             </select>
+                            <input type="number" id="chaos-core-2-target" class="target-point-input" placeholder="목표 포인트">
                         </div>
                         <div class="core-input-group">
-                            <label for="chaos-core-3">코어 3 등급:</label>
-                            <select id="chaos-core-3" class="core-selector" data-core-type="chaos">
-                                <option value="none">선택 안함</option>
-                                <option value="heroic">영웅</option>
-                                <option value="legendary">전설</option>
-                                <option value="relic">유물</option>
-                                <option value="ancient">고대</option>
+                            <label for="chaos-core-3">코어 3:</label>
+                            <select id="chaos-core-3" class="core-selector" data-core-type="chaos" data-core-id="3">
+                                <option value="none">선택 안함</option><option value="heroic">영웅</option><option value="legendary">전설</option><option value="relic">유물</option><option value="ancient">고대</option>
                             </select>
+                            <input type="number" id="chaos-core-3-target" class="target-point-input" placeholder="목표 포인트">
                         </div>
                     </div>
                 </div>

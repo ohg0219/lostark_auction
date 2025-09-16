@@ -79,38 +79,53 @@ function renderGemLists() {
     chaosGems.forEach(gem => chaosGemList.appendChild(createGemElement(gem)));
 }
 
-function findBestGemCombination(core, availableGems) {
+function findBestGemCombination(core, availableGems, targetPoint) {
     let bestCombination = {
         gems: [],
         points: 0,
-        willpower: 0
+        willpower: Infinity, // 최소화 대상
+        achieved: false
     };
 
-    // availableGems를 포인트 내림차순으로 정렬하여 더 효율적으로 탐색
-    const sortedGems = [...availableGems].sort((a, b) => b.point - a.point);
+    // 의지력 소모가 적은 순, 그 다음 포인트가 높은 순으로 정렬
+    const sortedGems = [...availableGems].sort((a, b) => {
+        if (a.willpower !== b.willpower) {
+            return a.willpower - b.willpower;
+        }
+        return b.point - a.point;
+    });
 
     function find(startIndex, currentGems, currentWillpower, currentPoints) {
-        // 현재 조합이 기존 최적 조합보다 더 좋으면 업데이트
-        if (currentPoints > bestCombination.points) {
-            bestCombination = {
-                gems: [...currentGems],
-                points: currentPoints,
-                willpower: currentWillpower
-            };
+        // 목표 포인트를 달성했는지 확인
+        if (currentPoints >= targetPoint) {
+            // 현재 조합이 기존 최적 조합보다 더 나은지 평가
+            // 1. 의지력 소모가 더 적거나
+            // 2. 의지력 소모는 같은데 포인트가 더 높으면
+            if (currentWillpower < bestCombination.willpower ||
+               (currentWillpower === bestCombination.willpower && currentPoints > bestCombination.points)) {
+                bestCombination = {
+                    gems: [...currentGems],
+                    points: currentPoints,
+                    willpower: currentWillpower,
+                    achieved: true
+                };
+            }
         }
 
-        // 젬을 4개 채웠거나 더 이상 탐색할 젬이 없으면 종료
+        // 4개를 다 채웠거나 더 탐색할 젬이 없으면 종료
         if (currentGems.length >= ARKGRID_DATA.gems.max_per_core || startIndex >= sortedGems.length) {
             return;
         }
 
-        // startIndex부터 시작하여 나머지 젬들을 탐색
+        // 나머지 젬들을 탐색
         for (let i = startIndex; i < sortedGems.length; i++) {
             const newGem = sortedGems[i];
             const newWillpower = currentWillpower + newGem.willpower;
 
-            // 의지력이 초과되지 않는 경우에만 젬을 추가하고 재귀 호출
             if (newWillpower <= core.willpower) {
+                // 최적화: 만약 현재 찾은 최고 조합보다 이미 의지력을 더 썼다면 더 볼 필요 없음
+                if (newWillpower >= bestCombination.willpower) continue;
+
                 currentGems.push(newGem);
                 find(i + 1, currentGems, newWillpower, currentPoints + newGem.point);
                 currentGems.pop(); // 백트래킹
@@ -129,26 +144,32 @@ function calculate() {
 
     const coreSelectors = document.querySelectorAll('.core-selector');
 
-    coreSelectors.forEach((selector, index) => {
+    coreSelectors.forEach(selector => {
         const grade = selector.value;
         if (grade === 'none') return;
+
+        const coreId = selector.id; // e.g., "order-core-1"
+        const targetPointInput = document.getElementById(`${coreId}-target`);
+        const targetPoint = parseInt(targetPointInput.value, 10) || 0;
 
         const coreType = selector.dataset.coreType;
         const coreData = ARKGRID_DATA.cores[grade];
         const core = {
-            name: `${coreType === 'order' ? '질서' : '혼돈'} 코어 ${index % 3 + 1} (${coreData.name})`,
+            name: `${coreType === 'order' ? '질서' : '혼돈'} 코어 ${selector.dataset.coreId} (${coreData.name})`,
             willpower: coreData.willpower,
             activationPoints: coreData.activationPoints,
+            targetPoint: targetPoint
         };
 
         const availableGems = coreType === 'order' ? availableOrderGems : availableChaosGems;
-        const result = findBestGemCombination(core, availableGems);
+        const result = findBestGemCombination(core, availableGems, targetPoint);
 
-        // Update the available gems pool
-        if (coreType === 'order') {
-            availableOrderGems = availableOrderGems.filter(gem => !result.gems.some(usedGem => usedGem.id === gem.id));
-        } else {
-            availableChaosGems = availableChaosGems.filter(gem => !result.gems.some(usedGem => usedGem.id === gem.id));
+        if (result.achieved) {
+            if (coreType === 'order') {
+                availableOrderGems = availableOrderGems.filter(gem => !result.gems.some(usedGem => usedGem.id === gem.id));
+            } else {
+                availableChaosGems = availableChaosGems.filter(gem => !result.gems.some(usedGem => usedGem.id === gem.id));
+            }
         }
 
         renderResult(core, result);
@@ -159,23 +180,28 @@ function renderResult(core, result) {
     const resultEl = document.createElement('div');
     resultEl.className = 'result-core';
 
-    let activatedOptions = core.activationPoints.filter(p => result.points >= p);
-    let activatedOptionsStr = activatedOptions.length > 0 ? ` (활성: ${activatedOptions.join(', ')})` : ' (활성 옵션 없음)';
+    let html;
 
-    let html = `
-        <h4>${core.name}</h4>
-        <p><strong>총 포인트:</strong> ${result.points}${activatedOptionsStr}</p>
-        <p><strong>소모 의지력:</strong> ${result.willpower} / ${core.willpower}</p>
-        <ul>
-    `;
-    if (result.gems.length > 0) {
+    if (result.achieved) {
+        let activatedOptions = core.activationPoints.filter(p => result.points >= p);
+        let activatedOptionsStr = activatedOptions.length > 0 ? ` (활성: ${activatedOptions.join(', ')})` : ' (활성 옵션 없음)';
+
+        html = `
+            <h4>${core.name} - 목표 ${core.targetPoint} 달성!</h4>
+            <p><strong>총 포인트:</strong> ${result.points}${activatedOptionsStr}</p>
+            <p><strong>소모 의지력:</strong> ${result.willpower} / ${core.willpower}</p>
+            <ul>
+        `;
         result.gems.forEach(gem => {
             html += `<li>의지력 ${gem.willpower}, 포인트 ${gem.point} 젬</li>`;
         });
+        html += `</ul>`;
     } else {
-        html += '<li>장착된 젬 없음</li>';
+        html = `
+            <h4>${core.name} - 목표 ${core.targetPoint} 달성 실패</h4>
+            <p>해당 목표를 달성할 수 있는 젬 조합을 찾지 못했습니다.</p>
+        `;
     }
-    html += `</ul>`;
 
     resultEl.innerHTML = html;
     resultsDiv.appendChild(resultEl);
