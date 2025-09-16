@@ -1,30 +1,105 @@
 console.log("arkgrid.js loaded");
 
-const ARKGRID_DATA = {
-    cores: {
-        heroic: { name: '영웅', willpower: 7, activationPoints: [10] },
-        legendary: { name: '전설', willpower: 11, activationPoints: [10, 14] },
-        relic: { name: '유물', willpower: 15, activationPoints: [10, 14, 17, 18, 19, 20] },
-        ancient: { name: '고대', willpower: 17, activationPoints: [10, 14, 17, 18, 19, 20] }
-    },
-    gems: {
-        max_per_core: 4
-    }
+// --- Static Data ---
+
+const ARKGRID_CORE_TYPES = {
+    order: [
+        { id: 'sun', name: '해', icon: 'https://ohg0219.github.io/lostark_auction/image/질서_해.png' },
+        { id: 'moon', name: '달', icon: 'https://ohg0219.github.io/lostark_auction/image/질서_달.png' },
+        { id: 'star', name: '별', icon: 'https://ohg0219.github.io/lostark_auction/image/질서_별.png' }
+    ],
+    chaos: [
+        { id: 'sun', name: '해', icon: 'https://ohg0219.github.io/lostark_auction/image/혼돈_해.png' },
+        { id: 'moon', name: '달', icon: 'https://ohg0219.github.io/lostark_auction/image/혼돈_달.png' },
+        { id: 'star', name: '별', icon: 'https://ohg0219.github.io/lostark_auction/image/혼돈_별.png' }
+    ]
 };
 
+const ARKGRID_GRADE_DATA = {
+    none: { name: '선택 안함', willpower: 0, activationPoints: [] },
+    heroic: { name: '영웅', willpower: 7, activationPoints: [10] },
+    legendary: { name: '전설', willpower: 11, activationPoints: [10, 14] },
+    relic: { name: '유물', willpower: 15, activationPoints: [10, 14, 17, 18, 19, 20] },
+    ancient: { name: '고대', willpower: 17, activationPoints: [10, 14, 17, 18, 19, 20] }
+};
+
+const MAX_GEMS_PER_CORE = 4;
+
 // --- DOM Elements ---
+const chaosCoreColumn = document.getElementById('chaos-core-column');
+const orderCoreColumn = document.getElementById('order-core-column');
 const addGemBtn = document.getElementById('add-gem-btn');
 const calculateBtn = document.getElementById('calculate-btn');
 const orderGemList = document.getElementById('order-gem-list');
 const chaosGemList = document.getElementById('chaos-gem-list');
-const resultsDiv = document.getElementById('results');
 
 // --- State ---
 let orderGems = [];
 let chaosGems = [];
 let nextGemId = 0;
+// selectedCores will track the selections for all 6 slots.
+// Example: { 'chaos-1': 'sun', 'chaos-2': 'moon', ... }
+let selectedCores = {};
+
+// --- Main Initialization ---
+document.addEventListener('DOMContentLoaded', init);
+
+function init() {
+    // Create 3 slots for each column
+    for (let i = 1; i <= 3; i++) {
+        chaosCoreColumn.appendChild(createCoreSlot('chaos', i));
+        orderCoreColumn.appendChild(createCoreSlot('order', i));
+    }
+
+    addGemBtn.addEventListener('click', addGem);
+    calculateBtn.addEventListener('click', calculate);
+}
 
 // --- Functions ---
+
+function createCoreSlot(type, id) {
+    const slotId = `${type}-${id}`;
+    const slot = document.createElement('div');
+    slot.className = 'core-slot';
+    slot.id = `slot-${slotId}`;
+
+    // 1. Core Selection Controls
+    const controls = document.createElement('div');
+    controls.className = 'core-controls';
+
+    // Core Type Dropdown
+    const typeSelect = document.createElement('select');
+    typeSelect.id = `type-${slotId}`;
+    typeSelect.innerHTML = '<option value="none">코어 종류</option>' + ARKGRID_CORE_TYPES[type].map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+    typeSelect.addEventListener('change', () => updateCoreTypeOptions(type));
+
+    // Grade Dropdown
+    const gradeSelect = document.createElement('select');
+    gradeSelect.id = `grade-${slotId}`;
+    gradeSelect.innerHTML = Object.keys(ARKGRID_GRADE_DATA).map(key => `<option value="${key}">${ARKGRID_GRADE_DATA[key].name}</option>`).join('');
+
+    // Target Point Input
+    const targetInput = document.createElement('input');
+    targetInput.type = 'number';
+    targetInput.id = `target-${slotId}`;
+    targetInput.placeholder = '목표 P';
+
+    controls.append(typeSelect, gradeSelect, targetInput);
+
+    // 2. Gem Sockets
+    const sockets = document.createElement('div');
+    sockets.className = 'gem-sockets';
+    sockets.id = `sockets-${slotId}`;
+    for (let i = 0; i < MAX_GEMS_PER_CORE; i++) {
+        const socket = document.createElement('div');
+        socket.className = 'gem-socket';
+        sockets.appendChild(socket);
+    }
+
+    slot.append(controls, sockets);
+    return slot;
+}
+
 function addGem() {
     const type = document.getElementById('gem-type').value;
     const willpowerInput = document.getElementById('gem-willpower');
@@ -79,6 +154,90 @@ function renderGemLists() {
     chaosGems.forEach(gem => chaosGemList.appendChild(createGemElement(gem)));
 }
 
+
+function updateCoreTypeOptions(type) {
+    const selected = [];
+    for (let i = 1; i <= 3; i++) {
+        const currentVal = document.getElementById(`type-${type}-${i}`).value;
+        if (currentVal !== 'none') {
+            selected.push(currentVal);
+        }
+    }
+
+    for (let i = 1; i <= 3; i++) {
+        const dropdown = document.getElementById(`type-${type}-${i}`);
+        const currentValue = dropdown.value;
+        for (const option of dropdown.options) {
+            if (option.value !== 'none' && option.value !== currentValue) {
+                option.disabled = selected.includes(option.value);
+            }
+        }
+    }
+}
+
+function calculate() {
+    let availableOrderGems = [...orderGems];
+    let availableChaosGems = [...chaosGems];
+
+    ['chaos', 'order'].forEach(type => {
+        for (let i = 1; i <= 3; i++) {
+            const slotId = `${type}-${i}`;
+            const typeId = document.getElementById(`type-${slotId}`).value;
+            const gradeId = document.getElementById(`grade-${slotId}`).value;
+            const targetPoint = parseInt(document.getElementById(`target-${slotId}`).value, 10) || 0;
+
+            // Clear previous results
+            const socketContainer = document.getElementById(`sockets-${slotId}`);
+            socketContainer.innerHTML = ''; // Clear old gems
+             for (let j = 0; j < MAX_GEMS_PER_CORE; j++) {
+                const socket = document.createElement('div');
+                socket.className = 'gem-socket';
+                socketContainer.appendChild(socket);
+            }
+
+            if (typeId === 'none' || gradeId === 'none') continue;
+
+            const coreTypeData = ARKGRID_CORE_TYPES[type].find(t => t.id === typeId);
+            const coreGradeData = ARKGRID_GRADE_DATA[gradeId];
+
+            const core = {
+                name: `${coreTypeData.name} (${coreGradeData.name})`,
+                willpower: coreGradeData.willpower,
+            };
+
+            const availableGems = type === 'order' ? availableOrderGems : availableChaosGems;
+            const result = findBestGemCombination(core, availableGems, targetPoint);
+
+            if (result.achieved) {
+                if (type === 'order') {
+                    availableOrderGems = availableOrderGems.filter(gem => !result.gems.some(usedGem => usedGem.id === gem.id));
+                } else {
+                    availableChaosGems = availableChaosGems.filter(gem => !result.gems.some(usedGem => usedGem.id === gem.id));
+                }
+            }
+            renderResult(slotId, result);
+        }
+    });
+}
+
+function renderResult(slotId, result) {
+    const socketContainer = document.getElementById(`sockets-${slotId}`);
+
+    if (!result.achieved) {
+        const firstSocket = socketContainer.firstChild;
+        if(firstSocket) firstSocket.textContent = '실패';
+        return;
+    }
+
+    result.gems.forEach((gem, index) => {
+        if (socketContainer.children[index]) {
+            const socket = socketContainer.children[index];
+            socket.textContent = `P${gem.point}/W${gem.willpower}`;
+            // You can add more styling here, e.g., based on gem points
+        }
+    });
+}
+
 function findBestGemCombination(core, availableGems, targetPoint) {
     let bestCombination = {
         gems: [],
@@ -87,20 +246,13 @@ function findBestGemCombination(core, availableGems, targetPoint) {
         achieved: false
     };
 
-    // 의지력 소모가 적은 순, 그 다음 포인트가 높은 순으로 정렬
     const sortedGems = [...availableGems].sort((a, b) => {
-        if (a.willpower !== b.willpower) {
-            return a.willpower - b.willpower;
-        }
+        if (a.willpower !== b.willpower) return a.willpower - b.willpower;
         return b.point - a.point;
     });
 
     function find(startIndex, currentGems, currentWillpower, currentPoints) {
-        // 목표 포인트를 달성했는지 확인
         if (currentPoints >= targetPoint) {
-            // 현재 조합이 기존 최적 조합보다 더 나은지 평가
-            // 1. 의지력 소모가 더 적거나
-            // 2. 의지력 소모는 같은데 포인트가 더 높으면
             if (currentWillpower < bestCombination.willpower ||
                (currentWillpower === bestCombination.willpower && currentPoints > bestCombination.points)) {
                 bestCombination = {
@@ -112,23 +264,20 @@ function findBestGemCombination(core, availableGems, targetPoint) {
             }
         }
 
-        // 4개를 다 채웠거나 더 탐색할 젬이 없으면 종료
-        if (currentGems.length >= ARKGRID_DATA.gems.max_per_core || startIndex >= sortedGems.length) {
+        if (currentGems.length >= MAX_GEMS_PER_CORE || startIndex >= sortedGems.length) {
             return;
         }
 
-        // 나머지 젬들을 탐색
         for (let i = startIndex; i < sortedGems.length; i++) {
             const newGem = sortedGems[i];
             const newWillpower = currentWillpower + newGem.willpower;
 
             if (newWillpower <= core.willpower) {
-                // 최적화: 만약 현재 찾은 최고 조합보다 이미 의지력을 더 썼다면 더 볼 필요 없음
                 if (newWillpower >= bestCombination.willpower) continue;
 
                 currentGems.push(newGem);
                 find(i + 1, currentGems, newWillpower, currentPoints + newGem.point);
-                currentGems.pop(); // 백트래킹
+                currentGems.pop();
             }
         }
     }
@@ -136,81 +285,3 @@ function findBestGemCombination(core, availableGems, targetPoint) {
     find(0, [], 0, 0);
     return bestCombination;
 }
-
-function calculate() {
-    resultsDiv.innerHTML = '';
-    let availableOrderGems = [...orderGems];
-    let availableChaosGems = [...chaosGems];
-
-    const coreSelectors = document.querySelectorAll('.core-selector');
-
-    coreSelectors.forEach(selector => {
-        const grade = selector.value;
-        if (grade === 'none') return;
-
-        const coreId = selector.id; // e.g., "order-core-1"
-        const targetPointInput = document.getElementById(`${coreId}-target`);
-        const targetPoint = parseInt(targetPointInput.value, 10) || 0;
-
-        const coreType = selector.dataset.coreType;
-        const coreData = ARKGRID_DATA.cores[grade];
-        const core = {
-            name: `${coreType === 'order' ? '질서' : '혼돈'} 코어 ${selector.dataset.coreId} (${coreData.name})`,
-            willpower: coreData.willpower,
-            activationPoints: coreData.activationPoints,
-            targetPoint: targetPoint
-        };
-
-        const availableGems = coreType === 'order' ? availableOrderGems : availableChaosGems;
-        const result = findBestGemCombination(core, availableGems, targetPoint);
-
-        if (result.achieved) {
-            if (coreType === 'order') {
-                availableOrderGems = availableOrderGems.filter(gem => !result.gems.some(usedGem => usedGem.id === gem.id));
-            } else {
-                availableChaosGems = availableChaosGems.filter(gem => !result.gems.some(usedGem => usedGem.id === gem.id));
-            }
-        }
-
-        renderResult(core, result);
-    });
-}
-
-function renderResult(core, result) {
-    const resultEl = document.createElement('div');
-    resultEl.className = 'result-core';
-
-    let html;
-
-    if (result.achieved) {
-        let activatedOptions = core.activationPoints.filter(p => result.points >= p);
-        let activatedOptionsStr = activatedOptions.length > 0 ? ` (활성: ${activatedOptions.join(', ')})` : ' (활성 옵션 없음)';
-
-        html = `
-            <h4>${core.name} - 목표 ${core.targetPoint} 달성!</h4>
-            <p><strong>총 포인트:</strong> ${result.points}${activatedOptionsStr}</p>
-            <p><strong>소모 의지력:</strong> ${result.willpower} / ${core.willpower}</p>
-            <ul>
-        `;
-        result.gems.forEach(gem => {
-            html += `<li>의지력 ${gem.willpower}, 포인트 ${gem.point} 젬</li>`;
-        });
-        html += `</ul>`;
-    } else {
-        html = `
-            <h4>${core.name} - 목표 ${core.targetPoint} 달성 실패</h4>
-            <p>해당 목표를 달성할 수 있는 젬 조합을 찾지 못했습니다.</p>
-        `;
-    }
-
-    resultEl.innerHTML = html;
-    resultsDiv.appendChild(resultEl);
-}
-
-
-// --- Event Listeners ---
-addGemBtn.addEventListener('click', addGem);
-calculateBtn.addEventListener('click', calculate);
-
-// --- Initial Render ---
-renderGemLists();
