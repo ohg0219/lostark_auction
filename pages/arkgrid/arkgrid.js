@@ -63,30 +63,57 @@ function createCoreSlot(type, id) {
     slot.className = 'core-slot';
     slot.id = `slot-${slotId}`;
 
-    // 1. Core Selection Controls
     const controls = document.createElement('div');
     controls.className = 'core-controls';
 
-    // Core Type Dropdown
-    const typeSelect = document.createElement('select');
-    typeSelect.id = `type-${slotId}`;
-    typeSelect.innerHTML = '<option value="none">코어 종류</option>' + ARKGRID_CORE_TYPES[type].map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-    typeSelect.addEventListener('change', () => updateCoreTypeOptions(type));
+    // --- Custom Core Type Dropdown ---
+    const selectWrapper = document.createElement('div');
+    selectWrapper.className = 'custom-select-wrapper';
+    selectWrapper.id = `type-${slotId}`; // Keep id for easy access
+    selectWrapper.dataset.value = 'none'; // Store selected value
 
-    // Grade Dropdown
+    const trigger = document.createElement('div');
+    trigger.className = 'custom-select-trigger';
+    trigger.innerHTML = '<span>코어 종류</span>';
+
+    const options = document.createElement('div');
+    options.className = 'custom-options';
+
+    // Default "None" option
+    const defaultOption = document.createElement('div');
+    defaultOption.className = 'custom-option';
+    defaultOption.dataset.value = 'none';
+    defaultOption.innerHTML = '<span>코어 종류</span>';
+    defaultOption.addEventListener('click', () => selectOption(selectWrapper, 'none', '코어 종류', null, type));
+    options.appendChild(defaultOption);
+
+    // Other options
+    ARKGRID_CORE_TYPES[type].forEach(coreType => {
+        const option = document.createElement('div');
+        option.className = 'custom-option';
+        option.dataset.value = coreType.id;
+        option.innerHTML = `<img src="${coreType.icon}" alt="${coreType.name}"><span>${coreType.name}</span>`;
+        option.addEventListener('click', () => selectOption(selectWrapper, coreType.id, coreType.name, coreType.icon, type));
+        options.appendChild(option);
+    });
+
+    trigger.addEventListener('click', () => {
+        options.style.display = options.style.display === 'block' ? 'none' : 'block';
+    });
+    selectWrapper.append(trigger, options);
+
+    // --- Grade and Target ---
     const gradeSelect = document.createElement('select');
     gradeSelect.id = `grade-${slotId}`;
     gradeSelect.innerHTML = Object.keys(ARKGRID_GRADE_DATA).map(key => `<option value="${key}">${ARKGRID_GRADE_DATA[key].name}</option>`).join('');
 
-    // Target Point Input
     const targetInput = document.createElement('input');
     targetInput.type = 'number';
     targetInput.id = `target-${slotId}`;
     targetInput.placeholder = '목표 P';
 
-    controls.append(typeSelect, gradeSelect, targetInput);
+    controls.append(selectWrapper, gradeSelect, targetInput);
 
-    // 2. Gem Sockets
     const sockets = document.createElement('div');
     sockets.className = 'gem-sockets';
     sockets.id = `sockets-${slotId}`;
@@ -98,6 +125,18 @@ function createCoreSlot(type, id) {
 
     slot.append(controls, sockets);
     return slot;
+}
+
+function selectOption(wrapper, value, name, iconUrl, type) {
+    wrapper.dataset.value = value;
+    const trigger = wrapper.querySelector('.custom-select-trigger');
+    if (iconUrl) {
+        trigger.innerHTML = `<img src="${iconUrl}" alt="${name}"><span>${name}</span>`;
+    } else {
+        trigger.innerHTML = `<span>${name}</span>`;
+    }
+    wrapper.querySelector('.custom-options').style.display = 'none';
+    updateCoreTypeOptions(type);
 }
 
 function addGem() {
@@ -156,24 +195,32 @@ function renderGemLists() {
 
 
 function updateCoreTypeOptions(type) {
-    const selected = [];
+    const selectedValues = [];
     for (let i = 1; i <= 3; i++) {
-        const currentVal = document.getElementById(`type-${type}-${i}`).value;
-        if (currentVal !== 'none') {
-            selected.push(currentVal);
+        const wrapper = document.getElementById(`type-${type}-${i}`);
+        if (wrapper.dataset.value !== 'none') {
+            selectedValues.push(wrapper.dataset.value);
         }
     }
 
     for (let i = 1; i <= 3; i++) {
-        const dropdown = document.getElementById(`type-${type}-${i}`);
-        const currentValue = dropdown.value;
-        for (const option of dropdown.options) {
-            if (option.value !== 'none' && option.value !== currentValue) {
-                option.disabled = selected.includes(option.value);
+        const wrapper = document.getElementById(`type-${type}-${i}`);
+        const currentValue = wrapper.dataset.value;
+        const options = wrapper.querySelectorAll('.custom-option');
+        options.forEach(option => {
+            const optionValue = option.dataset.value;
+            if (optionValue !== 'none' && optionValue !== currentValue) {
+                if (selectedValues.includes(optionValue)) {
+                    option.classList.add('disabled');
+                } else {
+                    option.classList.remove('disabled');
+                }
             }
-        }
+        });
     }
 }
+
+
 
 function calculate() {
     let availableOrderGems = [...orderGems];
@@ -182,13 +229,15 @@ function calculate() {
     ['chaos', 'order'].forEach(type => {
         for (let i = 1; i <= 3; i++) {
             const slotId = `${type}-${i}`;
-            const typeId = document.getElementById(`type-${slotId}`).value;
+            const typeId = document.getElementById(`type-${slotId}`).dataset.value;
             const gradeId = document.getElementById(`grade-${slotId}`).value;
             const targetPoint = parseInt(document.getElementById(`target-${slotId}`).value, 10) || 0;
 
-            // Clear previous results
+            const slotElement = document.getElementById(`slot-${slotId}`);
+            slotElement.classList.remove('target-failed');
+
             const socketContainer = document.getElementById(`sockets-${slotId}`);
-            socketContainer.innerHTML = ''; // Clear old gems
+            socketContainer.innerHTML = '';
              for (let j = 0; j < MAX_GEMS_PER_CORE; j++) {
                 const socket = document.createElement('div');
                 socket.className = 'gem-socket';
@@ -208,11 +257,14 @@ function calculate() {
             const availableGems = type === 'order' ? availableOrderGems : availableChaosGems;
             const result = findBestGemCombination(core, availableGems, targetPoint);
 
-            if (result.achieved) {
+            // Only consume gems if a valid combination was found (points > -1)
+            if (result.points > -1) {
+                // Always use the gems from the result, whether target was achieved or not
+                const usedGemIds = result.gems.map(g => g.id);
                 if (type === 'order') {
-                    availableOrderGems = availableOrderGems.filter(gem => !result.gems.some(usedGem => usedGem.id === gem.id));
+                    availableOrderGems = availableOrderGems.filter(gem => !usedGemIds.includes(gem.id));
                 } else {
-                    availableChaosGems = availableChaosGems.filter(gem => !result.gems.some(usedGem => usedGem.id === gem.id));
+                    availableChaosGems = availableChaosGems.filter(gem => !usedGemIds.includes(gem.id));
                 }
             }
             renderResult(slotId, result);
@@ -224,38 +276,41 @@ function renderResult(slotId, result) {
     const socketContainer = document.getElementById(`sockets-${slotId}`);
 
     if (!result.achieved) {
-        const firstSocket = socketContainer.firstChild;
-        if(firstSocket) firstSocket.textContent = '실패';
-        return;
+        const slotElement = document.getElementById(`slot-${slotId}`);
+        slotElement.classList.add('target-failed');
     }
+
+    if (result.points <= -1) return; // No valid combination found at all
 
     result.gems.forEach((gem, index) => {
         if (socketContainer.children[index]) {
             const socket = socketContainer.children[index];
-            socket.textContent = `P${gem.point}/W${gem.willpower}`;
-            // You can add more styling here, e.g., based on gem points
+            socket.innerHTML = `의지력: ${gem.willpower}<br>포인트: ${gem.point}`;
         }
     });
 }
 
 function findBestGemCombination(core, availableGems, targetPoint) {
-    let bestCombination = {
-        gems: [],
-        points: 0,
-        willpower: Infinity, // 최소화 대상
-        achieved: false
-    };
+    let bestAchieved = { gems: [], points: 0, willpower: Infinity, achieved: false };
+    let bestOverall = { gems: [], points: -1, willpower: 0 };
 
-    const sortedGems = [...availableGems].sort((a, b) => {
-        if (a.willpower !== b.willpower) return a.willpower - b.willpower;
-        return b.point - a.point;
-    });
+    const sortedGems = [...availableGems].sort((a, b) => b.point - a.point);
 
     function find(startIndex, currentGems, currentWillpower, currentPoints) {
-        if (currentPoints >= targetPoint) {
-            if (currentWillpower < bestCombination.willpower ||
-               (currentWillpower === bestCombination.willpower && currentPoints > bestCombination.points)) {
-                bestCombination = {
+        // Update bestOverall combination (highest points)
+        if (currentPoints > bestOverall.points) {
+            bestOverall = {
+                gems: [...currentGems],
+                points: currentPoints,
+                willpower: currentWillpower
+            };
+        }
+
+        // Check for and update bestAchieved combination
+        if (targetPoint > 0 && currentPoints >= targetPoint) {
+            if (currentWillpower < bestAchieved.willpower ||
+               (currentWillpower === bestAchieved.willpower && currentPoints > bestAchieved.points)) {
+                bestAchieved = {
                     gems: [...currentGems],
                     points: currentPoints,
                     willpower: currentWillpower,
@@ -273,8 +328,6 @@ function findBestGemCombination(core, availableGems, targetPoint) {
             const newWillpower = currentWillpower + newGem.willpower;
 
             if (newWillpower <= core.willpower) {
-                if (newWillpower >= bestCombination.willpower) continue;
-
                 currentGems.push(newGem);
                 find(i + 1, currentGems, newWillpower, currentPoints + newGem.point);
                 currentGems.pop();
@@ -283,5 +336,11 @@ function findBestGemCombination(core, availableGems, targetPoint) {
     }
 
     find(0, [], 0, 0);
-    return bestCombination;
+
+    if (bestAchieved.achieved) {
+        return bestAchieved;
+    } else {
+        // Return the best combination found, marking that it didn't meet the target
+        return { ...bestOverall, achieved: false };
+    }
 }
