@@ -1,21 +1,46 @@
+/* General Body Styles */
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    background-color: #1c1c1e;
-    color: #f2f2f7;
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: #121212;
+    color: #E0E0E0;
     margin: 0;
     padding: 24px;
 }
+
 main {
     max-width: 1200px;
     margin: auto;
 }
+
+/* Hero Section on Index */
+.hero {
+    text-align: center;
+    padding: 48px 24px;
+}
+
+.hero h1 {
+    font-size: 2.5rem;
+    color: #FFFFFF;
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+.hero p.description {
+    font-size: 1.2rem;
+    color: #888888;
+    margin-bottom: 48px;
+}
+
+/* General Headers */
 h1 {
     text-align: center;
-    color: #0a84ff;
+    color: #C89B3C;
+    font-weight: 500;
 }
+
 p.description {
     text-align: center;
-    color: #8e8e93;
+    color: #888888;
     margin-bottom: 32px;
 }
 
@@ -33,17 +58,18 @@ p.description {
     gap: 8px;
     padding: 12px 16px;
     border-radius: 8px;
-    border: 1px solid #3a3a3c;
-    background-color: #2c2c2e;
-    color: #f2f2f7;
+    border: 1px solid #333333;
+    background-color: #1E1E1E;
+    color: #E0E0E0;
     font-size: 1rem;
     text-decoration: none;
-    transition: background-color 0.2s, transform 0.2s;
+    transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
 .nav-button:hover {
-    background-color: #3a3a3c;
+    background-color: #2a2a2a;
     transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
 .nav-button img {
@@ -62,23 +88,23 @@ p.description {
 .filters button {
     padding: 8px 12px;
     border-radius: 8px;
-    border: 1px solid #3a3a3c;
-    background-color: #2c2c2e;
-    color: #f2f2f7;
+    border: 1px solid #333333;
+    background-color: #1E1E1E;
+    color: #E0E0E0;
     font-size: 1rem;
     cursor: pointer;
     transition: background-color 0.2s;
 }
 
 .filters button:hover {
-    background-color: #3a3a3c;
+    background-color: #2a2a2a;
 }
 
 #status {
     text-align: center;
     font-size: 1.2rem;
     padding: 40px;
-    color: #8e8e93;
+    color: #888888;
 }
 
 #grid-container {
@@ -95,15 +121,17 @@ p.description {
 }
 
 .item-card {
-    background-color: #2c2c2e;
+    background-color: #1E1E1E;
     border-radius: 12px;
     padding: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border: 1px solid #333333;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, border-color 0.2s;
 }
 .item-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0,132,255,0.3);
+    border-color: #C89B3C;
+    box-shadow: 0 6px 16px rgba(200,155,60,0.1);
 }
 .card-top-row {
     display: flex;
@@ -121,7 +149,7 @@ p.description {
     width: 48px;
     height: 48px;
     border-radius: 8px;
-    background-color: #3a3a3c;
+    background-color: #333333;
     flex-shrink: 0;
 }
 .item-details {
@@ -131,15 +159,16 @@ p.description {
     overflow: hidden;
 }
 .item-name {
-    font-weight: 600;
+    font-weight: 500;
     font-size: 0.9rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    color: #FFFFFF;
 }
 .item-grade {
     font-size: 0.75rem;
-    color: #8e8e93;
+    color: #888888;
 }
 .price-container {
     display: flex;
@@ -149,7 +178,7 @@ p.description {
 .item-price {
     font-size: 1rem;
     font-weight: bold;
-    color: #ff9f0a;
+    color: #C89B3C;
     white-space: nowrap;
 }
 .item-price::before {
@@ -160,14 +189,14 @@ p.description {
     margin-top: 4px;
 }
 .price-change.up {
-    color: #ff4d4f; /* A nice red */
+    color: #ff4d4f;
 }
 .price-change.down {
-    color: #4d94ff; /* A nice blue */
+    color: #4d94ff;
 }
 .last-updated {
     font-size: 0.75rem;
-    color: #636366;
+    color: #666666;
     text-align: right;
 }
 
@@ -176,8 +205,9 @@ p.description {
     max-width: 500px;
     margin: 32px auto;
     padding: 24px;
-    background-color: #2c2c2e;
+    background-color: #1E1E1E;
     border-radius: 12px;
+    border: 1px solid #333333;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
@@ -187,16 +217,16 @@ p.description {
 
 .input-group label {
     display: block;
-    color: #8e8e93;
+    color: #888888;
 }
 
 .input-group input[type="number"] {
     width: 100%;
     padding: 12px;
     border-radius: 8px;
-    border: 1px solid #3a3a3c;
-    background-color: #1c1c1e;
-    color: #f2f2f7;
+    border: 1px solid #333333;
+    background-color: #121212;
+    color: #E0E0E0;
     font-size: 1rem;
     box-sizing: border-box; /* Fix overflow issue */
     transition: border-color 0.2s, box-shadow 0.2s;
@@ -204,18 +234,18 @@ p.description {
 
 .input-group input[type="number"]:focus {
     outline: none;
-    border-color: #0a84ff;
-    box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.25);
+    border-color: #C89B3C;
+    box-shadow: 0 0 0 3px rgba(200, 155, 60, 0.2);
 }
 
 .radio-group {
     width: 100%;
     display: flex;
     gap: 4px;
-    border: 1px solid #3a3a3c;
+    border: 1px solid #333333;
     border-radius: 8px;
     padding: 4px;
-    background-color: #1c1c1e;
+    background-color: #121212;
 }
 
 .radio-group input[type="radio"] {
@@ -229,20 +259,20 @@ p.description {
     border-radius: 6px;
     cursor: pointer;
     transition: background-color 0.2s, color 0.2s;
-    color: #8e8e93;
+    color: #888888;
     display: block; /* Ensure label takes full space */
 }
 
 /* Style for the selected button */
 .radio-group input[type="radio"]:checked + label {
-    background-color: #3a3a3c;
-    color: #f2f2f7;
-    font-weight: 600;
+    background-color: #333333;
+    color: #E0E0E0;
+    font-weight: 500;
 }
 
 /* Hover effect for non-selected buttons */
 .radio-group input[type="radio"]:not(:checked) + label:hover {
-    background-color: #2c2c2e;
+    background-color: #2a2a2a;
 }
 
 #calculate-btn {
@@ -250,8 +280,8 @@ p.description {
     padding: 12px;
     border-radius: 8px;
     border: none;
-    background-color: #0a84ff;
-    color: white;
+    background-color: #C89B3C;
+    color: #121212;
     font-size: 1.1rem;
     font-weight: 600;
     cursor: pointer;
@@ -259,7 +289,7 @@ p.description {
 }
 
 #calculate-btn:hover {
-    background-color: #007aff;
+    background-color: #b58a35;
 }
 
 .result-container {
@@ -274,17 +304,18 @@ p.description {
 #result-table th, #result-table td {
     padding: 12px;
     text-align: left;
-    border-bottom: 1px solid #3a3a3c;
+    border-bottom: 1px solid #333333;
 }
 
 #result-table th {
-    background-color: #3a3a3c;
-    color: #f2f2f7;
+    background-color: #2a2a2a;
+    color: #FFFFFF;
+    font-weight: 500;
 }
 
 #result-table td:nth-child(2) {
     font-weight: bold;
-    color: #ff9f0a;
+    color: #C89B3C;
     text-align: right;
 }
 
@@ -306,8 +337,8 @@ p.description {
     bottom: 30px;
     left: 50%;
     transform: translateX(-50%);
-    background-color: #0a84ff;
-    color: white;
+    background-color: #C89B3C;
+    color: #121212;
     padding: 12px 24px;
     border-radius: 24px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -327,17 +358,19 @@ p.description {
 
 /* Detail Page Specific Styles */
 .item-card-detail {
-    background-color: #2c2c2e;
+    background-color: #1E1E1E;
     border-radius: 12px;
     padding: 16px;
     margin-bottom: 24px;
+    border: 1px solid #333333;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
 .chart-container {
-    background-color: #2c2c2e;
+    background-color: #1E1E1E;
     border-radius: 12px;
     padding: 16px;
+    border: 1px solid #333333;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     height: 400px; /* Give the chart a fixed height */
     max-height: 60vh; /* Ensure it doesn't take up too much vertical space */
@@ -353,9 +386,9 @@ p.description {
     flex-grow: 1;
     padding: 12px;
     border-radius: 8px;
-    border: 1px solid #3a3a3c;
-    background-color: #1c1c1e;
-    color: #f2f2f7;
+    border: 1px solid #333333;
+    background-color: #121212;
+    color: #E0E0E0;
     font-size: 1rem;
     box-sizing: border-box;
     transition: border-color 0.2s, box-shadow 0.2s;
@@ -363,16 +396,16 @@ p.description {
 
 .input-group input[type="text"]:focus {
     outline: none;
-    border-color: #0a84ff;
-    box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.25);
+    border-color: #C89B3C;
+    box-shadow: 0 0 0 3px rgba(200, 155, 60, 0.2);
 }
 
 #search-button {
     padding: 12px 20px;
     border-radius: 8px;
     border: none;
-    background-color: #0a84ff;
-    color: white;
+    background-color: #C89B3C;
+    color: #121212;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
@@ -381,14 +414,14 @@ p.description {
 }
 
 #search-button:hover {
-    background-color: #007aff;
+    background-color: #b58a35;
 }
 
 .server-title {
     text-align: center;
-    color: #8e8e93;
+    color: #888888;
     font-size: 1.2rem;
     margin-bottom: 16px;
-    border-bottom: 1px solid #3a3a3c;
+    border-bottom: 1px solid #333333;
     padding-bottom: 16px;
 }

@@ -23,15 +23,15 @@ const gradeColors = {
 
 // Corrected and simplified category map
 const categoryMap = {
-    "40000": "engraving.html",
-    "refining": "honing.html",
-    "210000": "jewels.html",
-    "230000": "gems.html"
+    "40000": "/pages/engraving/engraving.html",
+    "refining": "/pages/honing/honing.html",
+    "210000": "/pages/jewels/jewels.html",
+    "230000": "/gems/gems.html"
 };
 
 function getCategoryPage(categoryCode) {
-    if (!categoryCode) return "index.html";
-    return categoryMap[categoryCode] || "index.html";
+    if (!categoryCode) return "/index.html";
+    return categoryMap[categoryCode] || "/index.html";
 }
 
 async function loadItemDetails() {
