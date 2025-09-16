@@ -4,14 +4,14 @@ console.log("arkgrid.js loaded");
 
 const ARKGRID_CORE_TYPES = {
     order: [
-        { id: 'sun', name: '해', icon: 'https://ohg0219.github.io/lostark_auction/image/질서_해.png' },
-        { id: 'moon', name: '달', icon: 'https://ohg0219.github.io/lostark_auction/image/질서_달.png' },
-        { id: 'star', name: '별', icon: 'https://ohg0219.github.io/lostark_auction/image/질서_별.png' }
+        { id: 'sun', name: '해', icon: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_96.png' },
+        { id: 'moon', name: '달', icon: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_97.png' },
+        { id: 'star', name: '별', icon: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_98.png' }
     ],
     chaos: [
-        { id: 'sun', name: '해', icon: 'https://ohg0219.github.io/lostark_auction/image/혼돈_해.png' },
-        { id: 'moon', name: '달', icon: 'https://ohg0219.github.io/lostark_auction/image/혼돈_달.png' },
-        { id: 'star', name: '별', icon: 'https://ohg0219.github.io/lostark_auction/image/혼돈_별.png' }
+        { id: 'sun', name: '해', icon: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_99.png' },
+        { id: 'moon', name: '달', icon: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_100.png' },
+        { id: 'star', name: '별', icon: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_101.png' }
     ]
 };
 
@@ -55,9 +55,17 @@ document.addEventListener('DOMContentLoaded', init);
 function init() {
     // Create 3 slots for each column
     for (let i = 1; i <= 3; i++) {
-        chaosCoreColumn.appendChild(createCoreSlot('chaos', i));
         orderCoreColumn.appendChild(createCoreSlot('order', i));
+        chaosCoreColumn.appendChild(createCoreSlot('chaos', i));
     }
+
+    // Create gem input dropdowns
+    const gemInputForm = document.getElementById('gem-input-form');
+    const gemTypeDropdown = createCustomDropdown('gem-type', '젬 종류', [{id: 'order', name: '질서'}, {id: 'chaos', name: '혼돈'}], (w, s) => { w.dataset.value = s.value; w.querySelector('.custom-select-trigger').innerHTML = `<span>${s.text}</span>`; w.querySelector('.custom-options').style.display = 'none'; });
+    const willpowerDropdown = createCustomDropdown('gem-willpower', '의지력', [{id: 3, name: 3}, {id: 4, name: 4}, {id: 5, name: 5}], (w, s) => { w.dataset.value = s.value; w.querySelector('.custom-select-trigger').innerHTML = `<span>${s.text}</span>`; w.querySelector('.custom-options').style.display = 'none'; });
+    const pointDropdown = createCustomDropdown('gem-point', '포인트', [{id: 1, name: 1}, {id: 2, name: 2}, {id: 3, name: 3}, {id: 4, name: 4}, {id: 5, name: 5}], (w, s) => { w.dataset.value = s.value; w.querySelector('.custom-select-trigger').innerHTML = `<span>${s.text}</span>`; w.querySelector('.custom-options').style.display = 'none'; });
+
+    gemInputForm.prepend(gemTypeDropdown, willpowerDropdown, pointDropdown);
 
     addGemBtn.addEventListener('click', addGem);
     calculateBtn.addEventListener('click', calculate);
@@ -103,6 +111,7 @@ function createCustomDropdown(id, defaultText, items, onSelect) {
     });
 
     trigger.addEventListener('click', () => {
+        if (wrapper.classList.contains('disabled')) return;
         // Close other dropdowns
         document.querySelectorAll('.custom-options').forEach(opt => {
             if (opt !== options) opt.style.display = 'none';
@@ -112,6 +121,17 @@ function createCustomDropdown(id, defaultText, items, onSelect) {
 
     wrapper.append(trigger, options);
     return wrapper;
+}
+
+function clearSlotResults(slotId) {
+    const socketContainer = document.getElementById(`sockets-${slotId}`);
+    socketContainer.innerHTML = '';
+    for (let j = 0; j < MAX_GEMS_PER_CORE; j++) {
+        const socket = document.createElement('div');
+        socket.className = 'gem-socket';
+        socketContainer.appendChild(socket);
+    }
+    document.getElementById(`summary-${slotId}`).innerHTML = '';
 }
 
 function createCoreSlot(type, id) {
@@ -143,7 +163,13 @@ function createCoreSlot(type, id) {
         const activationPoints = ARKGRID_GRADE_DATA[gSelected.value]?.activationPoints || [];
 
         document.getElementById(`info-${slotId}`).textContent = willpower > 0 ? `공급 의지력: ${willpower}` : '';
-        slot.style.borderColor = GRADE_COLORS[gSelected.value] || '#4a4a7e';
+
+        if (gSelected.value !== 'none') {
+            slot.style.borderColor = GRADE_COLORS[gSelected.value];
+        } else {
+            slot.style.borderColor = '#4a4a7e';
+            clearSlotResults(slotId); // Clear results when grade is reset
+        }
 
         const targetOptions = activationPoints.map(p => ({ id: p, name: p }));
 
@@ -177,6 +203,7 @@ function createCoreSlot(type, id) {
             gradeSelectWrapper.classList.add('disabled');
             gradeSelectWrapper.dataset.value = 'none';
             gradeSelectWrapper.querySelector('.custom-select-trigger').innerHTML = `<span>등급</span>`;
+            clearSlotResults(slotId); // Clear results when core type is reset
         } else {
             gradeSelectWrapper.classList.remove('disabled');
         }
@@ -209,12 +236,17 @@ function createCoreSlot(type, id) {
 }
 
 function addGem() {
-    const type = document.getElementById('gem-type').value;
-    const willpowerInput = document.getElementById('gem-willpower');
-    const pointInput = document.getElementById('gem-point');
+    const type = document.getElementById('gem-type').dataset.value;
+    const willpowerStr = document.getElementById('gem-willpower').dataset.value;
+    const pointStr = document.getElementById('gem-point').dataset.value;
 
-    const willpower = parseInt(willpowerInput.value, 10);
-    const point = parseInt(pointInput.value, 10);
+    if (type === 'none' || willpowerStr === 'none' || pointStr === 'none') {
+        alert('젬 종류, 의지력, 포인트를 모두 선택하세요.');
+        return;
+    }
+
+    const willpower = parseInt(willpowerStr, 10);
+    const point = parseInt(pointStr, 10);
 
     if (isNaN(willpower) || isNaN(point) || willpower < 3 || willpower > 5 || point < 1 || point > 5) {
         alert('유효한 젬 정보를 입력하세요. (의지력: 3-5, 포인트: 1-5)');
@@ -229,8 +261,6 @@ function addGem() {
         chaosGems.push(gem);
     }
 
-    willpowerInput.value = '';
-    pointInput.value = '';
     renderGemLists();
 }
 
@@ -240,8 +270,8 @@ function renderGemLists() {
 
     const createGemElement = (gem) => {
         const gemEl = document.createElement('div');
-        gemEl.className = 'gem-item';
-        gemEl.textContent = `의지력: ${gem.willpower}, 포인트: ${gem.point} `;
+        gemEl.className = `gem-item ${gem.type}`;
+        gemEl.textContent = `의지력: ${gem.willpower}, P: ${gem.point}`;
 
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = '삭제';
