@@ -106,23 +106,40 @@ function createCoreSlot(type, id) {
     const gradeSelect = document.createElement('select');
     gradeSelect.id = `grade-${slotId}`;
     gradeSelect.innerHTML = Object.keys(ARKGRID_GRADE_DATA).map(key => `<option value="${key}">${ARKGRID_GRADE_DATA[key].name}</option>`).join('');
+    gradeSelect.disabled = true;
+
+    const targetSelect = document.createElement('select');
+    targetSelect.id = `target-${slotId}`;
+    targetSelect.innerHTML = `<option value="0">목표 포인트</option>`;
+    targetSelect.disabled = true;
+
     gradeSelect.addEventListener('change', () => {
         const selectedGrade = gradeSelect.value;
         const willpower = ARKGRID_GRADE_DATA[selectedGrade]?.willpower || 0;
+        const activationPoints = ARKGRID_GRADE_DATA[selectedGrade]?.activationPoints || [];
         const infoEl = document.getElementById(`info-${slotId}`);
+        const targetSelect = document.getElementById(`target-${slotId}`);
+
+        // Update willpower display
         if (willpower > 0) {
             infoEl.textContent = `공급 의지력: ${willpower}`;
         } else {
             infoEl.textContent = '';
         }
+
+        // Update and manage target select dropdown
+        targetSelect.innerHTML = `<option value="0">목표 포인트</option>`; // Reset
+        if (selectedGrade !== 'none' && activationPoints.length > 0) {
+            targetSelect.disabled = false;
+            activationPoints.forEach(p => {
+                targetSelect.innerHTML += `<option value="${p}">${p}</option>`;
+            });
+        } else {
+            targetSelect.disabled = true;
+        }
     });
 
-    const targetInput = document.createElement('input');
-    targetInput.type = 'number';
-    targetInput.id = `target-${slotId}`;
-    targetInput.placeholder = '목표 P';
-
-    controls.append(selectWrapper, gradeSelect, targetInput);
+    controls.append(selectWrapper, gradeSelect, targetSelect);
 
     // Info display for willpower
     const infoDisplay = document.createElement('div');
@@ -156,6 +173,22 @@ function selectOption(wrapper, value, name, iconUrl, type) {
     }
     wrapper.querySelector('.custom-options').style.display = 'none';
     updateCoreTypeOptions(type);
+
+    // --- Cascading Logic ---
+    const slotId = wrapper.id.substring(5); // "type-chaos-1" -> "chaos-1"
+    const gradeSelect = document.getElementById(`grade-${slotId}`);
+    const targetSelect = document.getElementById(`target-${slotId}`);
+
+    if (value === 'none') {
+        gradeSelect.disabled = true;
+        gradeSelect.selectedIndex = 0;
+        targetSelect.disabled = true;
+        targetSelect.innerHTML = `<option value="0">목표 포인트</option>`;
+    } else {
+        gradeSelect.disabled = false;
+    }
+    // Trigger change on grade to reset target
+    gradeSelect.dispatchEvent(new Event('change'));
 }
 
 function addGem() {
