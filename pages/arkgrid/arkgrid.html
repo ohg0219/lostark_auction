@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>아크그리드 최적화 계산기</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <style>
+        /* Basic styling for the calculator layout */
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .section {
+            border: 1px solid #ccc;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .core-inputs, .gem-inputs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .core-input, .gem-input-form {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .gem-lists {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+        }
+        .gem-list {
+            min-width: 200px;
+            border: 1px solid #eee;
+            padding: 10px;
+        }
+        #calculate-btn {
+            padding: 10px 20px;
+            font-size: 1.2em;
+            cursor: pointer;
+        }
+        .result-core {
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>아크그리드 최적화 계산기</h1>
+        <a href="../../index.html" class="nav-button">메인으로 돌아가기</a>
+
+        <div class="container">
+            <!-- 1. Core Selection -->
+            <div class="section" id="core-selection">
+                <h2>1. 코어 정보 입력</h2>
+                <div class="core-inputs">
+                    <div id="order-cores">
+                        <h3>질서 코어</h3>
+                        <div class="core-input-group">
+                            <label for="order-core-1">코어 1 등급:</label>
+                            <select id="order-core-1" class="core-selector" data-core-type="order">
+                                <option value="none">선택 안함</option>
+                                <option value="heroic">영웅</option>
+                                <option value="legendary">전설</option>
+                                <option value="relic">유물</option>
+                                <option value="ancient">고대</option>
+                            </select>
+                        </div>
+                        <div class="core-input-group">
+                            <label for="order-core-2">코어 2 등급:</label>
+                            <select id="order-core-2" class="core-selector" data-core-type="order">
+                                <option value="none">선택 안함</option>
+                                <option value="heroic">영웅</option>
+                                <option value="legendary">전설</option>
+                                <option value="relic">유물</option>
+                                <option value="ancient">고대</option>
+                            </select>
+                        </div>
+                        <div class="core-input-group">
+                            <label for="order-core-3">코어 3 등급:</label>
+                            <select id="order-core-3" class="core-selector" data-core-type="order">
+                                <option value="none">선택 안함</option>
+                                <option value="heroic">영웅</option>
+                                <option value="legendary">전설</option>
+                                <option value="relic">유물</option>
+                                <option value="ancient">고대</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="chaos-cores">
+                        <h3>혼돈 코어</h3>
+                        <div class="core-input-group">
+                            <label for="chaos-core-1">코어 1 등급:</label>
+                            <select id="chaos-core-1" class="core-selector" data-core-type="chaos">
+                                <option value="none">선택 안함</option>
+                                <option value="heroic">영웅</option>
+                                <option value="legendary">전설</option>
+                                <option value="relic">유물</option>
+                                <option value="ancient">고대</option>
+                            </select>
+                        </div>
+                        <div class="core-input-group">
+                            <label for="chaos-core-2">코어 2 등급:</label>
+                            <select id="chaos-core-2" class="core-selector" data-core-type="chaos">
+                                <option value="none">선택 안함</option>
+                                <option value="heroic">영웅</option>
+                                <option value="legendary">전설</option>
+                                <option value="relic">유물</option>
+                                <option value="ancient">고대</option>
+                            </select>
+                        </div>
+                        <div class="core-input-group">
+                            <label for="chaos-core-3">코어 3 등급:</label>
+                            <select id="chaos-core-3" class="core-selector" data-core-type="chaos">
+                                <option value="none">선택 안함</option>
+                                <option value="heroic">영웅</option>
+                                <option value="legendary">전설</option>
+                                <option value="relic">유물</option>
+                                <option value="ancient">고대</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Gem Management -->
+            <div class="section" id="gem-management">
+                <h2>2. 보유 젬 입력</h2>
+                <div class="gem-input-form">
+                    <select id="gem-type">
+                        <option value="order">질서</option>
+                        <option value="chaos">혼돈</option>
+                    </select>
+                    <input type="number" id="gem-willpower" placeholder="의지력 소모 (3-5)" min="3" max="5">
+                    <input type="number" id="gem-point" placeholder="공급 포인트 (1-5)" min="1" max="5">
+                    <button id="add-gem-btn">젬 추가</button>
+                </div>
+                <div class="gem-lists">
+                    <div id="order-gem-list-container">
+                        <h4>질서의 젬 목록</h4>
+                        <div class="gem-list" id="order-gem-list"></div>
+                    </div>
+                    <div id="chaos-gem-list-container">
+                        <h4>혼돈의 젬 목록</h4>
+                        <div class="gem-list" id="chaos-gem-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Calculation and Results -->
+            <button id="calculate-btn">최적 조합 계산</button>
+            <div class="section" id="results">
+                <h2>3. 계산 결과</h2>
+                <!-- Results will be rendered here -->
+            </div>
+        </div>
+    </main>
+    <script type="module" src="./arkgrid.js"></script>
+</body>
+</html>
