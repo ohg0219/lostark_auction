@@ -111,6 +111,7 @@ function createCustomDropdown(id, defaultText, items, onSelect) {
     });
 
     trigger.addEventListener('click', () => {
+        if (wrapper.classList.contains('disabled')) return;
         // Close other dropdowns
         document.querySelectorAll('.custom-options').forEach(opt => {
             if (opt !== options) opt.style.display = 'none';
@@ -120,6 +121,17 @@ function createCustomDropdown(id, defaultText, items, onSelect) {
 
     wrapper.append(trigger, options);
     return wrapper;
+}
+
+function clearSlotResults(slotId) {
+    const socketContainer = document.getElementById(`sockets-${slotId}`);
+    socketContainer.innerHTML = '';
+    for (let j = 0; j < MAX_GEMS_PER_CORE; j++) {
+        const socket = document.createElement('div');
+        socket.className = 'gem-socket';
+        socketContainer.appendChild(socket);
+    }
+    document.getElementById(`summary-${slotId}`).innerHTML = '';
 }
 
 function createCoreSlot(type, id) {
@@ -151,7 +163,13 @@ function createCoreSlot(type, id) {
         const activationPoints = ARKGRID_GRADE_DATA[gSelected.value]?.activationPoints || [];
 
         document.getElementById(`info-${slotId}`).textContent = willpower > 0 ? `공급 의지력: ${willpower}` : '';
-        slot.style.borderColor = GRADE_COLORS[gSelected.value] || '#4a4a7e';
+
+        if (gSelected.value !== 'none') {
+            slot.style.borderColor = GRADE_COLORS[gSelected.value];
+        } else {
+            slot.style.borderColor = '#4a4a7e';
+            clearSlotResults(slotId); // Clear results when grade is reset
+        }
 
         const targetOptions = activationPoints.map(p => ({ id: p, name: p }));
 
@@ -185,6 +203,7 @@ function createCoreSlot(type, id) {
             gradeSelectWrapper.classList.add('disabled');
             gradeSelectWrapper.dataset.value = 'none';
             gradeSelectWrapper.querySelector('.custom-select-trigger').innerHTML = `<span>등급</span>`;
+            clearSlotResults(slotId); // Clear results when core type is reset
         } else {
             gradeSelectWrapper.classList.remove('disabled');
         }
