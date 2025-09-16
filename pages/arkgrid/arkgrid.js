@@ -106,6 +106,16 @@ function createCoreSlot(type, id) {
     const gradeSelect = document.createElement('select');
     gradeSelect.id = `grade-${slotId}`;
     gradeSelect.innerHTML = Object.keys(ARKGRID_GRADE_DATA).map(key => `<option value="${key}">${ARKGRID_GRADE_DATA[key].name}</option>`).join('');
+    gradeSelect.addEventListener('change', () => {
+        const selectedGrade = gradeSelect.value;
+        const willpower = ARKGRID_GRADE_DATA[selectedGrade]?.willpower || 0;
+        const infoEl = document.getElementById(`info-${slotId}`);
+        if (willpower > 0) {
+            infoEl.textContent = `공급 의지력: ${willpower}`;
+        } else {
+            infoEl.textContent = '';
+        }
+    });
 
     const targetInput = document.createElement('input');
     targetInput.type = 'number';
@@ -113,6 +123,11 @@ function createCoreSlot(type, id) {
     targetInput.placeholder = '목표 P';
 
     controls.append(selectWrapper, gradeSelect, targetInput);
+
+    // Info display for willpower
+    const infoDisplay = document.createElement('div');
+    infoDisplay.className = 'core-info';
+    infoDisplay.id = `info-${slotId}`;
 
     const sockets = document.createElement('div');
     sockets.className = 'gem-sockets';
@@ -123,7 +138,11 @@ function createCoreSlot(type, id) {
         sockets.appendChild(socket);
     }
 
-    slot.append(controls, sockets);
+    const summaryDisplay = document.createElement('div');
+    summaryDisplay.className = 'result-summary';
+    summaryDisplay.id = `summary-${slotId}`;
+
+    slot.append(controls, infoDisplay, sockets, summaryDisplay);
     return slot;
 }
 
@@ -257,9 +276,7 @@ function calculate() {
             const availableGems = type === 'order' ? availableOrderGems : availableChaosGems;
             const result = findBestGemCombination(core, availableGems, targetPoint);
 
-            // Only consume gems if a valid combination was found (points > -1)
             if (result.points > -1) {
-                // Always use the gems from the result, whether target was achieved or not
                 const usedGemIds = result.gems.map(g => g.id);
                 if (type === 'order') {
                     availableOrderGems = availableOrderGems.filter(gem => !usedGemIds.includes(gem.id));
@@ -267,20 +284,24 @@ function calculate() {
                     availableChaosGems = availableChaosGems.filter(gem => !usedGemIds.includes(gem.id));
                 }
             }
-            renderResult(slotId, result);
+            renderResult(slotId, core, result);
         }
     });
 }
 
-function renderResult(slotId, result) {
+function renderResult(slotId, core, result) {
     const socketContainer = document.getElementById(`sockets-${slotId}`);
+    const summaryEl = document.getElementById(`summary-${slotId}`);
 
     if (!result.achieved) {
         const slotElement = document.getElementById(`slot-${slotId}`);
         slotElement.classList.add('target-failed');
     }
 
-    if (result.points <= -1) return; // No valid combination found at all
+    if (result.points <= -1) {
+        summaryEl.textContent = '';
+        return;
+    }
 
     result.gems.forEach((gem, index) => {
         if (socketContainer.children[index]) {
@@ -288,6 +309,8 @@ function renderResult(slotId, result) {
             socket.innerHTML = `의지력: ${gem.willpower}<br>포인트: ${gem.point}`;
         }
     });
+
+    summaryEl.innerHTML = `의지력: ${result.willpower} / ${core.willpower}<br>포인트: ${result.points}`;
 }
 
 function findBestGemCombination(core, availableGems, targetPoint) {

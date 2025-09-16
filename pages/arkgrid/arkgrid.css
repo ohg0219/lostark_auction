@@ -44,6 +44,15 @@ h1, h2, h3 {
     margin-bottom: 10px;
 }
 
+.core-info, .result-summary {
+    font-size: 14px;
+    margin: 10px 0;
+    padding: 5px;
+    background-color: #2a2a4e;
+    border-radius: 4px;
+    min-height: 20px;
+}
+
 /* Custom Dropdown */
 .custom-select-wrapper {
     position: relative;
