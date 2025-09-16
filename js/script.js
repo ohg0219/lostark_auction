@@ -52,7 +52,7 @@ if (gridContainer) {
 
             const link = document.createElement('a');
             link.className = 'item-link';
-            link.href = `/pages/detail/detail.html?itemId=${item.item_id}&category=${pageCategory}`;
+            link.href = `pages/detail/detail.html?itemId=${item.item_id}&category=${pageCategory}`;
 
             const card = document.createElement('div');
             card.className = 'item-card';
