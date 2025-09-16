@@ -23,6 +23,14 @@ const ARKGRID_GRADE_DATA = {
     ancient: { name: '고대', willpower: 17, activationPoints: [10, 14, 17, 18, 19, 20] }
 };
 
+const GRADE_COLORS = {
+    "none": "#a5a5a5",
+    "heroic": "#ba00f9",
+    "legendary": "#f99200",
+    "relic": "#fa5d00",
+    "ancient": "#B3956C",
+};
+
 const MAX_GEMS_PER_CORE = 4;
 
 // --- DOM Elements ---
@@ -57,6 +65,55 @@ function init() {
 
 // --- Functions ---
 
+function createCustomDropdown(id, defaultText, items, onSelect) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'custom-select-wrapper';
+    wrapper.id = id;
+    wrapper.dataset.value = 'none';
+
+    const trigger = document.createElement('div');
+    trigger.className = 'custom-select-trigger';
+    trigger.innerHTML = `<span>${defaultText}</span>`;
+
+    const options = document.createElement('div');
+    options.className = 'custom-options';
+
+    // Default option
+    const defaultOption = document.createElement('div');
+    defaultOption.className = 'custom-option';
+    defaultOption.dataset.value = 'none';
+    defaultOption.innerHTML = `<span>${defaultText}</span>`;
+    defaultOption.addEventListener('click', () => {
+        onSelect(wrapper, { value: 'none', text: defaultText, icon: null });
+    });
+    options.appendChild(defaultOption);
+
+    // Other options
+    items.forEach(item => {
+        const option = document.createElement('div');
+        option.className = 'custom-option';
+        option.dataset.value = item.id;
+        option.innerHTML = item.icon ? `<img src="${item.icon}" alt="${item.name}"><span>${item.name}</span>` : `<span>${item.name}</span>`;
+        option.addEventListener('click', () => {
+             if (!option.classList.contains('disabled')) {
+                onSelect(wrapper, { value: item.id, text: item.name, icon: item.icon });
+            }
+        });
+        options.appendChild(option);
+    });
+
+    trigger.addEventListener('click', () => {
+        // Close other dropdowns
+        document.querySelectorAll('.custom-options').forEach(opt => {
+            if (opt !== options) opt.style.display = 'none';
+        });
+        options.style.display = options.style.display === 'block' ? 'none' : 'block';
+    });
+
+    wrapper.append(trigger, options);
+    return wrapper;
+}
+
 function createCoreSlot(type, id) {
     const slotId = `${type}-${id}`;
     const slot = document.createElement('div');
@@ -66,82 +123,70 @@ function createCoreSlot(type, id) {
     const controls = document.createElement('div');
     controls.className = 'core-controls';
 
-    // --- Custom Core Type Dropdown ---
-    const selectWrapper = document.createElement('div');
-    selectWrapper.className = 'custom-select-wrapper';
-    selectWrapper.id = `type-${slotId}`; // Keep id for easy access
-    selectWrapper.dataset.value = 'none'; // Store selected value
+    const gradeDataForDropdown = Object.keys(ARKGRID_GRADE_DATA).map(key => ({ id: key, name: ARKGRID_GRADE_DATA[key].name }));
 
-    const trigger = document.createElement('div');
-    trigger.className = 'custom-select-trigger';
-    trigger.innerHTML = '<span>코어 종류</span>';
-
-    const options = document.createElement('div');
-    options.className = 'custom-options';
-
-    // Default "None" option
-    const defaultOption = document.createElement('div');
-    defaultOption.className = 'custom-option';
-    defaultOption.dataset.value = 'none';
-    defaultOption.innerHTML = '<span>코어 종류</span>';
-    defaultOption.addEventListener('click', () => selectOption(selectWrapper, 'none', '코어 종류', null, type));
-    options.appendChild(defaultOption);
-
-    // Other options
-    ARKGRID_CORE_TYPES[type].forEach(coreType => {
-        const option = document.createElement('div');
-        option.className = 'custom-option';
-        option.dataset.value = coreType.id;
-        option.innerHTML = `<img src="${coreType.icon}" alt="${coreType.name}"><span>${coreType.name}</span>`;
-        option.addEventListener('click', () => selectOption(selectWrapper, coreType.id, coreType.name, coreType.icon, type));
-        options.appendChild(option);
+    // --- Create all 3 dropdowns ---
+    const targetSelectWrapper = createCustomDropdown(`target-${slotId}`, '목표 포인트', [], (tWrapper, tSelected) => {
+        tWrapper.dataset.value = tSelected.value;
+        tWrapper.querySelector('.custom-select-trigger').innerHTML = `<span>${tSelected.text}</span>`;
+        tWrapper.querySelector('.custom-options').style.display = 'none';
     });
+    targetSelectWrapper.classList.add('disabled');
 
-    trigger.addEventListener('click', () => {
-        options.style.display = options.style.display === 'block' ? 'none' : 'block';
-    });
-    selectWrapper.append(trigger, options);
 
-    // --- Grade and Target ---
-    const gradeSelect = document.createElement('select');
-    gradeSelect.id = `grade-${slotId}`;
-    gradeSelect.innerHTML = Object.keys(ARKGRID_GRADE_DATA).map(key => `<option value="${key}">${ARKGRID_GRADE_DATA[key].name}</option>`).join('');
-    gradeSelect.disabled = true;
+    const gradeSelectWrapper = createCustomDropdown(`grade-${slotId}`, '등급', gradeDataForDropdown, (gWrapper, gSelected) => {
+        gWrapper.dataset.value = gSelected.value;
+        gWrapper.querySelector('.custom-select-trigger').innerHTML = `<span>${gSelected.text}</span>`;
+        gWrapper.querySelector('.custom-options').style.display = 'none';
 
-    const targetSelect = document.createElement('select');
-    targetSelect.id = `target-${slotId}`;
-    targetSelect.innerHTML = `<option value="0">목표 포인트</option>`;
-    targetSelect.disabled = true;
+        const willpower = ARKGRID_GRADE_DATA[gSelected.value]?.willpower || 0;
+        const activationPoints = ARKGRID_GRADE_DATA[gSelected.value]?.activationPoints || [];
 
-    gradeSelect.addEventListener('change', () => {
-        const selectedGrade = gradeSelect.value;
-        const willpower = ARKGRID_GRADE_DATA[selectedGrade]?.willpower || 0;
-        const activationPoints = ARKGRID_GRADE_DATA[selectedGrade]?.activationPoints || [];
-        const infoEl = document.getElementById(`info-${slotId}`);
-        const targetSelect = document.getElementById(`target-${slotId}`);
+        document.getElementById(`info-${slotId}`).textContent = willpower > 0 ? `공급 의지력: ${willpower}` : '';
+        slot.style.borderColor = GRADE_COLORS[gSelected.value] || '#4a4a7e';
 
-        // Update willpower display
-        if (willpower > 0) {
-            infoEl.textContent = `공급 의지력: ${willpower}`;
+        const targetOptions = activationPoints.map(p => ({ id: p, name: p }));
+
+        // Find existing target dropdown to replace
+        const oldTargetDropdown = document.getElementById(`target-${slotId}`);
+        const newTargetDropdown = createCustomDropdown(`target-${slotId}`, '목표 포인트', targetOptions, (tWrapper, tSelected) => {
+            tWrapper.dataset.value = tSelected.value;
+            tWrapper.querySelector('.custom-select-trigger').innerHTML = `<span>${tSelected.text}</span>`;
+            tWrapper.querySelector('.custom-options').style.display = 'none';
+        });
+
+        oldTargetDropdown.replaceWith(newTargetDropdown);
+
+        if (gSelected.value === 'none' || activationPoints.length === 0) {
+            newTargetDropdown.classList.add('disabled');
         } else {
-            infoEl.textContent = '';
-        }
-
-        // Update and manage target select dropdown
-        targetSelect.innerHTML = `<option value="0">목표 포인트</option>`; // Reset
-        if (selectedGrade !== 'none' && activationPoints.length > 0) {
-            targetSelect.disabled = false;
-            activationPoints.forEach(p => {
-                targetSelect.innerHTML += `<option value="${p}">${p}</option>`;
-            });
-        } else {
-            targetSelect.disabled = true;
+            newTargetDropdown.classList.remove('disabled');
         }
     });
+    gradeSelectWrapper.classList.add('disabled');
 
-    controls.append(selectWrapper, gradeSelect, targetSelect);
 
-    // Info display for willpower
+    const coreTypeSelectWrapper = createCustomDropdown(`type-${slotId}`, '코어 종류', ARKGRID_CORE_TYPES[type], (cWrapper, cSelected) => {
+        cWrapper.dataset.value = cSelected.value;
+        cWrapper.querySelector('.custom-select-trigger').innerHTML = cSelected.icon ? `<img src="${cSelected.icon}" alt="${cSelected.text}"><span>${cSelected.text}</span>` : `<span>${cSelected.text}</span>`;
+        cWrapper.querySelector('.custom-options').style.display = 'none';
+
+        updateCoreTypeOptions(type);
+
+        if (cSelected.value === 'none') {
+            gradeSelectWrapper.classList.add('disabled');
+            gradeSelectWrapper.dataset.value = 'none';
+            gradeSelectWrapper.querySelector('.custom-select-trigger').innerHTML = `<span>등급</span>`;
+        } else {
+            gradeSelectWrapper.classList.remove('disabled');
+        }
+
+        // Reset grade dropdown by clicking its "none" option
+        gradeSelectWrapper.querySelector('.custom-option[data-value="none"]').click();
+    });
+
+    controls.append(coreTypeSelectWrapper, gradeSelectWrapper, targetSelectWrapper);
+
     const infoDisplay = document.createElement('div');
     infoDisplay.className = 'core-info';
     infoDisplay.id = `info-${slotId}`;
@@ -161,34 +206,6 @@ function createCoreSlot(type, id) {
 
     slot.append(controls, infoDisplay, sockets, summaryDisplay);
     return slot;
-}
-
-function selectOption(wrapper, value, name, iconUrl, type) {
-    wrapper.dataset.value = value;
-    const trigger = wrapper.querySelector('.custom-select-trigger');
-    if (iconUrl) {
-        trigger.innerHTML = `<img src="${iconUrl}" alt="${name}"><span>${name}</span>`;
-    } else {
-        trigger.innerHTML = `<span>${name}</span>`;
-    }
-    wrapper.querySelector('.custom-options').style.display = 'none';
-    updateCoreTypeOptions(type);
-
-    // --- Cascading Logic ---
-    const slotId = wrapper.id.substring(5); // "type-chaos-1" -> "chaos-1"
-    const gradeSelect = document.getElementById(`grade-${slotId}`);
-    const targetSelect = document.getElementById(`target-${slotId}`);
-
-    if (value === 'none') {
-        gradeSelect.disabled = true;
-        gradeSelect.selectedIndex = 0;
-        targetSelect.disabled = true;
-        targetSelect.innerHTML = `<option value="0">목표 포인트</option>`;
-    } else {
-        gradeSelect.disabled = false;
-    }
-    // Trigger change on grade to reset target
-    gradeSelect.dispatchEvent(new Event('change'));
 }
 
 function addGem() {
@@ -278,12 +295,12 @@ function calculate() {
     let availableOrderGems = [...orderGems];
     let availableChaosGems = [...chaosGems];
 
-    ['chaos', 'order'].forEach(type => {
+    ['order', 'chaos'].forEach(type => {
         for (let i = 1; i <= 3; i++) {
             const slotId = `${type}-${i}`;
             const typeId = document.getElementById(`type-${slotId}`).dataset.value;
-            const gradeId = document.getElementById(`grade-${slotId}`).value;
-            const targetPoint = parseInt(document.getElementById(`target-${slotId}`).value, 10) || 0;
+            const gradeId = document.getElementById(`grade-${slotId}`).dataset.value;
+            const targetPoint = parseInt(document.getElementById(`target-${slotId}`).dataset.value, 10) || 0;
 
             const slotElement = document.getElementById(`slot-${slotId}`);
             slotElement.classList.remove('target-failed');
