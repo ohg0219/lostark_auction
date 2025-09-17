@@ -88,7 +88,7 @@ function init() {
     // Create gem input dropdowns
     const gemInputForm = document.getElementById('gem-input-form');
     const gemTypeDropdown = createCustomDropdown('gem-type', '젬 종류', [{id: 'order', name: '질서', icon: GEM_IMAGES.order}, {id: 'chaos', name: '혼돈', icon: GEM_IMAGES.chaos}], (w, s) => { w.dataset.value = s.value; w.querySelector('.custom-select-trigger').innerHTML = s.icon ? `<img src="${s.icon}" alt="${s.text}"><span>${s.text}</span>` : `<span>${s.text}</span>`; w.querySelector('.custom-options').style.display = 'none'; });
-    const willpowerDropdown = createCustomDropdown('gem-willpower', '의지력', [{id: 3, name: 3}, {id: 4, name: 4}, {id: 5, name: 5}], (w, s) => { w.dataset.value = s.value; w.querySelector('.custom-select-trigger').innerHTML = `<span>${s.text}</span>`; w.querySelector('.custom-options').style.display = 'none'; });
+    const willpowerDropdown = createCustomDropdown('gem-willpower', '의지력', [{id: 3, name: 3}, {id: 4, name: 4}, {id: 5, name: 5}, {id: 6, name: 6}, {id: 7, name: 7}], (w, s) => { w.dataset.value = s.value; w.querySelector('.custom-select-trigger').innerHTML = `<span>${s.text}</span>`; w.querySelector('.custom-options').style.display = 'none'; });
     const pointDropdown = createCustomDropdown('gem-point', '포인트', [{id: 1, name: 1}, {id: 2, name: 2}, {id: 3, name: 3}, {id: 4, name: 4}, {id: 5, name: 5}], (w, s) => { w.dataset.value = s.value; w.querySelector('.custom-select-trigger').innerHTML = `<span>${s.text}</span>`; w.querySelector('.custom-options').style.display = 'none'; });
 
     // Create row containers
