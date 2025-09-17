@@ -450,8 +450,8 @@ function addGem() {
     const willpower = parseInt(willpowerStr, 10);
     const point = parseInt(pointStr, 10);
 
-    if (isNaN(willpower) || isNaN(point) || willpower < 3 || willpower > 5 || point < 1 || point > 5) {
-        alert('유효한 젬 정보를 입력하세요. (의지력: 3-5, 포인트: 1-5)');
+    if (isNaN(willpower) || isNaN(point) || willpower < 3 || willpower > 7 || point < 1 || point > 5) {
+        alert('유효한 젬 정보를 입력하세요. (의지력: 3-7, 포인트: 1-5)');
         return;
     }
 
@@ -658,56 +658,80 @@ function renderResult(slotId, core, result) {
  *                  achieved가 true면 목표를 달성했음을 나타냅니다. 달성하지 못했다면 achieved는 false입니다.
  */
 function findBestGemCombination(core, availableGems, targetPoint) {
-    let bestAchieved = {gems: [], points: 0, willpower: Infinity, achieved: false};
-    let bestOverall = {gems: [], points: -1, willpower: 0};
+    // If no target is specified, find the combination with the maximum possible points.
+    if (targetPoint <= 0) {
+        let bestCombination = { gems: [], points: -1, willpower: 0, achieved: false };
 
-    const sortedGems = [...availableGems].sort((a, b) => b.point - a.point);
-
-    function find(startIndex, currentGems, currentWillpower, currentPoints) {
-        // Update bestOverall combination (highest points)
-        if (currentPoints > bestOverall.points) {
-            bestOverall = {
-                gems: [...currentGems],
-                points: currentPoints,
-                willpower: currentWillpower
-            };
+        function findMax(startIndex, currentGems, currentWillpower, currentPoints) {
+            if (currentPoints > bestCombination.points || (currentPoints === bestCombination.points && currentWillpower < bestCombination.willpower)) {
+                bestCombination = { gems: [...currentGems], points: currentPoints, willpower: currentWillpower, achieved: false };
+            }
+            if (currentGems.length >= MAX_GEMS_PER_CORE || startIndex >= availableGems.length) {
+                return;
+            }
+            for (let i = startIndex; i < availableGems.length; i++) {
+                const newGem = availableGems[i];
+                if (currentWillpower + newGem.willpower <= core.willpower) {
+                    currentGems.push(newGem);
+                    findMax(i + 1, currentGems, currentWillpower + newGem.willpower, currentPoints + newGem.point);
+                    currentGems.pop();
+                }
+            }
         }
+        findMax(0, [], 0, 0);
+        return bestCombination;
+    }
 
-        // Check for and update bestAchieved combination
-        if (targetPoint > 0 && currentPoints >= targetPoint) {
-            if (currentWillpower < bestAchieved.willpower ||
-                (currentWillpower === bestAchieved.willpower && currentPoints > bestAchieved.points)) {
-                bestAchieved = {
-                    gems: [...currentGems],
-                    points: currentPoints,
-                    willpower: currentWillpower,
-                    achieved: true
-                };
+    // --- Logic for when a targetPoint is provided ---
+    // Combination with the highest score BELOW the target
+    let bestUnderTarget = { gems: [], points: -1, willpower: 0, achieved: false };
+    // Combination with the lowest score ABOVE OR EQUAL to the target
+    let bestOverTarget = { gems: [], points: Infinity, willpower: 0, achieved: true };
+
+    function findClosest(startIndex, currentGems, currentWillpower, currentPoints) {
+        // Check if the current combination is a candidate for bestUnderTarget or bestOverTarget
+        if (currentPoints >= targetPoint) {
+            // This combination meets or exceeds the target.
+            // We want the one with the LOWEST score (closest to the target).
+            // Tie-breaker: higher willpower to use up budget and leave smaller gems for others.
+            if (currentPoints < bestOverTarget.points || (currentPoints === bestOverTarget.points && currentWillpower > bestOverTarget.willpower)) {
+                bestOverTarget = { gems: [...currentGems], points: currentPoints, willpower: currentWillpower, achieved: true };
+            }
+        } else { // currentPoints < targetPoint
+            // This combination is under the target.
+            // We want the one with the HIGHEST score (closest to the target).
+            if (currentPoints > bestUnderTarget.points || (currentPoints === bestUnderTarget.points && currentWillpower < bestUnderTarget.willpower)) {
+                bestUnderTarget = { gems: [...currentGems], points: currentPoints, willpower: currentWillpower, achieved: false };
             }
         }
 
-        if (currentGems.length >= MAX_GEMS_PER_CORE || startIndex >= sortedGems.length) {
+        // Base case for recursion
+        if (currentGems.length >= MAX_GEMS_PER_CORE || startIndex >= availableGems.length) {
             return;
         }
 
-        for (let i = startIndex; i < sortedGems.length; i++) {
-            const newGem = sortedGems[i];
-            const newWillpower = currentWillpower + newGem.willpower;
-
-            if (newWillpower <= core.willpower) {
+        // Recursive step
+        for (let i = startIndex; i < availableGems.length; i++) {
+            const newGem = availableGems[i];
+            if (currentWillpower + newGem.willpower <= core.willpower) {
                 currentGems.push(newGem);
-                find(i + 1, currentGems, newWillpower, currentPoints + newGem.point);
+                findClosest(i + 1, currentGems, currentWillpower + newGem.willpower, currentPoints + newGem.point);
                 currentGems.pop();
             }
         }
     }
 
-    find(0, [], 0, 0);
+    findClosest(0, [], 0, 0);
 
-    if (bestAchieved.achieved) {
-        return bestAchieved;
-    } else {
-        // Return the best combination found, marking that it didn't meet the target
-        return {...bestOverall, achieved: false};
+    // --- Determine final result ---
+    // If we found a combination that meets/exceeds the target, that's our preferred answer.
+    if (bestOverTarget.points !== Infinity) {
+        return bestOverTarget;
     }
+    // Otherwise, return the best we found that was under the target.
+    if (bestUnderTarget.points !== -1) {
+        return bestUnderTarget;
+    }
+    // If absolutely no combination was possible, return an empty/failure state.
+    return { gems: [], points: -1, willpower: 0, achieved: false };
 }
