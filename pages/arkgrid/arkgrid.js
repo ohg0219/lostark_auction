@@ -114,8 +114,13 @@ const orderGemList = document.getElementById('order-gem-list');
 const chaosGemList = document.getElementById('chaos-gem-list');
 const saveBtn = document.getElementById('save-btn');
 const loadBtn = document.getElementById('load-btn');
-const characterNameInput = document.getElementById('character-name');
-const characterPasswordInput = document.getElementById('character-password');
+// Modal DOM Elements
+const modal = document.getElementById('data-modal');
+const modalTitle = document.getElementById('modal-title');
+const modalCharacterNameInput = document.getElementById('modal-character-name');
+const modalCharacterPasswordInput = document.getElementById('modal-character-password');
+const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+const modalCancelBtn = document.getElementById('modal-cancel-btn');
 
 
 // --- State ---
@@ -125,6 +130,8 @@ let nextGemId = 0;
 // selectedCores will track the selections for all 6 slots.
 // Example: { 'chaos-1': 'sun', 'chaos-2': 'moon', ... }
 let selectedCores = {};
+let currentModalConfirmAction = null;
+
 
 // --- Main Initialization ---
 document.addEventListener('DOMContentLoaded', init);
@@ -188,12 +195,26 @@ function init() {
 
     addGemBtn.addEventListener('click', addGem);
     calculateBtn.addEventListener('click', calculate);
-    saveBtn.addEventListener('click', saveData);
-    loadBtn.addEventListener('click', showLoadPopup);
+
+    // Main save/load button listeners
+    saveBtn.addEventListener('click', () => openPopup('save'));
+    loadBtn.addEventListener('click', () => openPopup('load'));
+
+    // Modal button listeners
+    modalCancelBtn.addEventListener('click', closePopup);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closePopup();
+        }
+    });
+    modalConfirmBtn.addEventListener('click', () => {
+        if (currentModalConfirmAction) {
+            currentModalConfirmAction();
+        }
+    });
 }
 
 // --- Functions ---
-
 /**
  * 주어진 ID, 기본 텍스트 및 옵션 항목을 사용하여 커스텀 드롭다운을 생성합니다.
  *
@@ -749,10 +770,7 @@ function findBestGemCombination(core, availableGems, targetPoint) {
     return { gems: [], points: -1, willpower: 0, achieved: false };
 }
 
-async function saveData() {
-    const characterName = characterNameInput.value.trim();
-    const password = characterPasswordInput.value.trim();
-
+async function saveData(characterName, password) {
     if (!characterName || !password) {
         alert('캐릭터명과 비밀번호를 모두 입력해주세요.');
         return;
@@ -799,6 +817,7 @@ async function saveData() {
 
                 if (updateError) throw updateError;
                 alert('데이터를 덮어썼습니다.');
+                closePopup();
             } else {
                 alert('비밀번호가 일치하지 않습니다.');
                 return;
@@ -813,6 +832,7 @@ async function saveData() {
 
             if (insertError) throw insertError;
             alert('데이터를 새로 저장했습니다.');
+            closePopup();
         }
 
     } catch (error) {
@@ -821,21 +841,12 @@ async function saveData() {
     }
 }
 
-function showLoadPopup() {
-    const characterName = prompt("불러올 캐릭터명을 입력하세요:");
-    if (characterName === null || characterName.trim() === '') {
-        return; // User cancelled or entered empty name
-    }
-
-    const password = prompt(`'${characterName}'의 비밀번호를 입력하세요:`);
-    if (password === null) {
-        return; // User cancelled
-    }
-
-    loadData(characterName.trim(), password);
-}
-
 async function loadData(characterName, password) {
+    if (!characterName || !password) {
+        alert('캐릭터명과 비밀번호를 모두 입력해주세요.');
+        return;
+    }
+
     try {
         let { data, error } = await supabase
             .from('arkgrid_data')
@@ -854,8 +865,8 @@ async function loadData(characterName, password) {
 
         if (data.password === password) {
             alert('데이터를 불러옵니다.');
-            // This function will be created in the next step.
             restoreState(data.arkgrid_config);
+            closePopup();
         } else {
             alert('비밀번호가 일치하지 않습니다.');
         }
@@ -913,4 +924,37 @@ function restoreState(config) {
     // 3. Recalculate results
     // Use a small timeout to ensure all DOM updates from the clicks have been processed
     setTimeout(calculate, 100);
+}
+
+// --- Modal Functions ---
+function openPopup(mode) {
+    // Clear previous inputs
+    modalCharacterNameInput.value = '';
+    modalCharacterPasswordInput.value = '';
+
+    if (mode === 'save') {
+        modalTitle.textContent = '데이터 저장하기';
+        modalConfirmBtn.textContent = '저장';
+        currentModalConfirmAction = () => {
+            const charName = modalCharacterNameInput.value.trim();
+            const password = modalCharacterPasswordInput.value.trim();
+            saveData(charName, password);
+        };
+    } else { // mode === 'load'
+        modalTitle.textContent = '데이터 불러오기';
+        modalConfirmBtn.textContent = '불러오기';
+        currentModalConfirmAction = () => {
+            const charName = modalCharacterNameInput.value.trim();
+            const password = modalCharacterPasswordInput.value.trim();
+            loadData(charName, password);
+        };
+    }
+
+    modal.style.display = 'flex';
+    modalCharacterNameInput.focus();
+}
+
+function closePopup() {
+    modal.style.display = 'none';
+    currentModalConfirmAction = null;
 }
