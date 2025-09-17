@@ -693,7 +693,9 @@ function findBestGemCombination(core, availableGems, targetPoint) {
         if (currentPoints >= targetPoint) {
             // This combination meets or exceeds the target.
             // We want the one with the LOWEST score (closest to the target).
-            if (currentPoints < bestOverTarget.points || (currentPoints === bestOverTarget.points && currentWillpower < bestOverTarget.willpower)) {
+
+            // Tie-breaker: higher willpower to use up budget and leave smaller gems for others.
+            if (currentPoints < bestOverTarget.points || (currentPoints === bestOverTarget.points && currentWillpower > bestOverTarget.willpower)) {
                 bestOverTarget = { gems: [...currentGems], points: currentPoints, willpower: currentWillpower, achieved: true };
             }
         } else { // currentPoints < targetPoint
