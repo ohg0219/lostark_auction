@@ -1,3 +1,8 @@
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+const SUPABASE_URL = 'https://ojyiduiquzldbnimulvp.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qeWlkdWlxdXpsZGJuaW11bHZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2MzkxMTIsImV4cCI6MjA3MzIxNTExMn0.VRNMrbQSXZtWLPNuW-Sn522G1pmhT4AkhX0RJgANqZ4';
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /**
  * 탭 버튼과 탭 패널을 초기화하고 클릭 이벤트를 설정하여 탭을 전환합니다.
@@ -107,6 +112,11 @@ const addGemBtn = document.getElementById('add-gem-btn');
 const calculateBtn = document.getElementById('calculate-btn');
 const orderGemList = document.getElementById('order-gem-list');
 const chaosGemList = document.getElementById('chaos-gem-list');
+const saveBtn = document.getElementById('save-btn');
+const loadBtn = document.getElementById('load-btn');
+const characterNameInput = document.getElementById('character-name');
+const characterPasswordInput = document.getElementById('character-password');
+
 
 // --- State ---
 let orderGems = [];
@@ -178,6 +188,8 @@ function init() {
 
     addGemBtn.addEventListener('click', addGem);
     calculateBtn.addEventListener('click', calculate);
+    saveBtn.addEventListener('click', saveData);
+    loadBtn.addEventListener('click', showLoadPopup);
 }
 
 // --- Functions ---
@@ -735,4 +747,170 @@ function findBestGemCombination(core, availableGems, targetPoint) {
     }
     // If absolutely no combination was possible, return an empty/failure state.
     return { gems: [], points: -1, willpower: 0, achieved: false };
+}
+
+async function saveData() {
+    const characterName = characterNameInput.value.trim();
+    const password = characterPasswordInput.value.trim();
+
+    if (!characterName || !password) {
+        alert('캐릭터명과 비밀번호를 모두 입력해주세요.');
+        return;
+    }
+
+    // 1. Gather current configuration
+    const coreSlots = {};
+    ['order', 'chaos'].forEach(type => {
+        for (let i = 1; i <= 3; i++) {
+            const slotId = `${type}-${i}`;
+            const typeId = document.getElementById(`type-${slotId}`).dataset.value || 'none';
+            const gradeId = document.getElementById(`grade-${slotId}`).dataset.value || 'none';
+            const targetPoint = document.getElementById(`target-${slotId}`).dataset.value || 'none';
+            coreSlots[slotId] = { type: typeId, grade: gradeId, target: targetPoint };
+        }
+    });
+
+    const arkgridConfig = {
+        orderGems: orderGems,
+        chaosGems: chaosGems,
+        coreSlots: coreSlots
+    };
+
+    try {
+        // 2. Check if character exists
+        let { data: existingData, error: selectError } = await supabase
+            .from('arkgrid_data')
+            .select('password')
+            .eq('character_name', characterName)
+            .single();
+
+        if (selectError && selectError.code !== 'PGRST116') { // PGRST116 is "No rows found", which is not an error for us.
+            throw selectError;
+        }
+
+        // 3. Insert or Update
+        if (existingData) {
+            // Character exists, check password and update
+            if (existingData.password === password) {
+                const { error: updateError } = await supabase
+                    .from('arkgrid_data')
+                    .update({ arkgrid_config: arkgridConfig })
+                    .eq('character_name', characterName);
+
+                if (updateError) throw updateError;
+                alert('데이터를 덮어썼습니다.');
+            } else {
+                alert('비밀번호가 일치하지 않습니다.');
+                return;
+            }
+        } else {
+            // Character does not exist, insert new data
+            const { error: insertError } = await supabase
+                .from('arkgrid_data')
+                .insert([
+                    { character_name: characterName, password: password, arkgrid_config: arkgridConfig }
+                ]);
+
+            if (insertError) throw insertError;
+            alert('데이터를 새로 저장했습니다.');
+        }
+
+    } catch (error) {
+        console.error('데이터 저장 중 오류 발생:', error);
+        alert(`데이터 저장에 실패했습니다: ${error.message}`);
+    }
+}
+
+function showLoadPopup() {
+    const characterName = prompt("불러올 캐릭터명을 입력하세요:");
+    if (characterName === null || characterName.trim() === '') {
+        return; // User cancelled or entered empty name
+    }
+
+    const password = prompt(`'${characterName}'의 비밀번호를 입력하세요:`);
+    if (password === null) {
+        return; // User cancelled
+    }
+
+    loadData(characterName.trim(), password);
+}
+
+async function loadData(characterName, password) {
+    try {
+        let { data, error } = await supabase
+            .from('arkgrid_data')
+            .select('password, arkgrid_config')
+            .eq('character_name', characterName)
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') { // No rows found
+                alert('해당 캐릭터명의 데이터가 존재하지 않습니다.');
+            } else {
+                throw error;
+            }
+            return;
+        }
+
+        if (data.password === password) {
+            alert('데이터를 불러옵니다.');
+            // This function will be created in the next step.
+            restoreState(data.arkgrid_config);
+        } else {
+            alert('비밀번호가 일치하지 않습니다.');
+        }
+
+    } catch (error) {
+        console.error('데이터 불러오기 중 오류 발생:', error);
+        alert(`데이터 불러오기에 실패했습니다: ${error.message}`);
+    }
+}
+
+function restoreState(config) {
+    // 1. Restore Gems
+    orderGems = config.orderGems || [];
+    chaosGems = config.chaosGems || [];
+
+    // Reset nextGemId to prevent ID conflicts
+    const maxOrderId = orderGems.reduce((max, gem) => Math.max(max, gem.id), -1);
+    const maxChaosId = chaosGems.reduce((max, gem) => Math.max(max, gem.id), -1);
+    nextGemId = Math.max(maxOrderId, maxChaosId) + 1;
+
+    renderGemLists();
+
+    // 2. Restore Core Slots
+    if (config.coreSlots) {
+        Object.keys(config.coreSlots).forEach(slotId => {
+            const slotConfig = config.coreSlots[slotId];
+
+            // Helper function to programmatically "click" an option in a custom dropdown
+            const selectDropdownOption = (dropdownId, valueToSelect) => {
+                if (!valueToSelect || valueToSelect === 'none') {
+                     // If the value is none, we need to reset the dropdown
+                    const wrapper = document.getElementById(dropdownId);
+                    if (!wrapper) return;
+                    const defaultOption = wrapper.querySelector('.custom-option[data-value="none"]');
+                    if(defaultOption) {
+                        defaultOption.click();
+                    }
+                    return;
+                };
+                const wrapper = document.getElementById(dropdownId);
+                if (!wrapper) return;
+                const option = wrapper.querySelector(`.custom-option[data-value="${valueToSelect}"]`);
+                if (option) {
+                    option.click();
+                }
+            };
+
+            // Restore in sequence: Type -> Grade -> Target
+            selectDropdownOption(`type-${slotId}`, slotConfig.type);
+            selectDropdownOption(`grade-${slotId}`, slotConfig.grade);
+            selectDropdownOption(`target-${slotId}`, slotConfig.target);
+        });
+    }
+
+    // 3. Recalculate results
+    // Use a small timeout to ensure all DOM updates from the clicks have been processed
+    setTimeout(calculate, 100);
 }

@@ -509,3 +509,28 @@ button.nav-button:hover {
 #calculate-btn:hover {
     background-color: #b58a35;
 }
+
+.user-data-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+}
+
+.user-data-container input {
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid #555;
+    background-color: #2a2a2a;
+    color: #f2f2f7;
+    font-size: 14px;
+}
+
+.user-data-container input::placeholder {
+    color: #888;
+}
+
+.user-data-container .nav-button {
+    padding: 8px 16px;
+}
