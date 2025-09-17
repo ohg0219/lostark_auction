@@ -339,8 +339,8 @@ h2, h3 {
     padding: 12px;
     border-radius: 8px;
     border: 1px solid #333333;
-    min-height: 161px;
-    max-height: 161px;
+    min-height: 436px;
+    max-height: 436px;
     overflow-y: auto;
     display: flex;
     flex-wrap: wrap;
