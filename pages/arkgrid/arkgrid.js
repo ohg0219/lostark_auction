@@ -126,12 +126,16 @@ const chaosGemList = document.getElementById('chaos-gem-list');
 const saveBtn = document.getElementById('save-btn');
 const loadBtn = document.getElementById('load-btn');
 // Modal DOM Elements
-const modal = document.getElementById('data-modal');
+const dataModal = document.getElementById('data-modal');
 const modalTitle = document.getElementById('modal-title');
 const modalCharacterNameInput = document.getElementById('modal-character-name');
 const modalCharacterPasswordInput = document.getElementById('modal-character-password');
 const modalConfirmBtn = document.getElementById('modal-confirm-btn');
 const modalCancelBtn = document.getElementById('modal-cancel-btn');
+// Alert Modal DOM Elements
+const alertModal = document.getElementById('alert-modal');
+const alertModalMessage = document.getElementById('alert-modal-message');
+const alertModalOkBtn = document.getElementById('alert-modal-ok-btn');
 
 
 // --- State ---
@@ -215,16 +219,24 @@ function init() {
     saveBtn.addEventListener('click', () => openPopup('save'));
     loadBtn.addEventListener('click', () => openPopup('load'));
 
-    // Modal button listeners
-    modalCancelBtn.addEventListener('click', closePopup);
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            closePopup();
+    // Data Modal button listeners
+    modalCancelBtn.addEventListener('click', closeDataPopup);
+    dataModal.addEventListener('click', (e) => {
+        if (e.target === dataModal) {
+            closeDataPopup();
         }
     });
     modalConfirmBtn.addEventListener('click', () => {
         if (currentModalConfirmAction) {
             currentModalConfirmAction();
+        }
+    });
+
+    // Alert Modal button listeners
+    alertModalOkBtn.addEventListener('click', closeCustomAlert);
+    alertModal.addEventListener('click', (e) => {
+        if (e.target === alertModal) {
+            closeCustomAlert();
         }
     });
 }
@@ -491,7 +503,7 @@ function addGem() {
     const pointStr = document.getElementById('gem-point').dataset.value;
 
     if (type === 'none' || willpowerStr === 'none' || pointStr === 'none') {
-        alert('젬 종류, 의지력, 포인트를 모두 선택하세요.');
+        showCustomAlert('젬 종류, 의지력, 포인트를 모두 선택하세요.');
         return;
     }
 
@@ -499,7 +511,7 @@ function addGem() {
     const point = parseInt(pointStr, 10);
 
     if (isNaN(willpower) || isNaN(point) || willpower < 3 || willpower > 7 || point < 1 || point > 5) {
-        alert('유효한 젬 정보를 입력하세요. (의지력: 3-7, 포인트: 1-5)');
+        showCustomAlert('유효한 젬 정보를 입력하세요. (의지력: 3-7, 포인트: 1-5)');
         return;
     }
 
@@ -787,21 +799,32 @@ function findBestGemCombination(core, availableGems, targetPoint) {
 
 async function saveData(characterName, password) {
     if (!characterName || !password) {
-        alert('캐릭터명과 비밀번호를 모두 입력해주세요.');
+        showCustomAlert('캐릭터명과 비밀번호를 모두 입력해주세요.');
         return;
     }
 
     // 1. Gather current configuration
     const coreSlots = {};
+    let isCoreDataEntered = false;
     ['order', 'chaos'].forEach(type => {
         for (let i = 1; i <= 3; i++) {
             const slotId = `${type}-${i}`;
             const typeId = document.getElementById(`type-${slotId}`).dataset.value || 'none';
             const gradeId = document.getElementById(`grade-${slotId}`).dataset.value || 'none';
             const targetPoint = document.getElementById(`target-${slotId}`).dataset.value || 'none';
+            if (typeId !== 'none' || gradeId !== 'none' || targetPoint !== 'none') {
+                isCoreDataEntered = true;
+            }
             coreSlots[slotId] = { type: typeId, grade: gradeId, target: targetPoint };
         }
     });
+
+    const isGemDataEntered = orderGems.length > 0 || chaosGems.length > 0;
+
+    if (!isCoreDataEntered && !isGemDataEntered) {
+        showCustomAlert('저장할 데이터가 없습니다. 코어를 선택하거나 젬을 추가해주세요.');
+        return;
+    }
 
     const arkgridConfig = {
         orderGems: orderGems,
@@ -831,10 +854,10 @@ async function saveData(characterName, password) {
                     .eq('character_name', characterName);
 
                 if (updateError) throw updateError;
-                alert('데이터를 덮어썼습니다.');
-                closePopup();
+                closeDataPopup();
+                showCustomAlert('데이터를 덮어썼습니다.');
             } else {
-                alert('비밀번호가 일치하지 않습니다.');
+                showCustomAlert('비밀번호가 일치하지 않습니다.');
                 return;
             }
         } else {
@@ -846,19 +869,19 @@ async function saveData(characterName, password) {
                 ]);
 
             if (insertError) throw insertError;
-            alert('데이터를 새로 저장했습니다.');
-            closePopup();
+            closeDataPopup();
+            showCustomAlert('데이터를 새로 저장했습니다.');
         }
 
     } catch (error) {
         console.error('데이터 저장 중 오류 발생:', error);
-        alert(`데이터 저장에 실패했습니다: ${error.message}`);
+        showCustomAlert(`데이터 저장에 실패했습니다: ${error.message}`);
     }
 }
 
 async function loadData(characterName, password) {
     if (!characterName || !password) {
-        alert('캐릭터명과 비밀번호를 모두 입력해주세요.');
+        showCustomAlert('캐릭터명과 비밀번호를 모두 입력해주세요.');
         return;
     }
 
@@ -871,7 +894,7 @@ async function loadData(characterName, password) {
 
         if (error) {
             if (error.code === 'PGRST116') { // No rows found
-                alert('해당 캐릭터명의 데이터가 존재하지 않습니다.');
+                showCustomAlert('해당 캐릭터명의 데이터가 존재하지 않습니다.');
             } else {
                 throw error;
             }
@@ -879,16 +902,16 @@ async function loadData(characterName, password) {
         }
 
         if (data.password === password) {
-            alert('데이터를 불러옵니다.');
+            closeDataPopup();
+            showCustomAlert('데이터를 불러옵니다.');
             restoreState(data.arkgrid_config);
-            closePopup();
         } else {
-            alert('비밀번호가 일치하지 않습니다.');
+            showCustomAlert('비밀번호가 일치하지 않습니다.');
         }
 
     } catch (error) {
         console.error('데이터 불러오기 중 오류 발생:', error);
-        alert(`데이터 불러오기에 실패했습니다: ${error.message}`);
+        showCustomAlert(`데이터 불러오기에 실패했습니다: ${error.message}`);
     }
 }
 
@@ -965,11 +988,20 @@ function openPopup(mode) {
         };
     }
 
-    modal.style.display = 'flex';
+    dataModal.style.display = 'flex';
     modalCharacterNameInput.focus();
 }
 
-function closePopup() {
-    modal.style.display = 'none';
+function closeDataPopup() {
+    dataModal.style.display = 'none';
     currentModalConfirmAction = null;
+}
+
+function showCustomAlert(message) {
+    alertModalMessage.textContent = message;
+    alertModal.style.display = 'flex';
+}
+
+function closeCustomAlert() {
+    alertModal.style.display = 'none';
 }
