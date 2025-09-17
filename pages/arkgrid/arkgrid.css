@@ -334,6 +334,21 @@ h2, h3 {
     gap: 16px;
 }
 
+#order-gem-list-container h4,
+#chaos-gem-list-container h4 {
+    text-align: center;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+#order-gem-list-container h4 {
+    color: #F44336; /* Bright Red */
+}
+
+#chaos-gem-list-container h4 {
+    color: #2196F3; /* Bright Blue */
+}
+
 .gem-list {
     background-color: #121212;
     padding: 12px;
