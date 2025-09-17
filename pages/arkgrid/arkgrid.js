@@ -12,6 +12,8 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 function initializeTabs() {
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabPanels = document.querySelectorAll('.tab-panel');
+    const orderGemListContainer = document.getElementById('order-gem-list-container');
+    const chaosGemListContainer = document.getElementById('chaos-gem-list-container');
 
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
@@ -24,6 +26,15 @@ function initializeTabs() {
             // Add active class to clicked button and corresponding panel
             button.classList.add('active');
             document.getElementById(targetTab).classList.add('active');
+
+            // Toggle gem list visibility based on the selected tab
+            if (targetTab === 'order-cores') {
+                orderGemListContainer.style.display = 'block';
+                chaosGemListContainer.style.display = 'none';
+            } else { // 'chaos-cores'
+                orderGemListContainer.style.display = 'none';
+                chaosGemListContainer.style.display = 'block';
+            }
         });
     });
 }
@@ -144,6 +155,10 @@ document.addEventListener('DOMContentLoaded', init);
 function init() {
     // Initialize tabs
     initializeTabs();
+
+    // Set initial Gem List visibility
+    document.getElementById('chaos-gem-list-container').style.display = 'none';
+    document.getElementById('order-gem-list-container').style.display = 'block';
 
     // Create 3 slots for each column
     for (let i = 1; i <= 3; i++) {
