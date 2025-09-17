@@ -1,6 +1,31 @@
 console.log("arkgrid.js loaded");
 
+// --- Tab Functionality ---
+function initializeTabs() {
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const targetTab = button.getAttribute('data-tab');
+
+            // Remove active class from all buttons and panels
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabPanels.forEach(panel => panel.classList.remove('active'));
+
+            // Add active class to clicked button and corresponding panel
+            button.classList.add('active');
+            document.getElementById(targetTab).classList.add('active');
+        });
+    });
+}
+
 // --- Static Data ---
+
+const GEM_IMAGES = {
+    order: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_102.png',
+    chaos: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_103.png'
+};
 
 const ARKGRID_CORE_TYPES = {
     order: [
@@ -16,7 +41,6 @@ const ARKGRID_CORE_TYPES = {
 };
 
 const ARKGRID_GRADE_DATA = {
-    none: { name: '선택 안함', willpower: 0, activationPoints: [] },
     heroic: { name: '영웅', willpower: 7, activationPoints: [10] },
     legendary: { name: '전설', willpower: 11, activationPoints: [10, 14] },
     relic: { name: '유물', willpower: 15, activationPoints: [10, 14, 17, 18, 19, 20] },
@@ -24,7 +48,6 @@ const ARKGRID_GRADE_DATA = {
 };
 
 const GRADE_COLORS = {
-    "none": "#a5a5a5",
     "heroic": "#ba00f9",
     "legendary": "#f99200",
     "relic": "#fa5d00",
@@ -53,6 +76,9 @@ let selectedCores = {};
 document.addEventListener('DOMContentLoaded', init);
 
 function init() {
+    // Initialize tabs
+    initializeTabs();
+
     // Create 3 slots for each column
     for (let i = 1; i <= 3; i++) {
         orderCoreColumn.appendChild(createCoreSlot('order', i));
@@ -61,11 +87,27 @@ function init() {
 
     // Create gem input dropdowns
     const gemInputForm = document.getElementById('gem-input-form');
-    const gemTypeDropdown = createCustomDropdown('gem-type', '젬 종류', [{id: 'order', name: '질서'}, {id: 'chaos', name: '혼돈'}], (w, s) => { w.dataset.value = s.value; w.querySelector('.custom-select-trigger').innerHTML = `<span>${s.text}</span>`; w.querySelector('.custom-options').style.display = 'none'; });
+    const gemTypeDropdown = createCustomDropdown('gem-type', '젬 종류', [{id: 'order', name: '질서', icon: GEM_IMAGES.order}, {id: 'chaos', name: '혼돈', icon: GEM_IMAGES.chaos}], (w, s) => { w.dataset.value = s.value; w.querySelector('.custom-select-trigger').innerHTML = s.icon ? `<img src="${s.icon}" alt="${s.text}"><span>${s.text}</span>` : `<span>${s.text}</span>`; w.querySelector('.custom-options').style.display = 'none'; });
     const willpowerDropdown = createCustomDropdown('gem-willpower', '의지력', [{id: 3, name: 3}, {id: 4, name: 4}, {id: 5, name: 5}], (w, s) => { w.dataset.value = s.value; w.querySelector('.custom-select-trigger').innerHTML = `<span>${s.text}</span>`; w.querySelector('.custom-options').style.display = 'none'; });
     const pointDropdown = createCustomDropdown('gem-point', '포인트', [{id: 1, name: 1}, {id: 2, name: 2}, {id: 3, name: 3}, {id: 4, name: 4}, {id: 5, name: 5}], (w, s) => { w.dataset.value = s.value; w.querySelector('.custom-select-trigger').innerHTML = `<span>${s.text}</span>`; w.querySelector('.custom-options').style.display = 'none'; });
 
-    gemInputForm.prepend(gemTypeDropdown, willpowerDropdown, pointDropdown);
+    // Create row containers
+    const row1 = document.createElement('div');
+    row1.className = 'gem-input-row single';
+    row1.appendChild(gemTypeDropdown);
+
+    const row2 = document.createElement('div');
+    row2.className = 'gem-input-row';
+    row2.appendChild(willpowerDropdown);
+    row2.appendChild(pointDropdown);
+
+    const row3 = document.createElement('div');
+    row3.className = 'gem-input-row single';
+    row3.appendChild(addGemBtn);
+
+    gemInputForm.appendChild(row1);
+    gemInputForm.appendChild(row2);
+    gemInputForm.appendChild(row3);
 
     addGemBtn.addEventListener('click', addGem);
     calculateBtn.addEventListener('click', calculate);
@@ -123,6 +165,44 @@ function createCustomDropdown(id, defaultText, items, onSelect) {
     return wrapper;
 }
 
+function createGradeDropdown(id, defaultText, items, onSelect) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'custom-select-wrapper';
+    wrapper.id = id;
+    wrapper.dataset.value = 'none';
+
+    const trigger = document.createElement('div');
+    trigger.className = 'custom-select-trigger';
+    trigger.innerHTML = `<span>${defaultText}</span>`;
+
+    const options = document.createElement('div');
+    options.className = 'custom-options';
+
+    // Grade options only - no default option
+    items.forEach(item => {
+        const option = document.createElement('div');
+        option.className = 'custom-option';
+        option.dataset.value = item.id;
+        option.innerHTML = `<span>${item.name}</span>`;
+        option.addEventListener('click', () => {
+            onSelect(wrapper, { value: item.id, text: item.name, icon: null });
+        });
+        options.appendChild(option);
+    });
+
+    trigger.addEventListener('click', () => {
+        if (wrapper.classList.contains('disabled')) return;
+        // Close other dropdowns
+        document.querySelectorAll('.custom-options').forEach(opt => {
+            if (opt !== options) opt.style.display = 'none';
+        });
+        options.style.display = options.style.display === 'block' ? 'none' : 'block';
+    });
+
+    wrapper.append(trigger, options);
+    return wrapper;
+}
+
 function clearSlotResults(slotId) {
     const socketContainer = document.getElementById(`sockets-${slotId}`);
     socketContainer.innerHTML = '';
@@ -154,22 +234,22 @@ function createCoreSlot(type, id) {
     targetSelectWrapper.classList.add('disabled');
 
 
-    const gradeSelectWrapper = createCustomDropdown(`grade-${slotId}`, '등급', gradeDataForDropdown, (gWrapper, gSelected) => {
+    const gradeSelectWrapper = createGradeDropdown(`grade-${slotId}`, '등급', gradeDataForDropdown, (gWrapper, gSelected) => {
         gWrapper.dataset.value = gSelected.value;
         gWrapper.querySelector('.custom-select-trigger').innerHTML = `<span>${gSelected.text}</span>`;
         gWrapper.querySelector('.custom-options').style.display = 'none';
 
-        const willpower = ARKGRID_GRADE_DATA[gSelected.value]?.willpower || 0;
-        const activationPoints = ARKGRID_GRADE_DATA[gSelected.value]?.activationPoints || [];
+        const gradeData = ARKGRID_GRADE_DATA[gSelected.value];
+        const willpower = gradeData.willpower;
+        const activationPoints = gradeData.activationPoints;
 
-        document.getElementById(`info-${slotId}`).textContent = willpower > 0 ? `공급 의지력: ${willpower}` : '';
+        document.getElementById(`info-${slotId}`).textContent = `공급 의지력: ${willpower}`;
+        slot.style.borderColor = GRADE_COLORS[gSelected.value];
 
-        if (gSelected.value !== 'none') {
-            slot.style.borderColor = GRADE_COLORS[gSelected.value];
-        } else {
-            slot.style.borderColor = '#4a4a7e';
-            clearSlotResults(slotId); // Clear results when grade is reset
-        }
+        // Clear previous calculation results and remove target-failed class
+        const slotElement = document.getElementById(`slot-${slotId}`);
+        slotElement.classList.remove('target-failed');
+        clearSlotResults(slotId);
 
         const targetOptions = activationPoints.map(p => ({ id: p, name: p }));
 
@@ -183,7 +263,7 @@ function createCoreSlot(type, id) {
 
         oldTargetDropdown.replaceWith(newTargetDropdown);
 
-        if (gSelected.value === 'none' || activationPoints.length === 0) {
+        if (activationPoints.length === 0) {
             newTargetDropdown.classList.add('disabled');
         } else {
             newTargetDropdown.classList.remove('disabled');
@@ -206,10 +286,25 @@ function createCoreSlot(type, id) {
             clearSlotResults(slotId); // Clear results when core type is reset
         } else {
             gradeSelectWrapper.classList.remove('disabled');
+            // Reset grade dropdown to show placeholder text
+            gradeSelectWrapper.dataset.value = 'none';
+            gradeSelectWrapper.querySelector('.custom-select-trigger').innerHTML = `<span>등급</span>`;
         }
 
-        // Reset grade dropdown by clicking its "none" option
-        gradeSelectWrapper.querySelector('.custom-option[data-value="none"]').click();
+        // Reset target dropdown to initial state and disable it
+        const currentTargetDropdown = document.getElementById(`target-${slotId}`);
+        const resetTargetDropdown = createCustomDropdown(`target-${slotId}`, '목표 포인트', [], (tWrapper, tSelected) => {
+            tWrapper.dataset.value = tSelected.value;
+            tWrapper.querySelector('.custom-select-trigger').innerHTML = `<span>${tSelected.text}</span>`;
+            tWrapper.querySelector('.custom-options').style.display = 'none';
+        });
+        resetTargetDropdown.classList.add('disabled');
+        currentTargetDropdown.replaceWith(resetTargetDropdown);
+
+        // Clear slot info and reset border color
+        document.getElementById(`info-${slotId}`).textContent = '';
+        slot.style.borderColor = '#333333';
+        clearSlotResults(slotId);
     });
 
     controls.append(coreTypeSelectWrapper, gradeSelectWrapper, targetSelectWrapper);
@@ -271,10 +366,22 @@ function renderGemLists() {
     const createGemElement = (gem) => {
         const gemEl = document.createElement('div');
         gemEl.className = `gem-item ${gem.type}`;
-        gemEl.textContent = `의지력: ${gem.willpower}, 포인트: ${gem.point}`;
+
+        const gemImage = GEM_IMAGES[gem.type];
+        gemEl.innerHTML = `
+            <div class="gem-item-content">
+                <img src="${gemImage}" alt="${gem.type} 젬" class="gem-item-image">
+                <div class="gem-item-stats">
+                    <div>의지력: ${gem.willpower}</div>
+                    <div>포인트: ${gem.point}</div>
+                </div>
+            </div>
+        `;
 
         const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = '삭제';
+        deleteBtn.className = 'gem-delete-btn';
+        deleteBtn.innerHTML = '×';
+        deleteBtn.title = '젬 삭제';
         deleteBtn.onclick = () => {
             if (gem.type === 'order') {
                 orderGems = orderGems.filter(g => g.id !== gem.id);
@@ -386,11 +493,21 @@ function renderResult(slotId, core, result) {
     result.gems.forEach((gem, index) => {
         if (socketContainer.children[index]) {
             const socket = socketContainer.children[index];
-            socket.innerHTML = `의지력: ${gem.willpower}<br>포인트: ${gem.point}`;
+            const gemImage = GEM_IMAGES[gem.type];
+            socket.innerHTML = `
+                <div class="gem-socket-content">
+                    <img src="${gemImage}" alt="${gem.type} 젬" class="gem-socket-image">
+                    <div class="gem-socket-stats">
+                        <div>의지력: ${gem.willpower}</div>
+                        <div>포인트: ${gem.point}</div>
+                    </div>
+                </div>
+            `;
+            socket.classList.add('gem-equipped');
         }
     });
 
-    summaryEl.innerHTML = `의지력: ${result.willpower} / ${core.willpower}<br>포인트: ${result.points}`;
+    summaryEl.innerHTML = `[의지력: ${result.willpower} / ${core.willpower}] [포인트: ${result.points}]`;
 }
 
 function findBestGemCombination(core, availableGems, targetPoint) {

@@ -17,44 +17,63 @@
             <a href="../../index.html" class="nav-button">메인으로 돌아가기</a>
         </div>
 
-        <div class="arkgrid-container">
-            <!-- Order Cores Column -->
-            <div class="core-column" id="order-core-column">
-                <h3>질서의 코어</h3>
-                <!-- Order Core Slots will be generated here by JS -->
+        <div class="main-container">
+            <!-- Left side - Core Management with Tabs -->
+            <div class="core-management-container">
+                <div class="tab-container">
+                    <div class="tab-buttons">
+                        <button class="tab-button active" data-tab="order-cores">질서의 코어</button>
+                        <button class="tab-button" data-tab="chaos-cores">혼돈의 코어</button>
+                    </div>
+
+                    <div class="tab-content">
+                        <!-- Order Cores Tab -->
+                        <div class="tab-panel active" id="order-cores">
+                            <div class="core-column" id="order-core-column">
+                                <!-- Order Core Slots will be generated here by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Chaos Cores Tab -->
+                        <div class="tab-panel" id="chaos-cores">
+                            <div class="core-column" id="chaos-core-column">
+                                <!-- Chaos Core Slots will be generated here by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
-            <!-- Chaos Cores Column -->
-            <div class="core-column" id="chaos-core-column">
-                <h3>혼돈의 코어</h3>
-                <!-- Chaos Core Slots will be generated here by JS -->
+            <!-- Right side - Gem Management -->
+            <div class="gem-management-container">
+                <div class="gem-input-section">
+                    <h2>보유 젬 입력</h2>
+                    <div class="gem-input-form" id="gem-input-form">
+                        <!-- Gem input dropdowns will be generated here by JS -->
+                        <button id="add-gem-btn" class="nav-button">젬 추가</button>
+                    </div>
+                </div>
+
+                <div class="gem-list-section">
+                    <h2>보유 젬 목록</h2>
+                    <div class="gem-lists">
+                        <div id="order-gem-list-container">
+                            <h4>질서의 젬</h4>
+                            <div class="gem-list" id="order-gem-list"></div>
+                        </div>
+                        <div id="chaos-gem-list-container">
+                            <h4>혼돈의 젬</h4>
+                            <div class="gem-list" id="chaos-gem-list"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="gem-management-container">
-            <div class="gem-input-section">
-                <h2>보유 젬 입력</h2>
-                <div class="gem-input-form" id="gem-input-form">
-                    <!-- Gem input dropdowns will be generated here by JS -->
-                    <button id="add-gem-btn" class="nav-button">젬 추가</button>
-                </div>
-            </div>
-            <div class="gem-list-section">
-                <h2>보유 젬 목록</h2>
-                 <div class="gem-lists">
-                    <div id="order-gem-list-container">
-                        <h4>질서의 젬</h4>
-                        <div class="gem-list" id="order-gem-list"></div>
-                    </div>
-                    <div id="chaos-gem-list-container">
-                        <h4>혼돈의 젬</h4>
-                        <div class="gem-list" id="chaos-gem-list"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+        <!-- Calculate button spanning full width -->
         <button id="calculate-btn">최적 조합 계산</button>
+
         <!-- The results will be displayed inside the core slots directly -->
 
     </main>
