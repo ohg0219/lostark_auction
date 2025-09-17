@@ -450,8 +450,8 @@ function addGem() {
     const willpower = parseInt(willpowerStr, 10);
     const point = parseInt(pointStr, 10);
 
-    if (isNaN(willpower) || isNaN(point) || willpower < 3 || willpower > 5 || point < 1 || point > 5) {
-        alert('유효한 젬 정보를 입력하세요. (의지력: 3-5, 포인트: 1-5)');
+    if (isNaN(willpower) || isNaN(point) || willpower < 3 || willpower > 7 || point < 1 || point > 5) {
+        alert('유효한 젬 정보를 입력하세요. (의지력: 3-7, 포인트: 1-5)');
         return;
     }
 
