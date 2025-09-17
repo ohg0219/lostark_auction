@@ -1,6 +1,9 @@
-console.log("arkgrid.js loaded");
 
-// --- Tab Functionality ---
+/**
+ * 탭 버튼과 탭 패널을 초기화하고 클릭 이벤트를 설정하여 탭을 전환합니다.
+ *
+ * @return {void} 이 메서드는 아무 값도 반환하지 않습니다.
+ */
 function initializeTabs() {
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabPanels = document.querySelectorAll('.tab-panel');
@@ -20,33 +23,74 @@ function initializeTabs() {
     });
 }
 
-// --- Static Data ---
-
+/**
+ * `GEM_IMAGES` 변수는 게임 내에서 사용되는 보석(Order, Chaos)의 이미지를 나타내는 URL을 저장한 객체입니다.
+ *
+ * 속성:
+ * - `order`: 보석(Order) 이미지를 나타내는 URL 문자열.
+ * - `chaos`: 보석(Chaos) 이미지를 나타내는 URL 문자열.
+ */
 const GEM_IMAGES = {
     order: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_102.png',
     chaos: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_103.png'
 };
 
+/**
+ * ARKGRID_CORE_TYPES는 Lost Ark 게임의 UI 구성 요소를 나타내는 객체입니다.
+ *
+ * @description
+ * ARKGRID_CORE_TYPES는 두 가지 유형(order, chaos)으로 구성되어 있으며,
+ * 각 유형에는 세 가지 항목(해, 달, 별)이 포함되어 있습니다.
+ * 각 항목은 고유의 id, 이름(name), 아이콘(icon) URL을 가지고 있습니다.
+ *
+ * @property {Object[]} order - "order" 유형에 속하는 항목 목록.
+ * @property {string} order[].id - 항목의 고유 식별자. (예: 'sun', 'moon', 'star')
+ * @property {string} order[].name - 항목의 이름. (예: '해', '달', '별')
+ * @property {string} order[].icon - 항목의 아이콘 URL.
+ *
+ * @property {Object[]} chaos - "chaos" 유형에 속하는 항목 목록.
+ * @property {string} chaos[].id - 항목의 고유 식별자. (예: 'sun', 'moon', 'star')
+ * @property {string} chaos[].name - 항목의 이름. (예: '해', '달', '별')
+ * @property {string} chaos[].icon - 항목의 아이콘 URL.
+ */
 const ARKGRID_CORE_TYPES = {
     order: [
-        { id: 'sun', name: '해', icon: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_96.png' },
-        { id: 'moon', name: '달', icon: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_97.png' },
-        { id: 'star', name: '별', icon: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_98.png' }
+        {id: 'sun', name: '해', icon: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_96.png'},
+        {id: 'moon', name: '달', icon: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_97.png'},
+        {id: 'star', name: '별', icon: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_98.png'}
     ],
     chaos: [
-        { id: 'sun', name: '해', icon: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_99.png' },
-        { id: 'moon', name: '달', icon: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_100.png' },
-        { id: 'star', name: '별', icon: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_101.png' }
+        {id: 'sun', name: '해', icon: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_99.png'},
+        {id: 'moon', name: '달', icon: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_100.png'},
+        {id: 'star', name: '별', icon: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_101.png'}
     ]
 };
 
+/**
+ * ARKGRID_GRADE_DATA는 게임 내 등급에 따른 속성 데이터를 정의합니다.
+ *
+ * 각 등급은 다음과 같은 정보를 포함합니다:
+ * - 이름 (name): 등급의 이름.
+ * - 정신력 (willpower): 해당 등급의 정신력 수치.
+ * - 활성화 포인트 (activationPoints): 해당 등급에서 사용할 수 있는 활성화 포인트 목록.
+ *
+ * 속성 설명:
+ * - heroic: '영웅' 등급의 데이터.
+ * - legendary: '전설' 등급의 데이터.
+ * - relic: '유물' 등급의 데이터.
+ * - ancient: '고대' 등급의 데이터.
+ */
 const ARKGRID_GRADE_DATA = {
-    heroic: { name: '영웅', willpower: 7, activationPoints: [10] },
-    legendary: { name: '전설', willpower: 11, activationPoints: [10, 14] },
-    relic: { name: '유물', willpower: 15, activationPoints: [10, 14, 17, 18, 19, 20] },
-    ancient: { name: '고대', willpower: 17, activationPoints: [10, 14, 17, 18, 19, 20] }
+    heroic: {name: '영웅', willpower: 7, activationPoints: [10]},
+    legendary: {name: '전설', willpower: 11, activationPoints: [10, 14]},
+    relic: {name: '유물', willpower: 15, activationPoints: [10, 14, 17, 18, 19, 20]},
+    ancient: {name: '고대', willpower: 17, activationPoints: [10, 14, 17, 18, 19, 20]}
 };
 
+/**
+ * GRADE_COLORS 변수는 아이템 등급에 따라 색상을 정의하는 객체입니다.
+ * 각 키는 아이템의 등급을 나타내며, 값은 해당 등급에 대응하는 색상을 나타냅니다.
+ */
 const GRADE_COLORS = {
     "heroic": "#ba00f9",
     "legendary": "#f99200",
@@ -75,6 +119,11 @@ let selectedCores = {};
 // --- Main Initialization ---
 document.addEventListener('DOMContentLoaded', init);
 
+/**
+ * 초기화 메서드로, 사용자 인터페이스 요소를 설정하고 이벤트 리스너를 바인딩합니다.
+ *
+ * @return {void} 초기화 작업을 수행하며 반환 값이 없습니다.
+ */
 function init() {
     // Initialize tabs
     initializeTabs();
@@ -87,9 +136,27 @@ function init() {
 
     // Create gem input dropdowns
     const gemInputForm = document.getElementById('gem-input-form');
-    const gemTypeDropdown = createCustomDropdown('gem-type', '젬 종류', [{id: 'order', name: '질서', icon: GEM_IMAGES.order}, {id: 'chaos', name: '혼돈', icon: GEM_IMAGES.chaos}], (w, s) => { w.dataset.value = s.value; w.querySelector('.custom-select-trigger').innerHTML = s.icon ? `<img src="${s.icon}" alt="${s.text}"><span>${s.text}</span>` : `<span>${s.text}</span>`; w.querySelector('.custom-options').style.display = 'none'; });
-    const willpowerDropdown = createCustomDropdown('gem-willpower', '의지력', [{id: 3, name: 3}, {id: 4, name: 4}, {id: 5, name: 5}, {id: 6, name: 6}, {id: 7, name: 7}], (w, s) => { w.dataset.value = s.value; w.querySelector('.custom-select-trigger').innerHTML = `<span>${s.text}</span>`; w.querySelector('.custom-options').style.display = 'none'; });
-    const pointDropdown = createCustomDropdown('gem-point', '포인트', [{id: 1, name: 1}, {id: 2, name: 2}, {id: 3, name: 3}, {id: 4, name: 4}, {id: 5, name: 5}], (w, s) => { w.dataset.value = s.value; w.querySelector('.custom-select-trigger').innerHTML = `<span>${s.text}</span>`; w.querySelector('.custom-options').style.display = 'none'; });
+    const gemTypeDropdown = createCustomDropdown('gem-type', '젬 종류',
+        [{id: 'order', name: '질서', icon: GEM_IMAGES.order}, {id: 'chaos', name: '혼돈', icon: GEM_IMAGES.chaos}],
+        (w, s) => {
+            w.dataset.value = s.value;
+            w.querySelector('.custom-select-trigger').innerHTML = s.icon ? `<img src="${s.icon}" alt="${s.text}"><span>${s.text}</span>` : `<span>${s.text}</span>`;
+            w.querySelector('.custom-options').style.display = 'none';
+        });
+    const willpowerDropdown = createCustomDropdown('gem-willpower', '의지력',
+        [{id: 3, name: 3}, {id: 4, name: 4}, {id: 5, name: 5}, {id: 6, name: 6}, {id: 7, name: 7}],
+        (w, s) => {
+            w.dataset.value = s.value;
+            w.querySelector('.custom-select-trigger').innerHTML = `<span>${s.text}</span>`;
+            w.querySelector('.custom-options').style.display = 'none';
+        });
+    const pointDropdown = createCustomDropdown('gem-point', '포인트',
+        [{id: 1, name: 1}, {id: 2, name: 2}, {id: 3, name: 3}, {id: 4, name: 4}, {id: 5, name: 5}],
+        (w, s) => {
+            w.dataset.value = s.value;
+            w.querySelector('.custom-select-trigger').innerHTML = `<span>${s.text}</span>`;
+            w.querySelector('.custom-options').style.display = 'none';
+        });
 
     // Create row containers
     const row1 = document.createElement('div');
@@ -115,6 +182,15 @@ function init() {
 
 // --- Functions ---
 
+/**
+ * 주어진 ID, 기본 텍스트 및 옵션 항목을 사용하여 커스텀 드롭다운을 생성합니다.
+ *
+ * @param {string} id 드롭다운의 고유 식별자
+ * @param {string} defaultText 드롭다운의 기본 표시 텍스트
+ * @param {Array.<{id: string, name: string, icon: string|undefined}>} items 드롭다운에서 표시될 옵션 항목 배열, 각 항목은 고유 ID, 이름, 선택적 아이콘을 가짐
+ * @param {function} onSelect 드롭다운 옵션 선택 시 호출되는 콜백 함수. 선택된 항목의 데이터를 매개변수로 받음(wrapper, {value, text, icon})
+ * @return {Element} DOM 요소로 생성된 커스텀 드롭다운 컴포넌트
+ */
 function createCustomDropdown(id, defaultText, items, onSelect) {
     const wrapper = document.createElement('div');
     wrapper.className = 'custom-select-wrapper';
@@ -134,7 +210,7 @@ function createCustomDropdown(id, defaultText, items, onSelect) {
     defaultOption.dataset.value = 'none';
     defaultOption.innerHTML = `<span>${defaultText}</span>`;
     defaultOption.addEventListener('click', () => {
-        onSelect(wrapper, { value: 'none', text: defaultText, icon: null });
+        onSelect(wrapper, {value: 'none', text: defaultText, icon: null});
     });
     options.appendChild(defaultOption);
 
@@ -145,8 +221,8 @@ function createCustomDropdown(id, defaultText, items, onSelect) {
         option.dataset.value = item.id;
         option.innerHTML = item.icon ? `<img src="${item.icon}" alt="${item.name}"><span>${item.name}</span>` : `<span>${item.name}</span>`;
         option.addEventListener('click', () => {
-             if (!option.classList.contains('disabled')) {
-                onSelect(wrapper, { value: item.id, text: item.name, icon: item.icon });
+            if (!option.classList.contains('disabled')) {
+                onSelect(wrapper, {value: item.id, text: item.name, icon: item.icon});
             }
         });
         options.appendChild(option);
@@ -165,6 +241,15 @@ function createCustomDropdown(id, defaultText, items, onSelect) {
     return wrapper;
 }
 
+/**
+ * 주어진 항목으로 구성된 드롭다운을 생성합니다.
+ *
+ * @param {string} id 드롭다운 요소의 고유 식별자입니다.
+ * @param {string} defaultText 드롭다운에 표시될 기본 텍스트입니다.
+ * @param {Array} items 드롭다운에 포함될 항목 객체 배열입니다. 각 객체는 id와 name 속성을 포함해야 합니다.
+ * @param {function} onSelect 항목 선택 시 호출될 콜백 함수입니다. 선택된 항목의 정보(value, text, icon)를 매개변수로 전달받습니다.
+ * @return {HTMLElement} 생성된 드롭다운을 포함하는 div 요소입니다.
+ */
 function createGradeDropdown(id, defaultText, items, onSelect) {
     const wrapper = document.createElement('div');
     wrapper.className = 'custom-select-wrapper';
@@ -185,7 +270,7 @@ function createGradeDropdown(id, defaultText, items, onSelect) {
         option.dataset.value = item.id;
         option.innerHTML = `<span>${item.name}</span>`;
         option.addEventListener('click', () => {
-            onSelect(wrapper, { value: item.id, text: item.name, icon: null });
+            onSelect(wrapper, {value: item.id, text: item.name, icon: null});
         });
         options.appendChild(option);
     });
@@ -203,6 +288,12 @@ function createGradeDropdown(id, defaultText, items, onSelect) {
     return wrapper;
 }
 
+/**
+ * 주어진 슬롯 ID에 해당하는 슬롯 결과를 초기화합니다.
+ *
+ * @param {number|string} slotId 초기화할 슬롯의 ID
+ * @return {void}
+ */
 function clearSlotResults(slotId) {
     const socketContainer = document.getElementById(`sockets-${slotId}`);
     socketContainer.innerHTML = '';
@@ -214,6 +305,14 @@ function clearSlotResults(slotId) {
     document.getElementById(`summary-${slotId}`).innerHTML = '';
 }
 
+/**
+ * 지정된 유형과 ID를 바탕으로 코어 슬롯을 생성합니다.
+ * 생성된 코어 슬롯은 목표 포인트 선택, 등급 선택, 그리고 코어 종류 선택을 위한 커스텀 드롭다운과 관련 데이터를 포함합니다.
+ *
+ * @param {string} type 코어 슬롯의 유형을 나타내는 문자열입니다.
+ * @param {string} id 코어 슬롯의 고유 식별자를 나타내는 문자열입니다.
+ * @return {HTMLElement} 완성된 코어 슬롯 요소를 반환합니다.
+ */
 function createCoreSlot(type, id) {
     const slotId = `${type}-${id}`;
     const slot = document.createElement('div');
@@ -223,7 +322,10 @@ function createCoreSlot(type, id) {
     const controls = document.createElement('div');
     controls.className = 'core-controls';
 
-    const gradeDataForDropdown = Object.keys(ARKGRID_GRADE_DATA).map(key => ({ id: key, name: ARKGRID_GRADE_DATA[key].name }));
+    const gradeDataForDropdown = Object.keys(ARKGRID_GRADE_DATA).map(key => ({
+        id: key,
+        name: ARKGRID_GRADE_DATA[key].name
+    }));
 
     // --- Create all 3 dropdowns ---
     const targetSelectWrapper = createCustomDropdown(`target-${slotId}`, '목표 포인트', [], (tWrapper, tSelected) => {
@@ -251,7 +353,7 @@ function createCoreSlot(type, id) {
         slotElement.classList.remove('target-failed');
         clearSlotResults(slotId);
 
-        const targetOptions = activationPoints.map(p => ({ id: p, name: p }));
+        const targetOptions = activationPoints.map(p => ({id: p, name: p}));
 
         // Find existing target dropdown to replace
         const oldTargetDropdown = document.getElementById(`target-${slotId}`);
@@ -330,6 +432,11 @@ function createCoreSlot(type, id) {
     return slot;
 }
 
+/**
+ * 새 젬 데이터를 추가하는 함수입니다. 유효하지 않은 데이터가 입력되었을 경우 경고 메시지를 출력합니다.
+ *
+ * @return {undefined} 함수는 반환값이 없으며, 젬 데이터를 추가하거나 경고 메시지를 출력하고 종료합니다.
+ */
 function addGem() {
     const type = document.getElementById('gem-type').dataset.value;
     const willpowerStr = document.getElementById('gem-willpower').dataset.value;
@@ -348,7 +455,7 @@ function addGem() {
         return;
     }
 
-    const gem = { id: nextGemId++, type, willpower, point };
+    const gem = {id: nextGemId++, type, willpower, point};
 
     if (type === 'order') {
         orderGems.push(gem);
@@ -359,6 +466,12 @@ function addGem() {
     renderGemLists();
 }
 
+/**
+ * `renderGemLists` 메서드는 orderGems와 chaosGems 배열에 있는 젬 데이터를 기반으로
+ * 각각 orderGemList와 chaosGemList DOM 요소에 젬 목록을 렌더링합니다.
+ *
+ * @return {void} 이 메서드는 반환값이 없으며, DOM을 업데이트합니다.
+ */
 function renderGemLists() {
     orderGemList.innerHTML = '';
     chaosGemList.innerHTML = '';
@@ -400,6 +513,13 @@ function renderGemLists() {
 }
 
 
+/**
+ * 지정된 타입에 따라 옵션을 업데이트하는 함수입니다. 선택된 값들을 확인하고,
+ * 중복 선택이 되지 않도록 옵션의 상태를 조정합니다.
+ *
+ * @param {string} type 업데이트할 타입의 식별자입니다.
+ * @return {void} 반환값이 없습니다.
+ */
 function updateCoreTypeOptions(type) {
     const selectedValues = [];
     for (let i = 1; i <= 3; i++) {
@@ -427,7 +547,12 @@ function updateCoreTypeOptions(type) {
 }
 
 
-
+/**
+ * `calculate` 함수는 슬롯에 할당된 보석과 핵심 데이터에 따라 최적의 보석 조합을 계산하고 결과를 렌더링합니다.
+ * 슬롯별 목표 점수 달성 여부를 확인하며, 사용된 보석은 이후 슬롯 계산에서 제외됩니다.
+ *
+ * @return {void} 이 함수는 반환값이 없으며, DOM을 업데이트하여 계산 결과를 반영합니다.
+ */
 function calculate() {
     let availableOrderGems = [...orderGems];
     let availableChaosGems = [...chaosGems];
@@ -444,7 +569,7 @@ function calculate() {
 
             const socketContainer = document.getElementById(`sockets-${slotId}`);
             socketContainer.innerHTML = '';
-             for (let j = 0; j < MAX_GEMS_PER_CORE; j++) {
+            for (let j = 0; j < MAX_GEMS_PER_CORE; j++) {
                 const socket = document.createElement('div');
                 socket.className = 'gem-socket';
                 socketContainer.appendChild(socket);
@@ -476,6 +601,18 @@ function calculate() {
     });
 }
 
+/**
+ * 주어진 슬롯 ID와 결과값을 기반으로 UI 요소를 업데이트하여 결과를 렌더링합니다.
+ *
+ * @param {string} slotId - 업데이트할 슬롯의 ID.
+ * @param {Object} core - 코어 오브젝트이며, 동작에 필요한 데이터(예: 의지력)를 포함합니다.
+ * @param {Object} result - 렌더링할 결과 데이터로, `achieved`, `points`, `gems`, `willpower`를 포함합니다.
+ * @param {boolean} result.achieved - 요청된 목표 달성 여부.
+ * @param {number} result.points - 결과 포인트 값.
+ * @param {Array} result.gems - 보석 정보 배열.
+ * @param {number} result.willpower - 계산된 의지력 값.
+ * @return {void} 이 메서드는 값을 반환하지 않습니다.
+ */
 function renderResult(slotId, core, result) {
     const socketContainer = document.getElementById(`sockets-${slotId}`);
     const summaryEl = document.getElementById(`summary-${slotId}`);
@@ -510,9 +647,19 @@ function renderResult(slotId, core, result) {
     summaryEl.innerHTML = `[의지력: ${result.willpower} / ${core.willpower}] [포인트: ${result.points}]`;
 }
 
+/**
+ * 사용 가능한 보석과 코어의 조건을 기반으로 최적의 보석 조합을 찾습니다. 목표 점수를 달성할 수 있다면 해당 정보를 반환하고,
+ * 목표를 달성하지 못할 경우 가장 높은 점수를 얻을 수 있는 조합을 반환합니다.
+ *
+ * @param {Object} core 코어의 정보를 포함하는 객체. core.willpower는 총 제한 의지력입니다.
+ * @param {Array} availableGems 사용 가능한 보석 목록. 각 보석은 point와 willpower 속성을 가진 객체입니다.
+ * @param {number} targetPoint 달성해야 할 목표 점수. 0 이하의 값이 주어진 경우 목표 점수 없이 최적 조합을 찾습니다.
+ * @return {Object} 최적의 보석 조합을 나타내는 객체. gems, points, willpower, achieved 속성을 포함하며,
+ *                  achieved가 true면 목표를 달성했음을 나타냅니다. 달성하지 못했다면 achieved는 false입니다.
+ */
 function findBestGemCombination(core, availableGems, targetPoint) {
-    let bestAchieved = { gems: [], points: 0, willpower: Infinity, achieved: false };
-    let bestOverall = { gems: [], points: -1, willpower: 0 };
+    let bestAchieved = {gems: [], points: 0, willpower: Infinity, achieved: false};
+    let bestOverall = {gems: [], points: -1, willpower: 0};
 
     const sortedGems = [...availableGems].sort((a, b) => b.point - a.point);
 
@@ -529,7 +676,7 @@ function findBestGemCombination(core, availableGems, targetPoint) {
         // Check for and update bestAchieved combination
         if (targetPoint > 0 && currentPoints >= targetPoint) {
             if (currentWillpower < bestAchieved.willpower ||
-               (currentWillpower === bestAchieved.willpower && currentPoints > bestAchieved.points)) {
+                (currentWillpower === bestAchieved.willpower && currentPoints > bestAchieved.points)) {
                 bestAchieved = {
                     gems: [...currentGems],
                     points: currentPoints,
@@ -561,6 +708,6 @@ function findBestGemCombination(core, availableGems, targetPoint) {
         return bestAchieved;
     } else {
         // Return the best combination found, marking that it didn't meet the target
-        return { ...bestOverall, achieved: false };
+        return {...bestOverall, achieved: false};
     }
 }
