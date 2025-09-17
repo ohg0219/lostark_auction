@@ -4,14 +4,14 @@ console.log("arkgrid.js loaded");
 
 const ARKGRID_CORE_TYPES = {
     order: [
-        { id: 'sun', name: '해', icon: 'https://ohg0219.github.io/lostark_auction/image/질서_해.png' },
-        { id: 'moon', name: '달', icon: 'https://ohg0219.github.io/lostark_auction/image/질서_달.png' },
-        { id: 'star', name: '별', icon: 'https://ohg0219.github.io/lostark_auction/image/질서_별.png' }
+        { id: 'sun', name: '해', icon: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_96.png' },
+        { id: 'moon', name: '달', icon: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_97.png' },
+        { id: 'star', name: '별', icon: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_98.png' }
     ],
     chaos: [
-        { id: 'sun', name: '해', icon: 'https://ohg0219.github.io/lostark_auction/image/혼돈_해.png' },
-        { id: 'moon', name: '달', icon: 'https://ohg0219.github.io/lostark_auction/image/혼돈_달.png' },
-        { id: 'star', name: '별', icon: 'https://ohg0219.github.io/lostark_auction/image/혼돈_별.png' }
+        { id: 'sun', name: '해', icon: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_99.png' },
+        { id: 'moon', name: '달', icon: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_100.png' },
+        { id: 'star', name: '별', icon: 'https://cdn-lostark.game.onstove.com/efui_iconatlas/use/use_13_101.png' }
     ]
 };
 
@@ -271,7 +271,7 @@ function renderGemLists() {
     const createGemElement = (gem) => {
         const gemEl = document.createElement('div');
         gemEl.className = `gem-item ${gem.type}`;
-        gemEl.textContent = `의지력: ${gem.willpower}, P: ${gem.point}`;
+        gemEl.textContent = `의지력: ${gem.willpower}, 포인트: ${gem.point}`;
 
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = '삭제';
