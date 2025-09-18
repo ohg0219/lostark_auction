@@ -1261,7 +1261,7 @@ function openGemEditPopup(gem) {
         const possibleNames = Object.keys(GEM_DATA[gem.type]);
         const nameDropdown = createCustomDropdown(
             'edit-gem-name',
-            '이 젬의 종류를 선택하세요',
+            '젬 종류',
             possibleNames.map(name => ({ id: name, name: name })),
             (w, s) => {
                 if (s.value !== 'none') {
