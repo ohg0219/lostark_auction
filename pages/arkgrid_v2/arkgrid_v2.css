@@ -1,0 +1,649 @@
+body {
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: #121212;
+    color: #E0E0E0;
+    margin: 0;
+    padding: 24px;
+}
+
+main {
+    width: 1000px;
+    margin: auto;
+}
+
+h1 {
+    text-align: center;
+    color: #C89B3C;
+    font-weight: 500;
+}
+
+h2, h3 {
+    color: #ffffff;
+    padding-bottom: 10px;
+}
+
+.gem-input-section h2,
+.gem-list-section h2 {
+    color: #C89B3C;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0 0 16px 0;
+    padding-bottom: 8px;
+    text-align: center;
+}
+
+/* Main container with side-by-side layout */
+.main-container {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+/* Left side - Core Management */
+.core-management-container {
+    width: 616px;
+}
+
+/* Tab styling */
+.tab-container {
+    background-color: #1E1E1E;
+    border: 1px solid #333333;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    margin-bottom: 20px;
+}
+
+.tab-buttons {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+    background-color: #121212;
+    border-radius: 8px;
+    padding: 4px;
+}
+
+.tab-button {
+    flex: 1;
+    padding: 12px 16px;
+    border: none;
+    background-color: transparent;
+    color: #888888;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.tab-button:hover {
+    background-color: #2a2a2a;
+    color: #E0E0E0;
+}
+
+.tab-button.active {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.tab-button.active[data-tab="order-cores"] {
+    background-color: #AE0D0B;
+}
+
+.tab-button.active[data-tab="chaos-cores"] {
+    background-color: #2B7DB2;
+}
+
+.tab-content {
+    min-height: 400px;
+}
+
+.tab-panel {
+    display: none;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+.core-column {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Right side - Gem Management */
+.gem-management-container {
+    width: 360px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.core-slot {
+    background-color: #1E1E1E;
+    border: 2px solid #333333;
+    border-radius: 12px;
+    padding: 16px;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.core-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.core-info, .result-summary {
+    font-size: 14px;
+    margin: 10px 0;
+    padding: 8px;
+    background-color: #121212;
+    border-radius: 8px;
+    border: 1px solid #333333;
+    min-height: 20px;
+}
+
+/* Custom Dropdown */
+.custom-select-wrapper {
+    position: relative;
+    width: 150px;
+    font-size: 14px;
+}
+#add-gem-btn {
+    width: 318px;
+    margin-top: 10px;
+    height: 35px;
+    justify-content: center;
+}
+.custom-select-trigger {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    background-color: #121212;
+    border: 1px solid #333333;
+    border-radius: 8px;
+    cursor: pointer;
+    gap: 8px;
+    height: 15px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.custom-select-trigger:focus {
+    outline: none;
+    border-color: #C89B3C;
+    box-shadow: 0 0 0 3px rgba(200, 155, 60, 0.2);
+}
+.custom-select-trigger img {
+    width: 24px;
+    height: 24px;
+}
+.custom-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #121212;
+    border: 1px solid #333333;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    z-index: 10;
+    display: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.custom-option {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    cursor: pointer;
+    gap: 8px;
+}
+.custom-option:hover {
+    background-color: #2a2a2a;
+}
+.custom-option.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #333333;
+}
+.custom-option img {
+    width: 24px;
+    height: 24px;
+}
+
+.gem-sockets {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.gem-socket {
+    border: 2px dashed #666666;
+    border-radius: 8px;
+    width: auto;
+    height: 60px;
+    padding: 6px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    line-height: 1.2;
+    text-align: center;
+    background-color: #0a0a0a;
+    box-sizing: border-box;
+}
+
+.gem-socket.gem-equipped {
+    border: 2px solid #333333;
+    background-color: #1a1a1a;
+}
+
+.gem-socket-content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+}
+
+.gem-socket-image {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+.gem-socket-stats {
+    font-size: 12px;
+    line-height: 1.1;
+    text-align: center;
+}
+
+.gem-socket-stats div {
+    margin: 1px 0;
+}
+
+
+.core-slot.target-failed .gem-socket {
+    border-color: #ff4d4d;
+    background-color: #2a0f0f;
+}
+
+
+.gem-input-section, .gem-list-section {
+    background-color: #1E1E1E;
+    border: 1px solid #333333;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.gem-input-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+}
+
+.gem-input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.gem-input-row.single {
+    justify-content: flex-start;
+}
+
+.gem-input-row.single .custom-select-wrapper {
+    width: 248px; /* 120px + 8px gap + 120px */
+}
+
+.gem-input-row.single button {
+    width: 248px;
+    height: 31px;
+    padding: 8px;
+    font-size: 14px;
+    background-color: #1E1E1E;
+    color: #E0E0E0;
+    border: 1px solid #333333;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.gem-input-form > .custom-select-wrapper {
+    flex-shrink: 0;
+}
+
+.gem-input-form > button {
+    flex-shrink: 0;
+    padding: 8px;
+    font-size: 14px;
+    width: 120px;
+    height: 31px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.gem-lists {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+#order-gem-list-container h4,
+#chaos-gem-list-container h4 {
+    text-align: center;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+#order-gem-list-container h4 {
+    color: #F44336; /* Bright Red */
+}
+
+#chaos-gem-list-container h4 {
+    color: #2196F3; /* Bright Blue */
+}
+
+.gem-list {
+    background-color: #121212;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #333333;
+    min-height: 436px;
+    max-height: 436px;
+    overflow-y: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-content: flex-start;
+    position: relative;
+}
+
+/* 커스텀 스크롤바 */
+.gem-list::-webkit-scrollbar {
+    width: 20px;
+}
+
+.gem-list::-webkit-scrollbar-track {
+    background: #0a0a0a;
+    border-radius: 4px;
+}
+
+.gem-list::-webkit-scrollbar-thumb {
+    background: #333333;
+    border-radius: 4px;
+    border: 1px solid #1E1E1E;
+}
+
+.gem-list::-webkit-scrollbar-thumb:hover {
+    background: #C89B3C;
+}
+
+.gem-list::-webkit-scrollbar-thumb:active {
+    background: #b58a35;
+}
+
+/* Firefox 스크롤바 */
+.gem-list {
+    scrollbar-width: auto;
+    scrollbar-color: #333333 #0a0a0a;
+}
+
+.gem-list:empty::before {
+    content: '등록된 젬이 없습니다';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #666666;
+    font-size: 14px;
+    font-style: italic;
+}
+
+.gem-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    border: 1px solid #333333;
+    background-color: #1E1E1E;
+    color: #E0E0E0;
+    position: relative;
+    flex: 0 0 auto;
+}
+
+.gem-item-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.gem-item-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.gem-item-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.gem-item-title {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.gem-item-sub-options {
+    font-size: 11px;
+    color: #aaa;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.character-class-section {
+    background-color: #1E1E1E;
+    border: 1px solid #333333;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.character-class-section h2 {
+    color: #C89B3C;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0 0 16px 0;
+    padding-bottom: 8px;
+    text-align: center;
+}
+#character-class-selector .custom-select-wrapper {
+    width: 100%;
+}
+
+
+.gem-item.order::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background-color: #AE0D0B;
+    border-radius: 8px 0 0 8px;
+}
+
+.gem-item.chaos::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background-color: #2B7DB2;
+    border-radius: 8px 0 0 8px;
+}
+
+.gem-delete-btn {
+    background: none;
+    border: none;
+    color: #888888;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    margin-left: 8px;
+}
+
+.gem-delete-btn:hover {
+    background-color: #ff4d4d;
+    color: #ffffff;
+    transform: scale(1.1);
+}
+
+button.nav-button {
+    background-color: #1E1E1E;
+    color: #E0E0E0;
+    border: 1px solid #333333;
+    padding: 12px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    font-size: 1rem;
+}
+
+button.nav-button:hover {
+    background-color: #2a2a2a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+#calculate-btn {
+    width: 1000px;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    background-color: #C89B3C;
+    color: #121212;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin: 20px auto;
+    display: block;
+}
+
+#calculate-btn:hover {
+    background-color: #b58a35;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: #1E1E1E;
+    padding: 24px;
+    border-radius: 12px;
+    border: 1px solid #333;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    width: 350px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.modal-content h2 {
+    margin: 0;
+    text-align: center;
+    color: #C89B3C;
+}
+
+.modal-content input {
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid #555;
+    background-color: #2a2a2a;
+    color: #f2f2f7;
+    font-size: 16px;
+}
+
+.password-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.password-hint {
+    font-size: 12px;
+    color: #888;
+    margin: 0;
+    padding-left: 2px;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.modal-buttons .nav-button {
+    padding: 8px 16px;
+}
+
+#modal-confirm-btn {
+    background-color: #C89B3C;
+    color: #121212;
+    font-weight: bold;
+}
+
+/* Alert Modal Styles */
+#alert-modal .modal-content {
+    gap: 20px;
+}
+
+#alert-modal-message {
+    margin: 0;
+    text-align: center;
+    font-size: 16px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+#alert-modal .modal-buttons {
+    justify-content: center;
+}
