@@ -170,6 +170,7 @@ const gemEditSaveBtn = document.getElementById('gem-edit-save-btn');
 const gemEditCancelBtn = document.getElementById('gem-edit-cancel-btn');
 // Spinner Modal
 const spinnerModal = document.getElementById('spinner-modal');
+const spinnerText = document.querySelector('#spinner-modal .spinner-text');
 
 
 // --- State ---
@@ -861,33 +862,17 @@ function updateCoreTypeOptions(type) {
  *
  * @return {void} 이 함수는 반환값이 없으며, DOM을 업데이트하여 계산 결과를 반영합니다.
  */
-const TIER_SCORE_BONUS = 10000;
-
-function getCombinationScore(combination, activationPoints, targetPoint) {
-    let achievedTier = 0;
-    const sortedTiers = [...activationPoints].sort((a, b) => b - a);
-
-    for (const tier of sortedTiers) {
-        if (combination.points >= tier) {
-            achievedTier = tier;
-            break;
-        }
-    }
-
-    // Do not give extra score for over-achieving the user's target.
-    // This prioritizes effectiveness score once the target is met.
-    let scoringTier = achievedTier;
-    if (scoringTier > targetPoint) {
-        scoringTier = targetPoint;
-    }
-
-    // The score is primarily driven by the tier, then by the sub-option effectiveness.
-    return (scoringTier * TIER_SCORE_BONUS) + combination.effectivenessScore;
+function showSpinner(text) {
+    spinnerText.textContent = text;
+    spinnerModal.style.display = 'flex';
 }
 
+function hideSpinner() {
+    spinnerModal.style.display = 'none';
+}
 
 function calculate() {
-    spinnerModal.style.display = 'flex';
+    showSpinner('최적 조합을 계산 중입니다...');
 
     // Use setTimeout to allow the spinner to render before the heavy calculation starts
     setTimeout(() => {
@@ -927,46 +912,37 @@ function calculate() {
                 return;
             }
 
-            // 2. For each active core, find all possible gem combinations that fit willpower
-            const corePossibleCombinations = new Map();
+            // 2. For each active core, find all combinations that meet the specific targetPoint
+            const coreValidCombinations = new Map();
             for (const core of activeCores) {
                 const availableGems = core.type === 'order' ? orderGems : chaosGems;
                 let combinations = findAllPossibleCombinations(core.coreData, availableGems, selectedCharacterClass);
 
-                // Pruning: Only consider combinations that meet at least the lowest activation tier.
-                if (core.activationPoints.length > 0) {
-                    const lowestTier = Math.min(...core.activationPoints);
-                    combinations = combinations.filter(c => c.points >= lowestTier);
-                }
+                // Filter combinations by the exact target point. No fallbacks.
+                combinations = combinations.filter(c => c.points >= core.targetPoint);
 
-                // Heuristic: Sort combinations by score to explore best options first.
-                combinations.sort((a, b) => {
-                    const scoreA = getCombinationScore(a, core.activationPoints, core.targetPoint);
-                    const scoreB = getCombinationScore(b, core.activationPoints, core.targetPoint);
-                    return scoreB - scoreA;
-                });
+                // Heuristic: Sort by effectiveness score to find the best solution faster.
+                combinations.sort((a, b) => b.effectivenessScore - a.effectivenessScore);
 
-                corePossibleCombinations.set(core.id, combinations);
+                coreValidCombinations.set(core.id, combinations);
             }
 
-            // 3. Backtracking solver to find the assignment with the highest total score
+            // 3. Backtracking solver to find the assignment with the highest total effectiveness score
             let bestAssignment = { score: -1, assignment: {} };
-    const CALCULATION_TIMEOUT = 5000; // 5 seconds
-    const startTime = Date.now();
-    let timedOut = false;
-    let iterationCounter = 0;
-
+            const CALCULATION_TIMEOUT = 5000; // 5 seconds
+            const startTime = Date.now();
+            let timedOut = false;
+            let iterationCounter = 0;
 
             function solve(coreIndex, currentAssignment, currentScore, usedGemIds) {
-        iterationCounter++;
-        if (iterationCounter % 2000 === 0) { // Check time every 2000 iterations
-            if (Date.now() - startTime > CALCULATION_TIMEOUT) {
-                timedOut = true;
-                return;
-            }
-        }
-
-        if (timedOut) return;
+                iterationCounter++;
+                if (iterationCounter % 2000 === 0) {
+                    if (Date.now() - startTime > CALCULATION_TIMEOUT) {
+                        timedOut = true;
+                        return;
+                    }
+                }
+                if (timedOut) return;
 
                 // Base case: If we have processed all cores, check if this solution is the best one
                 if (coreIndex === activeCores.length) {
@@ -977,42 +953,45 @@ function calculate() {
                 }
 
                 const core = activeCores[coreIndex];
-                const combinations = corePossibleCombinations.get(core.id);
+                const combinations = coreValidCombinations.get(core.id);
 
-                // Path 1: Try to assign a combination to this core
-                for (const combination of combinations) {
-                    const combinationGemIds = combination.gems.map(g => g.id);
-                    const hasConflict = combinationGemIds.some(id => usedGemIds.has(id));
+                // Path 1 (Optional): Try to assign a combination to this core.
+                // If a core has no valid combinations, we must skip it.
+                if (combinations && combinations.length > 0) {
+                    for (const combination of combinations) {
+                        const combinationGemIds = combination.gems.map(g => g.id);
+                        const hasConflict = combinationGemIds.some(id => usedGemIds.has(id));
 
-                    if (!hasConflict) {
-                        const newUsedGemIds = new Set([...usedGemIds, ...combinationGemIds]);
-                const score = getCombinationScore(combination, core.activationPoints, core.targetPoint);
-                        currentAssignment[core.id] = { ...combination, score: score, achievedTier: Math.floor(score / TIER_SCORE_BONUS) };
-                        solve(coreIndex + 1, currentAssignment, currentScore + score, newUsedGemIds);
-                if (timedOut) return; // Exit early if timeout occurred in a deeper recursion
-                        delete currentAssignment[core.id]; // Backtrack
+                        if (!hasConflict) {
+                            const newUsedGemIds = new Set([...usedGemIds, ...combinationGemIds]);
+                            currentAssignment[core.id] = combination;
+                            solve(coreIndex + 1, currentAssignment, currentScore + combination.effectivenessScore, newUsedGemIds);
+                            if (timedOut) return;
+                            delete currentAssignment[core.id]; // Backtrack
+                        }
                     }
                 }
 
-                // Path 2: Don't assign anything to this core (score for this core is 0)
+                // Path 2: Don't assign anything to this core.
+                // This allows finding solutions for a subset of cores if a full solution is impossible.
                 solve(coreIndex + 1, currentAssignment, currentScore, usedGemIds);
             }
 
             solve(0, {}, 0, new Set());
 
-    if (timedOut) {
-        showCustomAlert('계산 시간이 5초를 초과하여, 현재까지 찾은 최적의 조합을 표시합니다. 더 많은 젬을 보유한 경우 결과가 완전하지 않을 수 있습니다.');
-    }
+            if (timedOut) {
+                showCustomAlert('계산 시간이 5초를 초과하여, 현재까지 찾은 최적의 조합을 표시합니다. 더 많은 젬을 보유한 경우 결과가 완전하지 않을 수 있습니다.');
+            }
 
             // 4. Render the best found assignment
-            if (bestAssignment.score >= 0) { // Check for >= 0 to handle cases where score is exactly 0
+            if (bestAssignment.score >= 0) {
                 for (const core of activeCores) {
                     const result = bestAssignment.assignment[core.id];
                     if (result) {
-                        renderResult(core.id, core.coreData, { ...result, achieved: true, targetPoint: core.targetPoint });
+                        renderResult(core.id, core.coreData, { ...result, achieved: true });
                     } else {
                         // This core was not part of the best solution
-                        renderResult(core.id, core.coreData, { achieved: false, targetPoint: core.targetPoint });
+                        renderResult(core.id, core.coreData, { achieved: false });
                     }
                 }
             } else {
@@ -1022,7 +1001,7 @@ function calculate() {
                 });
             }
         } finally {
-            spinnerModal.style.display = 'none';
+            hideSpinner();
         }
     }, 0);
 }
@@ -1033,11 +1012,11 @@ function renderResult(slotId, core, result) {
     const slotElement = document.getElementById(`slot-${slotId}`);
 
     // Clear previous state
-    slotElement.classList.remove('target-failed', 'target-partial');
+    slotElement.classList.remove('target-failed');
 
-    if (!result || !result.achieved || result.achievedTier === 0) {
+    if (!result || !result.achieved) {
         slotElement.classList.add('target-failed');
-        summaryEl.textContent = `목표(${result.targetPoint}) 조합을 찾을 수 없습니다.`;
+        summaryEl.textContent = '최적 조합을 찾을 수 없습니다.';
         return;
     }
 
@@ -1062,17 +1041,8 @@ function renderResult(slotId, core, result) {
         }
     });
 
-    // Add classes based on success level
-    if (result.achievedTier < result.targetPoint) {
-        slotElement.classList.add('target-partial');
-    }
-
-    // Build summary string
-    summaryEl.innerHTML = `
-        <span class="summary-tier">목표: ${result.targetPoint} / 달성: ${result.achievedTier}</span>
-        <span class="summary-stats">[의지력: ${result.willpower}/${core.willpower}] [포인트: ${result.points}]</span>
-        <span class="summary-eff">유효효율: ${(result.effectivenessScore * 100).toFixed(4)}%</span>
-    `;
+    // Build original summary string
+    summaryEl.innerHTML = `[의지력: ${result.willpower} / ${core.willpower}] [포인트: ${result.points}] [유효효율: ${(result.effectivenessScore * 100).toFixed(4)}%]`;
 }
 
 function calculateEffectiveness(gem, characterClass) {
@@ -1227,8 +1197,11 @@ async function loadData(characterName, password) {
 
         if (data.password === password) {
             closeDataPopup();
-            showCustomAlert('데이터를 불러옵니다.');
-            restoreState(data.arkgrid_config);
+            showSpinner('데이터를 불러오는 중...');
+            // Use a timeout to allow the spinner to render before state restoration
+            setTimeout(() => {
+                restoreState(data.arkgrid_config);
+            }, 50);
         } else {
             showCustomAlert('비밀번호가 일치하지 않습니다.');
         }
@@ -1310,8 +1283,7 @@ function restoreState(config) {
     }
 
     // 3. Recalculate results
-    // Use a small timeout to ensure all DOM updates from the clicks have been processed
-    setTimeout(calculate, 100);
+    calculate();
 }
 
 // --- Modal Functions ---

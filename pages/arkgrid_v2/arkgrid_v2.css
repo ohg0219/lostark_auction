@@ -698,27 +698,6 @@ button.nav-button:hover {
     min-width: 80px;
 }
 
-.core-slot.target-partial {
-    border-color: #f9d71c; /* Gold color for partial success */
-}
-
-.result-summary span {
-    display: block;
-}
-
-.result-summary span + span {
-    margin-top: 5px;
-}
-
-.summary-tier {
-    font-weight: bold;
-    font-size: 15px;
-}
-.summary-stats, .summary-eff {
-    font-size: 13px;
-    color: #b3b3b3;
-}
-
 /* Spinner Modal Styles */
 #spinner-modal .spinner-content {
     display: flex;
