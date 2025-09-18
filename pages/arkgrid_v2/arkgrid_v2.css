@@ -7,7 +7,7 @@ body {
 }
 
 main {
-    width: 1100px;
+    width: 1000px;
     margin: auto;
 }
 
@@ -114,7 +114,7 @@ h2, h3 {
 
 /* Right side - Gem Management */
 .gem-management-container {
-    width: 440px;
+    width: 360px;
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -696,4 +696,25 @@ button.nav-button:hover {
 #gem-edit-form .gem-input-row .custom-select-wrapper:nth-of-type(2) {
     flex-grow: 1;
     min-width: 80px;
+}
+
+.core-slot.target-partial {
+    border-color: #f9d71c; /* Gold color for partial success */
+}
+
+.result-summary span {
+    display: block;
+}
+
+.result-summary span + span {
+    margin-top: 5px;
+}
+
+.summary-tier {
+    font-weight: bold;
+    font-size: 15px;
+}
+.summary-stats, .summary-eff {
+    font-size: 13px;
+    color: #b3b3b3;
 }
