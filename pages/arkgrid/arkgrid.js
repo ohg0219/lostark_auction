@@ -752,7 +752,7 @@ function runCalculation() {
         if (bestAssignment.score >= 0) {
             for (const core of activeCores) {
                 const result = bestAssignment.assignment[core.id];
-                renderResult(slotId, core.coreData, { ...(result || {}), achieved: !!result });
+                renderResult(core.id, core.coreData, { ...(result || {}), achieved: !!result });
             }
         } else {
             activeCores.forEach(core => {
