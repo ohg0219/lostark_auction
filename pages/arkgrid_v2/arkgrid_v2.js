@@ -860,48 +860,120 @@ function updateCoreTypeOptions(type) {
  * @return {void} 이 함수는 반환값이 없으며, DOM을 업데이트하여 계산 결과를 반영합니다.
  */
 function calculate() {
-    let availableOrderGems = [...orderGems];
-    let availableChaosGems = [...chaosGems];
-
+    // 1. Gather all active cores and clear previous results
+    const activeCores = [];
     ['order', 'chaos'].forEach(type => {
         for (let i = 1; i <= 3; i++) {
             const slotId = `${type}-${i}`;
-            const typeId = document.getElementById(`type-${slotId}`).dataset.value;
-            const gradeId = document.getElementById(`grade-${slotId}`).dataset.value;
-            const targetPointStr = document.getElementById(`target-${slotId}`).dataset.value;
-
-            // Clear previous results
             const slotElement = document.getElementById(`slot-${slotId}`);
             slotElement.classList.remove('target-failed');
             clearSlotResults(slotId);
 
-            if (typeId === 'none' || gradeId === 'none' || targetPointStr === 'none') {
-                continue;
+            const typeId = document.getElementById(`type-${slotId}`).dataset.value;
+            const gradeId = document.getElementById(`grade-${slotId}`).dataset.value;
+            const targetPointStr = document.getElementById(`target-${slotId}`).dataset.value;
+
+            if (typeId !== 'none' && gradeId !== 'none' && targetPointStr !== 'none') {
+                const targetPoint = parseInt(targetPointStr, 10);
+                const coreTypeData = ARKGRID_CORE_TYPES[type].find(t => t.id === typeId);
+                const coreGradeData = ARKGRID_GRADE_DATA[gradeId];
+                activeCores.push({
+                    id: slotId,
+                    type: type,
+                    coreData: {
+                        name: `${coreTypeData.name} (${coreGradeData.name})`,
+                        willpower: coreGradeData.willpower,
+                    },
+                    targetPoint: targetPoint
+                });
             }
-
-            const targetPoint = parseInt(targetPointStr, 10);
-            const coreTypeData = ARKGRID_CORE_TYPES[type].find(t => t.id === typeId);
-            const coreGradeData = ARKGRID_GRADE_DATA[gradeId];
-
-            const core = {
-                name: `${coreTypeData.name} (${coreGradeData.name})`,
-                willpower: coreGradeData.willpower,
-            };
-
-            const availableGems = type === 'order' ? availableOrderGems : availableChaosGems;
-            const result = findBestGemCombination(core, availableGems, targetPoint, selectedCharacterClass);
-
-            if (result && result.gems && result.gems.length > 0) {
-                const usedGemIds = result.gems.map(g => g.id);
-                if (type === 'order') {
-                    availableOrderGems = availableOrderGems.filter(gem => !usedGemIds.includes(gem.id));
-                } else {
-                    availableChaosGems = availableChaosGems.filter(gem => !usedGemIds.includes(gem.id));
-                }
-            }
-            renderResult(slotId, core, result);
         }
     });
+
+    if (activeCores.length === 0) return; // No cores to calculate
+
+    // 2. For each active core, find all possible gem combinations
+    const coreSolutions = new Map();
+    for (const core of activeCores) {
+        const availableGems = core.type === 'order' ? orderGems : chaosGems;
+        const combinations = findAllValidCombinations(core.coreData, availableGems, core.targetPoint, selectedCharacterClass);
+        if (combinations.length === 0) {
+            // If any core has zero possible combinations, no solution is possible.
+            renderResult(core.id, core.coreData, { achieved: false });
+            // We can continue to see if other cores can be solved, but a global solution is impossible.
+        }
+        coreSolutions.set(core.id, combinations);
+    }
+
+
+    // 3. Backtracking solver to find the best assignment
+    let bestAssignment = null;
+    let maxEffectiveness = -1;
+
+    function solve(coreIndex, currentAssignment, usedGemIds) {
+        // Base case: If all cores have been assigned, we have a complete solution
+        if (coreIndex === activeCores.length) {
+            const totalEffectiveness = Object.values(currentAssignment).reduce((acc, solution) => acc + solution.effectivenessScore, 0);
+            if (totalEffectiveness > maxEffectiveness) {
+                maxEffectiveness = totalEffectiveness;
+                bestAssignment = JSON.parse(JSON.stringify(currentAssignment)); // Deep copy
+            }
+            return;
+        }
+
+        const core = activeCores[coreIndex];
+        const possibleCombinations = coreSolutions.get(core.id);
+
+        if (!possibleCombinations || possibleCombinations.length === 0) {
+             // This core couldn't be solved, so we can't form a full assignment.
+             // We still try to solve the rest of the cores.
+             solve(coreIndex + 1, currentAssignment, usedGemIds);
+             return;
+        }
+
+
+        // Iterate through each possible combination for the current core
+        for (const combination of possibleCombinations) {
+            const combinationGemIds = combination.gems.map(g => g.id);
+
+            // Check for conflicts with already used gems
+            const hasConflict = combinationGemIds.some(id => usedGemIds.has(id));
+
+            if (!hasConflict) {
+                // If no conflict, assign this combination and recurse
+                currentAssignment[core.id] = combination;
+                const newUsedGemIds = new Set([...usedGemIds, ...combinationGemIds]);
+
+                solve(coreIndex + 1, currentAssignment, newUsedGemIds);
+
+                // Backtrack
+                delete currentAssignment[core.id];
+            }
+        }
+         // Also explore the path of not assigning anything to this core,
+         // allowing solutions where not all cores are filled.
+        solve(coreIndex + 1, currentAssignment, usedGemIds);
+    }
+
+    solve(0, {}, new Set());
+
+    // 4. Render the best found assignment
+    if (bestAssignment) {
+        for (const core of activeCores) {
+            const result = bestAssignment[core.id];
+            if (result) {
+                renderResult(core.id, core.coreData, { ...result, achieved: true });
+            } else {
+                // This core was not part of the best solution
+                renderResult(core.id, core.coreData, { achieved: false });
+            }
+        }
+    } else {
+        // No solution found at all that satisfies any combination of cores
+        activeCores.forEach(core => {
+            renderResult(core.id, core.coreData, { achieved: false });
+        });
+    }
 }
 
 function renderResult(slotId, core, result) {
@@ -951,7 +1023,7 @@ function calculateEffectiveness(gem, characterClass) {
     return score;
 }
 
-function findBestGemCombination(core, availableGems, targetPoint, characterClass) {
+function findAllValidCombinations(core, availableGems, targetPoint, characterClass) {
     let allCombinations = [];
 
     function find(startIndex, currentGems, currentWillpower, currentPoints) {
@@ -982,34 +1054,7 @@ function findBestGemCombination(core, availableGems, targetPoint, characterClass
 
     const validCombinations = allCombinations.filter(c => c.points >= targetPoint);
 
-    if (validCombinations.length === 0) {
-        return { gems: [], points: -1, willpower: 0, achieved: false, effectivenessScore: 0 };
-    }
-
-    validCombinations.sort((a, b) => {
-        // Priority 1: Gem Point / Willpower Efficiency (higher is better)
-        const efficiencyA = a.points / a.willpower || 0;
-        const efficiencyB = b.points / b.willpower || 0;
-        if (efficiencyA !== efficiencyB) {
-            return efficiencyB - efficiencyA;
-        }
-
-        // Priority 2: Effectiveness Score (higher is better)
-        if (a.effectivenessScore !== b.effectivenessScore) {
-            return b.effectivenessScore - a.effectivenessScore;
-        }
-
-        // Tie-breaker 1: Lower willpower is better
-        if (a.willpower !== b.willpower) {
-            return a.willpower - b.willpower;
-        }
-
-        // Tie-breaker 2: Lower points (but still >= target) is better
-        return a.points - b.points;
-    });
-
-    const best = validCombinations[0];
-    return { ...best, achieved: true };
+    return validCombinations;
 }
 
 async function saveData(characterName, password) {
