@@ -637,6 +637,10 @@ button.nav-button:hover {
 }
 
 /* Alert Modal Styles */
+#alert-modal {
+    z-index: 1050; /* Ensure it appears above other modals */
+}
+
 #alert-modal .modal-content {
     gap: 20px;
 }
