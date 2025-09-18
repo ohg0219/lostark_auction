@@ -726,9 +726,19 @@ function renderGemLists() {
         gemEl.className = `gem-item ${gem.type}`;
 
         const gemImage = GEM_IMAGES[gem.type];
-        gemEl.innerHTML = `
-            <div class="gem-item-content">
-                <img src="${gemImage}" alt="${gem.type} 젬" class="gem-item-image">
+        let detailsHtml;
+
+        if (gem.name === '기존 젬') {
+            detailsHtml = `
+                <div class="gem-item-details">
+                    <div class="gem-item-title">${gem.name}</div>
+                    <div class="gem-item-sub-options">
+                        <span>의지력: ${gem.willpower} / 포인트: ${gem.point}</span>
+                    </div>
+                </div>
+            `;
+        } else {
+            detailsHtml = `
                 <div class="gem-item-details">
                     <div class="gem-item-title">${gem.name} (W:${gem.willpower} / P:${gem.point})</div>
                     <div class="gem-item-sub-options">
@@ -736,6 +746,13 @@ function renderGemLists() {
                         <span>${gem.subOption2} Lv.${gem.subOption2Level}</span>
                     </div>
                 </div>
+            `;
+        }
+
+        gemEl.innerHTML = `
+            <div class="gem-item-content">
+                <img src="${gemImage}" alt="${gem.type} 젬" class="gem-item-image">
+                ${detailsHtml}
             </div>
         `;
 
@@ -986,7 +1003,8 @@ async function saveData(characterName, password) {
     const arkgridConfig = {
         orderGems: orderGems,
         chaosGems: chaosGems,
-        coreSlots: coreSlots
+        coreSlots: coreSlots,
+        characterClass: selectedCharacterClass
     };
 
     try {
@@ -1073,9 +1091,35 @@ async function loadData(characterName, password) {
 }
 
 function restoreState(config) {
-    // 1. Restore Gems
-    orderGems = config.orderGems || [];
-    chaosGems = config.chaosGems || [];
+    // Helper function to migrate old gem data format to the new one
+    const migrateGem = (gem) => {
+        if (gem.hasOwnProperty('name')) {
+            return gem; // Already in new format
+        }
+        // Old format, add default values for new properties
+        return {
+            ...gem,
+            name: '기존 젬',
+            subOption1: '-',
+            subOption1Level: 0,
+            subOption2: '-',
+            subOption2Level: 0,
+        };
+    };
+
+    // 1. Restore and migrate Gems
+    orderGems = (config.orderGems || []).map(migrateGem);
+    chaosGems = (config.chaosGems || []).map(migrateGem);
+
+    // Restore character class
+    selectedCharacterClass = config.characterClass || '딜러';
+    const classDropdown = document.getElementById('character-class');
+    if (classDropdown) {
+        const classOption = classDropdown.querySelector(`.custom-option[data-value="${selectedCharacterClass}"]`);
+        if (classOption) {
+            classOption.click();
+        }
+    }
 
     // Reset nextGemId to prevent ID conflicts
     const maxOrderId = orderGems.reduce((max, gem) => Math.max(max, gem.id), -1);
