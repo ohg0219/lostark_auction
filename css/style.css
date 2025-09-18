@@ -147,6 +147,11 @@ p.description {
     border-color: #C89B3C;
     box-shadow: 0 6px 16px rgba(200,155,60,0.1);
 }
+.custom-option.selected {
+    background-color: #C89B3C;
+    color: #121212;
+    font-weight: 500;
+}
 .card-top-row {
     display: flex;
     justify-content: space-between;
@@ -438,38 +443,4 @@ p.description {
     margin-bottom: 16px;
     border-bottom: 1px solid #333333;
     padding-bottom: 16px;
-}
-
-/* --- Gem Edit Modal --- */
-#gem-edit-form {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    padding: 10px 0;
-}
-
-#gem-edit-form .gem-input-row,
-.gem-edit-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-#gem-edit-form label,
-.gem-edit-row label {
-    width: 80px;
-    text-align: right;
-    font-weight: 500;
-    color: #C89B3C;
-    flex-shrink: 0;
-}
-
-.gem-edit-row input {
-    flex-grow: 1;
-    padding: 8px;
-    border-radius: 4px;
-    border: 1px solid #555;
-    background-color: #2a2a2a;
-    color: #f2f2f7;
-    font-size: 16px;
 }

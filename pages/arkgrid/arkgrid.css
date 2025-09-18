@@ -613,4 +613,40 @@ button.nav-button:hover {
     justify-content: center;
 }
 
-/* No page-specific styles needed for the modal anymore */
+/* Gem Edit Modal Specific Styles */
+#gem-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 10px 0;
+}
+
+.gem-edit-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.gem-edit-row label {
+    width: 80px;
+    text-align: right;
+    font-weight: 500;
+    color: #C89B3C;
+    flex-shrink: 0;
+}
+
+.gem-edit-row input {
+    flex-grow: 1;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #555;
+    background-color: #2a2a2a;
+    color: #f2f2f7;
+    font-size: 16px;
+}
+
+.custom-option.selected {
+    background-color: #C89B3C !important;
+    color: #121212 !important;
+    font-weight: 500;
+}

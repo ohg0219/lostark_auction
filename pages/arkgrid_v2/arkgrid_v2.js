@@ -283,13 +283,24 @@ function createCustomDropdown(id, defaultText, items, onSelect) {
     const options = document.createElement('div');
     options.className = 'custom-options';
 
+    const handleSelection = (optionEl, value, text, icon) => {
+        // Remove 'selected' from all options
+        options.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('selected'));
+        // Add 'selected' to the clicked option
+        if (optionEl) {
+            optionEl.classList.add('selected');
+        }
+        // Call the original onSelect callback
+        onSelect(wrapper, { value, text, icon });
+    };
+
     // Default option
     const defaultOption = document.createElement('div');
     defaultOption.className = 'custom-option';
     defaultOption.dataset.value = 'none';
     defaultOption.innerHTML = `<span>${defaultText}</span>`;
     defaultOption.addEventListener('click', () => {
-        onSelect(wrapper, {value: 'none', text: defaultText, icon: null});
+        handleSelection(defaultOption, 'none', defaultText, null);
     });
     options.appendChild(defaultOption);
 
@@ -301,7 +312,7 @@ function createCustomDropdown(id, defaultText, items, onSelect) {
         option.innerHTML = item.icon ? `<img src="${item.icon}" alt="${item.name}"><span>${item.name}</span>` : `<span>${item.name}</span>`;
         option.addEventListener('click', () => {
             if (!option.classList.contains('disabled')) {
-                onSelect(wrapper, {value: item.id, text: item.name, icon: item.icon});
+                handleSelection(option, item.id, item.name, item.icon);
             }
         });
         options.appendChild(option);
@@ -309,6 +320,15 @@ function createCustomDropdown(id, defaultText, items, onSelect) {
 
     trigger.addEventListener('click', () => {
         if (wrapper.classList.contains('disabled')) return;
+        // Set the initial selected class when opening
+        const currentValue = wrapper.dataset.value;
+        options.querySelectorAll('.custom-option').forEach(opt => {
+            if (opt.dataset.value === String(currentValue)) {
+                opt.classList.add('selected');
+            } else {
+                opt.classList.remove('selected');
+            }
+        });
         // Close other dropdowns
         document.querySelectorAll('.custom-options').forEach(opt => {
             if (opt !== options) opt.style.display = 'none';
@@ -1260,16 +1280,18 @@ function openGemEditPopup(gem) {
     gemEditForm.appendChild(createDropdownRow('포인트', 'edit-gem-point', gem.point, gemInfo.gemPoints.map(p => ({ id: p, name: p })), onSelect));
 
     // Sub Option 1
-    const subOption1Row = createDropdownRow('부가옵션 1', 'edit-gem-sub-option-1', gem.subOption1, gemInfo.subOptions.map(opt => ({ id: opt, name: opt })), onSelect);
-    const subOption1LevelDropdown = createCustomDropdown('edit-gem-sub-option-1-level', `Lv.${gem.subOption1Level}`, [1, 2, 3, 4, 5].map(l => ({ id: l, name: `Lv.${l}` })), onSelect);
+    const subOption1Row = createDropdownRow('부가옵션 1', 'edit-gem-sub-option-1', '부가옵션 1', gemInfo.subOptions.map(opt => ({ id: opt, name: opt })), onSelect);
+    subOption1Row.querySelector('.custom-select-wrapper').dataset.value = gem.subOption1;
+    const subOption1LevelDropdown = createCustomDropdown('edit-gem-sub-option-1-level', '레벨', [1, 2, 3, 4, 5].map(l => ({ id: l, name: `Lv.${l}` })), onSelect);
     subOption1LevelDropdown.dataset.value = gem.subOption1Level;
     subOption1Row.appendChild(subOption1LevelDropdown);
     gemEditForm.appendChild(subOption1Row);
 
 
     // Sub Option 2
-    const subOption2Row = createDropdownRow('부가옵션 2', 'edit-gem-sub-option-2', gem.subOption2, gemInfo.subOptions.map(opt => ({ id: opt, name: opt })), onSelect);
-    const subOption2LevelDropdown = createCustomDropdown('edit-gem-sub-option-2-level', `Lv.${gem.subOption2Level}`, [1, 2, 3, 4, 5].map(l => ({ id: l, name: `Lv.${l}` })), onSelect);
+    const subOption2Row = createDropdownRow('부가옵션 2', 'edit-gem-sub-option-2', '부가옵션 2', gemInfo.subOptions.map(opt => ({ id: opt, name: opt })), onSelect);
+    subOption2Row.querySelector('.custom-select-wrapper').dataset.value = gem.subOption2;
+    const subOption2LevelDropdown = createCustomDropdown('edit-gem-sub-option-2-level', '레벨', [1, 2, 3, 4, 5].map(l => ({ id: l, name: `Lv.${l}` })), onSelect);
     subOption2LevelDropdown.dataset.value = gem.subOption2Level;
     subOption2Row.appendChild(subOption2LevelDropdown);
     gemEditForm.appendChild(subOption2Row);
