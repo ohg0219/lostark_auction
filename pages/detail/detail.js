@@ -23,15 +23,15 @@ const gradeColors = {
 
 // Corrected and simplified category map
 const categoryMap = {
-    "40000": "/pages/engraving/",
-    "refining": "/pages/honing/",
-    "210000": "/pages/jewels/",
-    "230000": "/pages/gems/"
+    "40000": "/lostark_auction/pages/engraving/",
+    "refining": "/lostark_auction/pages/honing/",
+    "210000": "/lostark_auction/pages/jewels/",
+    "230000": "/lostark_auction/pages/gems/"
 };
 
 function getCategoryPage(categoryCode) {
-    if (!categoryCode) return "/index.html";
-    return categoryMap[categoryCode] || "/index.html";
+    if (!categoryCode) return "/";
+    return categoryMap[categoryCode] || "/";
 }
 
 async function loadItemDetails() {
