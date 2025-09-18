@@ -136,12 +136,18 @@ const modalCancelBtn = document.getElementById('modal-cancel-btn');
 const alertModal = document.getElementById('alert-modal');
 const alertModalMessage = document.getElementById('alert-modal-message');
 const alertModalOkBtn = document.getElementById('alert-modal-ok-btn');
+// Gem Edit Modal DOM Elements
+const gemEditModal = document.getElementById('gem-edit-modal');
+const gemEditForm = document.getElementById('gem-edit-form');
+const gemEditSaveBtn = document.getElementById('gem-edit-save-btn');
+const gemEditCancelBtn = document.getElementById('gem-edit-cancel-btn');
 
 
 // --- State ---
 let orderGems = [];
 let chaosGems = [];
 let nextGemId = 0;
+let currentlyEditingGem = null;
 // selectedCores will track the selections for all 6 slots.
 // Example: { 'chaos-1': 'sun', 'chaos-2': 'moon', ... }
 let selectedCores = {};
@@ -239,6 +245,15 @@ function init() {
             closeCustomAlert();
         }
     });
+
+    // Gem Edit Modal button listeners
+    gemEditCancelBtn.addEventListener('click', closeGemEditPopup);
+    gemEditModal.addEventListener('click', (e) => {
+        if (e.target === gemEditModal) {
+            closeGemEditPopup();
+        }
+    });
+    gemEditSaveBtn.addEventListener('click', saveGemEdit);
 }
 
 // --- Functions ---
@@ -539,6 +554,7 @@ function renderGemLists() {
     const createGemElement = (gem) => {
         const gemEl = document.createElement('div');
         gemEl.className = `gem-item ${gem.type}`;
+        gemEl.style.cursor = 'pointer';
 
         const gemImage = GEM_IMAGES[gem.type];
         gemEl.innerHTML = `
@@ -555,7 +571,8 @@ function renderGemLists() {
         deleteBtn.className = 'gem-delete-btn';
         deleteBtn.innerHTML = '×';
         deleteBtn.title = '젬 삭제';
-        deleteBtn.onclick = () => {
+        deleteBtn.onclick = (e) => {
+            e.stopPropagation();
             if (gem.type === 'order') {
                 orderGems = orderGems.filter(g => g.id !== gem.id);
             } else {
@@ -565,6 +582,11 @@ function renderGemLists() {
         };
 
         gemEl.appendChild(deleteBtn);
+
+        gemEl.addEventListener('click', () => {
+            openGemEditPopup(gem);
+        });
+
         return gemEl;
     };
 
@@ -1004,4 +1026,48 @@ function showCustomAlert(message) {
 
 function closeCustomAlert() {
     alertModal.style.display = 'none';
+}
+
+// --- Gem Edit Modal Functions ---
+function openGemEditPopup(gem) {
+    currentlyEditingGem = gem;
+    gemEditForm.innerHTML = `
+        <div class="gem-edit-row">
+            <label for="edit-willpower">의지력:</label>
+            <input type="number" id="edit-willpower" value="${gem.willpower}" min="3" max="7">
+        </div>
+        <div class="gem-edit-row">
+            <label for="edit-point">포인트:</label>
+            <input type="number" id="edit-point" value="${gem.point}" min="1" max="5">
+        </div>
+    `;
+    gemEditModal.style.display = 'flex';
+}
+
+function closeGemEditPopup() {
+    gemEditModal.style.display = 'none';
+    currentlyEditingGem = null;
+    gemEditForm.innerHTML = '';
+}
+
+function saveGemEdit() {
+    if (!currentlyEditingGem) return;
+
+    const newWillpower = parseInt(document.getElementById('edit-willpower').value, 10);
+    const newPoint = parseInt(document.getElementById('edit-point').value, 10);
+
+    if (isNaN(newWillpower) || isNaN(newPoint) || newWillpower < 3 || newWillpower > 7 || newPoint < 1 || newPoint > 5) {
+        showCustomAlert('유효한 젬 정보를 입력하세요. (의지력: 3-7, 포인트: 1-5)');
+        return;
+    }
+
+    const gemToUpdate = orderGems.find(g => g.id === currentlyEditingGem.id) || chaosGems.find(g => g.id === currentlyEditingGem.id);
+
+    if (gemToUpdate) {
+        gemToUpdate.willpower = newWillpower;
+        gemToUpdate.point = newPoint;
+    }
+
+    renderGemLists();
+    closeGemEditPopup();
 }

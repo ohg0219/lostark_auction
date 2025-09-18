@@ -612,3 +612,5 @@ button.nav-button:hover {
 #alert-modal .modal-buttons {
     justify-content: center;
 }
+
+/* No page-specific styles needed for the modal anymore */
