@@ -1342,6 +1342,11 @@ function saveGemEdit() {
     const newSubOption2Level = parseInt(document.getElementById('edit-gem-sub-option-2-level').dataset.value, 10);
 
     // Validation
+    if (newSubOption1 === '-' || newSubOption2 === '-' || !newSubOption1Level || !newSubOption2Level) {
+        showCustomAlert('모든 부가옵션과 레벨을 선택해주세요.');
+        return;
+    }
+
     if (isNaN(newWillpower) || isNaN(newPoint) || isNaN(newSubOption1Level) || isNaN(newSubOption2Level)) {
         showCustomAlert('모든 젬 정보를 올바르게 입력해주세요.');
         return;
