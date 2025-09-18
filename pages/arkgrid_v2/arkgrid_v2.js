@@ -394,7 +394,6 @@ function setupNewGemInputForm() {
             updateGemNameDropdown(selected.value);
         }
     );
-    gemTypeDropdown.style.width = '120px';
 
     const gemNameDropdown = createCustomDropdown('gem-name', '젬 이름', [], (wrapper, selected) => {
         wrapper.dataset.value = selected.value;
@@ -402,7 +401,6 @@ function setupNewGemInputForm() {
         wrapper.querySelector('.custom-options').style.display = 'none';
         updateDynamicDropdowns(selected.value);
     });
-    gemNameDropdown.style.width = '120px';
     gemNameDropdown.classList.add('disabled');
 
 

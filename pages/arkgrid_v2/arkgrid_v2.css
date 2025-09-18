@@ -149,8 +149,14 @@ h2, h3 {
 /* Custom Dropdown */
 .custom-select-wrapper {
     position: relative;
-    width: 120px;
+    width: 150px;
     font-size: 14px;
+}
+#add-gem-btn {
+    width: 318px;
+    margin-top: 10px;
+    height: 35px;
+    justify-content: center;
 }
 .custom-select-trigger {
     display: flex;
@@ -218,7 +224,7 @@ h2, h3 {
     border: 2px dashed #666666;
     border-radius: 8px;
     width: auto;
-    height: 48px;
+    height: 60px;
     padding: 6px;
     display: flex;
     flex-direction: row;
