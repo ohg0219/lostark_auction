@@ -118,6 +118,20 @@ p.description {
     #grid-container {
         grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
     }
+    .ad-container {
+        margin: 15px 10px;
+        padding: 10px;
+    }
+}
+
+.ad-container {
+    text-align: center;
+    margin: 20px auto;
+    padding: 5px;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    max-width: 728px;
 }
 
 .item-card {
