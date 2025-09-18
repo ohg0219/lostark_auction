@@ -141,6 +141,9 @@ const gemEditModal = document.getElementById('gem-edit-modal');
 const gemEditForm = document.getElementById('gem-edit-form');
 const gemEditSaveBtn = document.getElementById('gem-edit-save-btn');
 const gemEditCancelBtn = document.getElementById('gem-edit-cancel-btn');
+// Spinner Modal
+const spinnerModal = document.getElementById('spinner-modal');
+const spinnerText = document.querySelector('#spinner-modal .spinner-text');
 
 
 // --- State ---
@@ -636,51 +639,129 @@ function updateCoreTypeOptions(type) {
  * @return {void} 이 함수는 반환값이 없으며, DOM을 업데이트하여 계산 결과를 반영합니다.
  */
 function calculate() {
-    let availableOrderGems = [...orderGems];
-    let availableChaosGems = [...chaosGems];
+    // This function is now a wrapper to call the real calculation logic inside a timeout,
+    // allowing the UI to update with a spinner first.
+    // The actual logic is implemented in runCalculation.
+    showSpinner('최적 조합을 계산 중입니다...');
+    setTimeout(runCalculation, 0);
+}
 
-    ['order', 'chaos'].forEach(type => {
-        for (let i = 1; i <= 3; i++) {
-            const slotId = `${type}-${i}`;
-            const typeId = document.getElementById(`type-${slotId}`).dataset.value;
-            const gradeId = document.getElementById(`grade-${slotId}`).dataset.value;
-            const targetPoint = parseInt(document.getElementById(`target-${slotId}`).dataset.value, 10) || 0;
+function showSpinner(text) {
+    spinnerText.textContent = text;
+    spinnerModal.style.display = 'flex';
+}
 
-            const slotElement = document.getElementById(`slot-${slotId}`);
-            slotElement.classList.remove('target-failed');
+function hideSpinner() {
+    spinnerModal.style.display = 'none';
+}
 
-            const socketContainer = document.getElementById(`sockets-${slotId}`);
-            socketContainer.innerHTML = '';
-            for (let j = 0; j < MAX_GEMS_PER_CORE; j++) {
-                const socket = document.createElement('div');
-                socket.className = 'gem-socket';
-                socketContainer.appendChild(socket);
-            }
+function runCalculation() {
+    try {
+        // 1. Gather all active cores and clear previous results
+        const activeCores = [];
+        ['order', 'chaos'].forEach(type => {
+            for (let i = 1; i <= 3; i++) {
+                const slotId = `${type}-${i}`;
+                const slotElement = document.getElementById(`slot-${slotId}`);
+                slotElement.classList.remove('target-failed');
+                clearSlotResults(slotId);
 
-            if (typeId === 'none' || gradeId === 'none') continue;
+                const typeId = document.getElementById(`type-${slotId}`).dataset.value;
+                const gradeId = document.getElementById(`grade-${slotId}`).dataset.value;
+                const targetPointStr = document.getElementById(`target-${slotId}`).dataset.value;
 
-            const coreTypeData = ARKGRID_CORE_TYPES[type].find(t => t.id === typeId);
-            const coreGradeData = ARKGRID_GRADE_DATA[gradeId];
-
-            const core = {
-                name: `${coreTypeData.name} (${coreGradeData.name})`,
-                willpower: coreGradeData.willpower,
-            };
-
-            const availableGems = type === 'order' ? availableOrderGems : availableChaosGems;
-            const result = findBestGemCombination(core, availableGems, targetPoint);
-
-            if (result.points > -1) {
-                const usedGemIds = result.gems.map(g => g.id);
-                if (type === 'order') {
-                    availableOrderGems = availableOrderGems.filter(gem => !usedGemIds.includes(gem.id));
-                } else {
-                    availableChaosGems = availableChaosGems.filter(gem => !usedGemIds.includes(gem.id));
+                if (typeId !== 'none' && gradeId !== 'none' && targetPointStr !== 'none') {
+                    const coreTypeData = ARKGRID_CORE_TYPES[type].find(t => t.id === typeId);
+                    const coreGradeData = ARKGRID_GRADE_DATA[gradeId];
+                    activeCores.push({
+                        id: slotId,
+                        type: type,
+                        coreData: {
+                            name: `${coreTypeData.name} (${coreGradeData.name})`,
+                            willpower: coreGradeData.willpower,
+                        },
+                        targetPoint: parseInt(targetPointStr, 10),
+                    });
                 }
             }
-            renderResult(slotId, core, result);
+        });
+
+        if (activeCores.length === 0) return;
+
+        // 2. For each active core, find all combinations that meet the specific targetPoint
+        const coreValidCombinations = new Map();
+        for (const core of activeCores) {
+            const availableGems = core.type === 'order' ? orderGems : chaosGems;
+            let combinations = findAllPossibleCombinations(core.coreData, availableGems);
+            combinations = combinations.filter(c => c.points >= core.targetPoint);
+            combinations.sort((a, b) => b.points - a.points); // Sort by points as a heuristic
+            coreValidCombinations.set(core.id, combinations);
         }
-    });
+
+        // 3. Backtracking solver to find the assignment with the highest total points
+        let bestAssignment = { score: -1, assignment: {} };
+        const CALCULATION_TIMEOUT = 5000;
+        const startTime = Date.now();
+        let timedOut = false;
+        let iterationCounter = 0;
+
+        function solve(coreIndex, currentAssignment, currentScore, usedGemIds) {
+            iterationCounter++;
+            if (iterationCounter % 2000 === 0) {
+                if (Date.now() - startTime > CALCULATION_TIMEOUT) {
+                    timedOut = true;
+                    return;
+                }
+            }
+            if (timedOut) return;
+
+            if (coreIndex === activeCores.length) {
+                if (currentScore > bestAssignment.score) {
+                    bestAssignment = { score: currentScore, assignment: JSON.parse(JSON.stringify(currentAssignment)) };
+                }
+                return;
+            }
+
+            const core = activeCores[coreIndex];
+            const combinations = coreValidCombinations.get(core.id);
+
+            if (combinations && combinations.length > 0) {
+                for (const combination of combinations) {
+                    const combinationGemIds = combination.gems.map(g => g.id);
+                    const hasConflict = combinationGemIds.some(id => usedGemIds.has(id));
+
+                    if (!hasConflict) {
+                        const newUsedGemIds = new Set([...usedGemIds, ...combinationGemIds]);
+                        currentAssignment[core.id] = combination;
+                        solve(coreIndex + 1, currentAssignment, currentScore + combination.points, newUsedGemIds);
+                        if (timedOut) return;
+                        delete currentAssignment[core.id];
+                    }
+                }
+            }
+            solve(coreIndex + 1, currentAssignment, currentScore, usedGemIds);
+        }
+
+        solve(0, {}, 0, new Set());
+
+        if (timedOut) {
+            showCustomAlert('계산 시간이 5초를 초과하여, 현재까지 찾은 최적의 조합을 표시합니다.');
+        }
+
+        // 4. Render the best found assignment
+        if (bestAssignment.score >= 0) {
+            for (const core of activeCores) {
+                const result = bestAssignment.assignment[core.id];
+                renderResult(slotId, core.coreData, { ...(result || {}), achieved: !!result });
+            }
+        } else {
+            activeCores.forEach(core => {
+                renderResult(core.id, core.coreData, { achieved: false });
+            });
+        }
+    } finally {
+        hideSpinner();
+    }
 }
 
 /**
@@ -925,8 +1006,11 @@ async function loadData(characterName, password) {
 
         if (data.password === password) {
             closeDataPopup();
-            showCustomAlert('데이터를 불러옵니다.');
-            restoreState(data.arkgrid_config);
+            showSpinner('데이터를 불러오는 중...');
+            // Use a timeout to allow the spinner to render before state restoration
+            setTimeout(() => {
+                restoreState(data.arkgrid_config);
+            }, 50);
         } else {
             showCustomAlert('비밀번호가 일치하지 않습니다.');
         }
@@ -982,8 +1066,7 @@ function restoreState(config) {
     }
 
     // 3. Recalculate results
-    // Use a small timeout to ensure all DOM updates from the clicks have been processed
-    setTimeout(calculate, 100);
+    calculate();
 }
 
 // --- Modal Functions ---
@@ -1070,4 +1153,34 @@ function saveGemEdit() {
 
     renderGemLists();
     closeGemEditPopup();
+}
+
+function findAllPossibleCombinations(core, availableGems) {
+    let allCombinations = [];
+
+    function find(startIndex, currentGems, currentWillpower, currentPoints) {
+        if (currentWillpower <= core.willpower) {
+            allCombinations.push({
+                gems: [...currentGems],
+                points: currentPoints,
+                willpower: currentWillpower
+            });
+        }
+
+        if (currentGems.length >= MAX_GEMS_PER_CORE || startIndex >= availableGems.length) {
+            return;
+        }
+
+        for (let i = startIndex; i < availableGems.length; i++) {
+            const newGem = availableGems[i];
+            if (currentWillpower + newGem.willpower <= core.willpower) {
+                currentGems.push(newGem);
+                find(i + 1, currentGems, currentWillpower + newGem.willpower, currentPoints + newGem.point);
+                currentGems.pop();
+            }
+        }
+    }
+
+    find(0, [], 0, 0);
+    return allCombinations;
 }
