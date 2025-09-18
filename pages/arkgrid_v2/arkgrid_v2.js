@@ -1253,6 +1253,32 @@ function openGemEditPopup(gem) {
     currentlyEditingGem = gem;
     gemEditForm.innerHTML = ''; // Clear previous form
 
+    // Handle V1 gems that don't have a name
+    if (!gem.name) {
+        const title = document.getElementById('gem-edit-modal-title');
+        title.textContent = '젬 종류 선택';
+
+        const possibleNames = Object.keys(GEM_DATA[gem.type]);
+        const nameDropdown = createCustomDropdown(
+            'edit-gem-name',
+            '이 젬의 종류를 선택하세요',
+            possibleNames.map(name => ({ id: name, name: name })),
+            (w, s) => {
+                if (s.value !== 'none') {
+                    // "Upgrade" the gem with the new name and re-open the popup
+                    const updatedGem = { ...gem, name: s.value };
+                    openGemEditPopup(updatedGem);
+                }
+            }
+        );
+        gemEditForm.appendChild(nameDropdown);
+        gemEditModal.style.display = 'flex';
+        return; // Stop execution here for v1 gems
+    }
+
+    // Restore title for standard V2 gems
+    document.getElementById('gem-edit-modal-title').textContent = '젬 정보 수정';
+
     const gemInfo = GEM_DATA[gem.type][gem.name];
 
     // Helper function to create a labeled dropdown row
@@ -1330,6 +1356,7 @@ function saveGemEdit() {
     const gemToUpdate = orderGems.find(g => g.id === currentlyEditingGem.id) || chaosGems.find(g => g.id === currentlyEditingGem.id);
 
     if (gemToUpdate) {
+        gemToUpdate.name = currentlyEditingGem.name; // Ensure name is updated for v1 gems
         gemToUpdate.willpower = newWillpower;
         gemToUpdate.point = newPoint;
         gemToUpdate.subOption1 = newSubOption1;
