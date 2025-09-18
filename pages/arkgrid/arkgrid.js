@@ -783,10 +783,13 @@ function renderResult(slotId, core, result) {
     if (!result.achieved) {
         const slotElement = document.getElementById(`slot-${slotId}`);
         slotElement.classList.add('target-failed');
+        summaryEl.textContent = '최적 조합을 찾을 수 없습니다.';
+        return;
     }
 
     if (result.points <= -1) {
-        summaryEl.textContent = '';
+        slotElement.classList.add('target-failed');
+        summaryEl.textContent = '최적 조합을 찾을 수 없습니다.';
         return;
     }
 
