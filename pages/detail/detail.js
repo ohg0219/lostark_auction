@@ -23,10 +23,10 @@ const gradeColors = {
 
 // Corrected and simplified category map
 const categoryMap = {
-    "40000": "/pages/engraving/engraving.html",
-    "refining": "/pages/honing/honing.html",
-    "210000": "/pages/jewels/jewels.html",
-    "230000": "/gems/gems.html"
+    "40000": "/pages/engraving/engraving/",
+    "refining": "/pages/honing/honing/",
+    "210000": "/pages/jewels/jewels/",
+    "230000": "/pages/gems/gems/"
 };
 
 function getCategoryPage(categoryCode) {

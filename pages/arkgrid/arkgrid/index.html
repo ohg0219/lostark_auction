@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>아크그리드 최적화 계산기 v2</title>
+    <title>아크그리드 최적화 계산기</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../../css/style.css?v=2">
-    <link rel="stylesheet" href="./arkgrid_v2.css?v=2">
+    <link rel="stylesheet" href="../../../css/style.css?v=2">
+    <link rel="stylesheet" href="../arkgrid.css?v=2">
 </head>
 <body>
     <main>
-        <h1>아크그리드 최적화 계산기 V2</h1>
+        <h1>아크그리드 최적화 계산기</h1>
 
         <div class="filters">
-            <a href="../../index.html" class="nav-button">메인으로 돌아가기</a>
-            <a href="../arkgrid/arkgrid.html" class="nav-button">V1</a>
+            <a href="../../../index.html" class="nav-button">메인으로 돌아가기</a>
+            <a href="../../arkgrid_v2/" class="nav-button">V2</a>
             <button id="save-btn" class="nav-button">저장하기</button>
             <button id="load-btn" class="nav-button">불러오기</button>
         </div>
@@ -51,18 +51,12 @@
 
             <!-- Right side - Gem Management -->
             <div class="gem-management-container">
-                <div class="character-class-section">
-                    <h2>직업군 선택</h2>
-                    <div id="character-class-selector">
-                        <!-- Character class dropdown will be generated here by JS -->
-                    </div>
-                </div>
                 <div class="gem-input-section">
                     <h2>보유 젬 입력</h2>
                     <div class="gem-input-form" id="gem-input-form">
-                        <!-- New gem input form will be generated here by JS -->
+                        <!-- Gem input dropdowns will be generated here by JS -->
+                        <button id="add-gem-btn" class="nav-button">젬 추가</button>
                     </div>
-                     <button id="add-gem-btn" class="nav-button">젬 추가</button>
                 </div>
 
                 <div class="gem-list-section">
@@ -111,7 +105,7 @@
         </div>
     </div>
 
-    <script type="module" src="./arkgrid_v2.js?v=2"></script>
+    <script type="module" src="../arkgrid.js?v=2"></script>
 
     <!-- Alert Modal -->
     <div id="alert-modal" class="modal-overlay" style="display: none;">
