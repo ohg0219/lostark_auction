@@ -203,6 +203,11 @@ h2, h3 {
 .custom-option:hover {
     background-color: #2a2a2a;
 }
+.custom-option.selected {
+    background-color: #C89B3C !important;
+    color: #121212 !important;
+    font-weight: 500;
+}
 .custom-option.disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -632,6 +637,10 @@ button.nav-button:hover {
 }
 
 /* Alert Modal Styles */
+#alert-modal {
+    z-index: 1050; /* Ensure it appears above other modals */
+}
+
 #alert-modal .modal-content {
     gap: 20px;
 }
@@ -646,4 +655,45 @@ button.nav-button:hover {
 
 #alert-modal .modal-buttons {
     justify-content: center;
+}
+
+/* V2 Gem Edit Modal Specific Styles */
+#gem-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 10px 0;
+}
+
+#gem-edit-form .gem-input-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#gem-edit-form label {
+    width: 80px; /* Fixed width for labels */
+    text-align: right;
+    font-weight: 500;
+    color: #C89B3C;
+    flex-shrink: 0;
+}
+
+.custom-option.selected {
+    background-color: #C89B3C !important;
+    color: #121212 !important;
+    font-weight: 500;
+}
+
+#gem-edit-form .custom-select-wrapper {
+    flex-grow: 1; /* Default flex behavior */
+}
+
+/* Specific adjustments for sub-option rows with two dropdowns */
+#gem-edit-form .gem-input-row .custom-select-wrapper:nth-of-type(1) {
+    flex-grow: 3; /* Give more space to the option name */
+}
+#gem-edit-form .gem-input-row .custom-select-wrapper:nth-of-type(2) {
+    flex-grow: 1;
+    min-width: 80px;
 }

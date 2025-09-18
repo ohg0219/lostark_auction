@@ -147,6 +147,11 @@ p.description {
     border-color: #C89B3C;
     box-shadow: 0 6px 16px rgba(200,155,60,0.1);
 }
+.custom-option.selected {
+    background-color: #C89B3C;
+    color: #121212;
+    font-weight: 500;
+}
 .card-top-row {
     display: flex;
     justify-content: space-between;

@@ -163,6 +163,11 @@ const modalCancelBtn = document.getElementById('modal-cancel-btn');
 const alertModal = document.getElementById('alert-modal');
 const alertModalMessage = document.getElementById('alert-modal-message');
 const alertModalOkBtn = document.getElementById('alert-modal-ok-btn');
+// Gem Edit Modal DOM Elements
+const gemEditModal = document.getElementById('gem-edit-modal');
+const gemEditForm = document.getElementById('gem-edit-form');
+const gemEditSaveBtn = document.getElementById('gem-edit-save-btn');
+const gemEditCancelBtn = document.getElementById('gem-edit-cancel-btn');
 
 
 // --- State ---
@@ -174,6 +179,7 @@ let selectedCharacterClass = '딜러'; // Default class
 // Example: { 'chaos-1': 'sun', 'chaos-2': 'moon', ... }
 let selectedCores = {};
 let currentModalConfirmAction = null;
+let currentlyEditingGem = null;
 
 
 // --- Main Initialization ---
@@ -243,6 +249,15 @@ function init() {
             closeCustomAlert();
         }
     });
+
+    // Gem Edit Modal button listeners
+    gemEditCancelBtn.addEventListener('click', closeGemEditPopup);
+    gemEditModal.addEventListener('click', (e) => {
+        if (e.target === gemEditModal) {
+            closeGemEditPopup();
+        }
+    });
+    gemEditSaveBtn.addEventListener('click', saveGemEdit);
 }
 
 // --- Functions ---
@@ -268,13 +283,24 @@ function createCustomDropdown(id, defaultText, items, onSelect) {
     const options = document.createElement('div');
     options.className = 'custom-options';
 
+    const handleSelection = (optionEl, value, text, icon) => {
+        // Remove 'selected' from all options
+        options.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('selected'));
+        // Add 'selected' to the clicked option
+        if (optionEl) {
+            optionEl.classList.add('selected');
+        }
+        // Call the original onSelect callback
+        onSelect(wrapper, { value, text, icon });
+    };
+
     // Default option
     const defaultOption = document.createElement('div');
     defaultOption.className = 'custom-option';
     defaultOption.dataset.value = 'none';
     defaultOption.innerHTML = `<span>${defaultText}</span>`;
     defaultOption.addEventListener('click', () => {
-        onSelect(wrapper, {value: 'none', text: defaultText, icon: null});
+        handleSelection(defaultOption, 'none', defaultText, null);
     });
     options.appendChild(defaultOption);
 
@@ -286,7 +312,7 @@ function createCustomDropdown(id, defaultText, items, onSelect) {
         option.innerHTML = item.icon ? `<img src="${item.icon}" alt="${item.name}"><span>${item.name}</span>` : `<span>${item.name}</span>`;
         option.addEventListener('click', () => {
             if (!option.classList.contains('disabled')) {
-                onSelect(wrapper, {value: item.id, text: item.name, icon: item.icon});
+                handleSelection(option, item.id, item.name, item.icon);
             }
         });
         options.appendChild(option);
@@ -294,6 +320,15 @@ function createCustomDropdown(id, defaultText, items, onSelect) {
 
     trigger.addEventListener('click', () => {
         if (wrapper.classList.contains('disabled')) return;
+        // Set the initial selected class when opening
+        const currentValue = wrapper.dataset.value;
+        options.querySelectorAll('.custom-option').forEach(opt => {
+            if (opt.dataset.value === String(currentValue)) {
+                opt.classList.add('selected');
+            } else {
+                opt.classList.remove('selected');
+            }
+        });
         // Close other dropdowns
         document.querySelectorAll('.custom-options').forEach(opt => {
             if (opt !== options) opt.style.display = 'none';
@@ -724,6 +759,7 @@ function renderGemLists() {
     const createGemElement = (gem) => {
         const gemEl = document.createElement('div');
         gemEl.className = `gem-item ${gem.type}`;
+        gemEl.style.cursor = 'pointer';
 
         const gemImage = GEM_IMAGES[gem.type];
         let detailsHtml;
@@ -759,7 +795,8 @@ function renderGemLists() {
         deleteBtn.className = 'gem-delete-btn';
         deleteBtn.innerHTML = '×';
         deleteBtn.title = '젬 삭제';
-        deleteBtn.onclick = () => {
+        deleteBtn.onclick = (e) => {
+            e.stopPropagation(); // Prevent the gem edit modal from opening when deleting
             if (gem.type === 'order') {
                 orderGems = orderGems.filter(g => g.id !== gem.id);
             } else {
@@ -769,6 +806,11 @@ function renderGemLists() {
         };
 
         gemEl.appendChild(deleteBtn);
+
+        gemEl.addEventListener('click', () => {
+            openGemEditPopup(gem);
+        });
+
         return gemEl;
     };
 
@@ -1204,4 +1246,130 @@ function showCustomAlert(message) {
 
 function closeCustomAlert() {
     alertModal.style.display = 'none';
+}
+
+// --- Gem Edit Modal Functions ---
+function openGemEditPopup(gem) {
+    currentlyEditingGem = gem;
+    gemEditForm.innerHTML = ''; // Clear previous form
+
+    // Handle V1 gems that don't have a name
+    if (!gem.name) {
+        const title = document.getElementById('gem-edit-modal-title');
+        title.textContent = '젬 종류 선택';
+
+        const possibleNames = Object.keys(GEM_DATA[gem.type]);
+        const nameDropdown = createCustomDropdown(
+            'edit-gem-name',
+            '젬 종류',
+            possibleNames.map(name => ({ id: name, name: name })),
+            (w, s) => {
+                if (s.value !== 'none') {
+                    // "Upgrade" the gem with the new name and re-open the popup
+                    const updatedGem = { ...gem, name: s.value };
+                    openGemEditPopup(updatedGem);
+                }
+            }
+        );
+        gemEditForm.appendChild(nameDropdown);
+        gemEditModal.style.display = 'flex';
+        return; // Stop execution here for v1 gems
+    }
+
+    // Restore title for standard V2 gems
+    document.getElementById('gem-edit-modal-title').textContent = '젬 정보 수정';
+
+    const gemInfo = GEM_DATA[gem.type][gem.name];
+
+    // Helper function to create a labeled dropdown row
+    const createDropdownRow = (labelText, dropdownId, initialValue, items, onSelectCallback) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'gem-input-row';
+        const label = document.createElement('label');
+        label.textContent = labelText;
+        const dropdown = createCustomDropdown(dropdownId, initialValue, items, onSelectCallback);
+        dropdown.dataset.value = initialValue;
+        wrapper.append(label, dropdown);
+        return wrapper;
+    };
+
+    const onSelect = (w, s) => {
+        w.dataset.value = s.value;
+        w.querySelector('.custom-select-trigger').innerHTML = `<span>${s.text}</span>`;
+        w.querySelector('.custom-options').style.display = 'none';
+    };
+
+    // Willpower
+    gemEditForm.appendChild(createDropdownRow('의지력', 'edit-gem-willpower', gem.willpower, gemInfo.willpower.map(w => ({ id: w, name: w })), onSelect));
+
+    // Point
+    gemEditForm.appendChild(createDropdownRow('포인트', 'edit-gem-point', gem.point, gemInfo.gemPoints.map(p => ({ id: p, name: p })), onSelect));
+
+    // Sub Option 1
+    const subOption1Row = createDropdownRow('부가옵션 1', 'edit-gem-sub-option-1', gem.subOption1, gemInfo.subOptions.map(opt => ({ id: opt, name: opt })), onSelect);
+    const subOption1LevelDropdown = createCustomDropdown('edit-gem-sub-option-1-level', `Lv.${gem.subOption1Level}`, [1, 2, 3, 4, 5].map(l => ({ id: l, name: `Lv.${l}` })), onSelect);
+    subOption1LevelDropdown.dataset.value = gem.subOption1Level;
+    subOption1Row.appendChild(subOption1LevelDropdown);
+    gemEditForm.appendChild(subOption1Row);
+
+
+    // Sub Option 2
+    const subOption2Row = createDropdownRow('부가옵션 2', 'edit-gem-sub-option-2', gem.subOption2, gemInfo.subOptions.map(opt => ({ id: opt, name: opt })), onSelect);
+    const subOption2LevelDropdown = createCustomDropdown('edit-gem-sub-option-2-level', `Lv.${gem.subOption2Level}`, [1, 2, 3, 4, 5].map(l => ({ id: l, name: `Lv.${l}` })), onSelect);
+    subOption2LevelDropdown.dataset.value = gem.subOption2Level;
+    subOption2Row.appendChild(subOption2LevelDropdown);
+    gemEditForm.appendChild(subOption2Row);
+
+
+    gemEditModal.style.display = 'flex';
+}
+
+function closeGemEditPopup() {
+    gemEditModal.style.display = 'none';
+    currentlyEditingGem = null;
+    gemEditForm.innerHTML = ''; // Clear form
+}
+
+function saveGemEdit() {
+    if (!currentlyEditingGem) return;
+
+    // Get values from all dropdowns
+    const newWillpower = parseInt(document.getElementById('edit-gem-willpower').dataset.value, 10);
+    const newPoint = parseInt(document.getElementById('edit-gem-point').dataset.value, 10);
+    const newSubOption1 = document.getElementById('edit-gem-sub-option-1').dataset.value;
+    const newSubOption1Level = parseInt(document.getElementById('edit-gem-sub-option-1-level').dataset.value, 10);
+    const newSubOption2 = document.getElementById('edit-gem-sub-option-2').dataset.value;
+    const newSubOption2Level = parseInt(document.getElementById('edit-gem-sub-option-2-level').dataset.value, 10);
+
+    // Validation
+    if (newSubOption1 === '-' || newSubOption2 === '-' || !newSubOption1Level || !newSubOption2Level) {
+        showCustomAlert('모든 부가옵션과 레벨을 선택해주세요.');
+        return;
+    }
+
+    if (isNaN(newWillpower) || isNaN(newPoint) || isNaN(newSubOption1Level) || isNaN(newSubOption2Level)) {
+        showCustomAlert('모든 젬 정보를 올바르게 입력해주세요.');
+        return;
+    }
+
+    if (newSubOption1 === newSubOption2) {
+        showCustomAlert('부가옵션 1과 부가옵션 2는 서로 다른 옵션이어야 합니다.');
+        return;
+    }
+
+    // Find the gem in the original arrays and update it
+    const gemToUpdate = orderGems.find(g => g.id === currentlyEditingGem.id) || chaosGems.find(g => g.id === currentlyEditingGem.id);
+
+    if (gemToUpdate) {
+        gemToUpdate.name = currentlyEditingGem.name; // Ensure name is updated for v1 gems
+        gemToUpdate.willpower = newWillpower;
+        gemToUpdate.point = newPoint;
+        gemToUpdate.subOption1 = newSubOption1;
+        gemToUpdate.subOption1Level = newSubOption1Level;
+        gemToUpdate.subOption2 = newSubOption2;
+        gemToUpdate.subOption2Level = newSubOption2Level;
+    }
+
+    renderGemLists();
+    closeGemEditPopup();
 }
