@@ -1280,18 +1280,16 @@ function openGemEditPopup(gem) {
     gemEditForm.appendChild(createDropdownRow('포인트', 'edit-gem-point', gem.point, gemInfo.gemPoints.map(p => ({ id: p, name: p })), onSelect));
 
     // Sub Option 1
-    const subOption1Row = createDropdownRow('부가옵션 1', 'edit-gem-sub-option-1', '부가옵션 1', gemInfo.subOptions.map(opt => ({ id: opt, name: opt })), onSelect);
-    subOption1Row.querySelector('.custom-select-wrapper').dataset.value = gem.subOption1;
-    const subOption1LevelDropdown = createCustomDropdown('edit-gem-sub-option-1-level', '레벨', [1, 2, 3, 4, 5].map(l => ({ id: l, name: `Lv.${l}` })), onSelect);
+    const subOption1Row = createDropdownRow('부가옵션 1', 'edit-gem-sub-option-1', gem.subOption1, gemInfo.subOptions.map(opt => ({ id: opt, name: opt })), onSelect);
+    const subOption1LevelDropdown = createCustomDropdown('edit-gem-sub-option-1-level', `Lv.${gem.subOption1Level}`, [1, 2, 3, 4, 5].map(l => ({ id: l, name: `Lv.${l}` })), onSelect);
     subOption1LevelDropdown.dataset.value = gem.subOption1Level;
     subOption1Row.appendChild(subOption1LevelDropdown);
     gemEditForm.appendChild(subOption1Row);
 
 
     // Sub Option 2
-    const subOption2Row = createDropdownRow('부가옵션 2', 'edit-gem-sub-option-2', '부가옵션 2', gemInfo.subOptions.map(opt => ({ id: opt, name: opt })), onSelect);
-    subOption2Row.querySelector('.custom-select-wrapper').dataset.value = gem.subOption2;
-    const subOption2LevelDropdown = createCustomDropdown('edit-gem-sub-option-2-level', '레벨', [1, 2, 3, 4, 5].map(l => ({ id: l, name: `Lv.${l}` })), onSelect);
+    const subOption2Row = createDropdownRow('부가옵션 2', 'edit-gem-sub-option-2', gem.subOption2, gemInfo.subOptions.map(opt => ({ id: opt, name: opt })), onSelect);
+    const subOption2LevelDropdown = createCustomDropdown('edit-gem-sub-option-2-level', `Lv.${gem.subOption2Level}`, [1, 2, 3, 4, 5].map(l => ({ id: l, name: `Lv.${l}` })), onSelect);
     subOption2LevelDropdown.dataset.value = gem.subOption2Level;
     subOption2Row.appendChild(subOption2LevelDropdown);
     gemEditForm.appendChild(subOption2Row);
