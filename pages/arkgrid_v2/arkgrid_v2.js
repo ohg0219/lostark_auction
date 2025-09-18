@@ -863,7 +863,7 @@ function updateCoreTypeOptions(type) {
  */
 const TIER_SCORE_BONUS = 10000;
 
-function getCombinationScore(combination, activationPoints) {
+function getCombinationScore(combination, activationPoints, targetPoint) {
     let achievedTier = 0;
     const sortedTiers = [...activationPoints].sort((a, b) => b - a);
 
@@ -873,8 +873,16 @@ function getCombinationScore(combination, activationPoints) {
             break;
         }
     }
+
+    // Do not give extra score for over-achieving the user's target.
+    // This prioritizes effectiveness score once the target is met.
+    let scoringTier = achievedTier;
+    if (scoringTier > targetPoint) {
+        scoringTier = targetPoint;
+    }
+
     // The score is primarily driven by the tier, then by the sub-option effectiveness.
-    return (achievedTier * TIER_SCORE_BONUS) + combination.effectivenessScore;
+    return (scoringTier * TIER_SCORE_BONUS) + combination.effectivenessScore;
 }
 
 
@@ -933,8 +941,8 @@ function calculate() {
 
                 // Heuristic: Sort combinations by score to explore best options first.
                 combinations.sort((a, b) => {
-                    const scoreA = getCombinationScore(a, core.activationPoints);
-                    const scoreB = getCombinationScore(b, core.activationPoints);
+                    const scoreA = getCombinationScore(a, core.activationPoints, core.targetPoint);
+                    const scoreB = getCombinationScore(b, core.activationPoints, core.targetPoint);
                     return scoreB - scoreA;
                 });
 
@@ -978,7 +986,7 @@ function calculate() {
 
                     if (!hasConflict) {
                         const newUsedGemIds = new Set([...usedGemIds, ...combinationGemIds]);
-                        const score = getCombinationScore(combination, core.activationPoints);
+                const score = getCombinationScore(combination, core.activationPoints, core.targetPoint);
                         currentAssignment[core.id] = { ...combination, score: score, achievedTier: Math.floor(score / TIER_SCORE_BONUS) };
                         solve(coreIndex + 1, currentAssignment, currentScore + score, newUsedGemIds);
                 if (timedOut) return; // Exit early if timeout occurred in a deeper recursion
