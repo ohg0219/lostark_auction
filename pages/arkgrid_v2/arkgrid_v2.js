@@ -728,10 +728,9 @@ function renderGemLists() {
         const gemImage = GEM_IMAGES[gem.type];
         let detailsHtml;
 
-        if (gem.name === '기존 젬') {
+        if (gem.name === '') {
             detailsHtml = `
                 <div class="gem-item-details">
-                    <div class="gem-item-title">${gem.name}</div>
                     <div class="gem-item-sub-options">
                         <span>의지력: ${gem.willpower} / 포인트: ${gem.point}</span>
                     </div>
@@ -1099,7 +1098,7 @@ function restoreState(config) {
         // Old format, add default values for new properties
         return {
             ...gem,
-            name: '기존 젬',
+            name: '',
             subOption1: '-',
             subOption1Level: 0,
             subOption2: '-',
