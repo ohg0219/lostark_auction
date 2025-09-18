@@ -168,6 +168,8 @@ const gemEditModal = document.getElementById('gem-edit-modal');
 const gemEditForm = document.getElementById('gem-edit-form');
 const gemEditSaveBtn = document.getElementById('gem-edit-save-btn');
 const gemEditCancelBtn = document.getElementById('gem-edit-cancel-btn');
+// Spinner Modal
+const spinnerModal = document.getElementById('spinner-modal');
 
 
 // --- State ---
@@ -877,98 +879,144 @@ function getCombinationScore(combination, activationPoints) {
 
 
 function calculate() {
-    // 1. Gather all active cores and clear previous results
-    const activeCores = [];
-    ['order', 'chaos'].forEach(type => {
-        for (let i = 1; i <= 3; i++) {
-            const slotId = `${type}-${i}`;
-            const slotElement = document.getElementById(`slot-${slotId}`);
-            slotElement.classList.remove('target-failed');
-            clearSlotResults(slotId);
+    spinnerModal.style.display = 'flex';
 
-            const typeId = document.getElementById(`type-${slotId}`).dataset.value;
-            const gradeId = document.getElementById(`grade-${slotId}`).dataset.value;
-            const targetPointStr = document.getElementById(`target-${slotId}`).dataset.value;
+    // Use setTimeout to allow the spinner to render before the heavy calculation starts
+    setTimeout(() => {
+        try {
+            // 1. Gather all active cores and clear previous results
+            const activeCores = [];
+            ['order', 'chaos'].forEach(type => {
+                for (let i = 1; i <= 3; i++) {
+                    const slotId = `${type}-${i}`;
+                    const slotElement = document.getElementById(`slot-${slotId}`);
+                    slotElement.classList.remove('target-failed', 'target-partial');
+                    clearSlotResults(slotId);
 
-            if (typeId !== 'none' && gradeId !== 'none' && targetPointStr !== 'none') {
-                const coreTypeData = ARKGRID_CORE_TYPES[type].find(t => t.id === typeId);
-                const coreGradeData = ARKGRID_GRADE_DATA[gradeId];
-                activeCores.push({
-                    id: slotId,
-                    type: type,
-                    coreData: {
-                        name: `${coreTypeData.name} (${coreGradeData.name})`,
-                        willpower: coreGradeData.willpower,
-                    },
-                    targetPoint: parseInt(targetPointStr, 10),
-                    activationPoints: coreGradeData.activationPoints,
+                    const typeId = document.getElementById(`type-${slotId}`).dataset.value;
+                    const gradeId = document.getElementById(`grade-${slotId}`).dataset.value;
+                    const targetPointStr = document.getElementById(`target-${slotId}`).dataset.value;
+
+                    if (typeId !== 'none' && gradeId !== 'none' && targetPointStr !== 'none') {
+                        const coreTypeData = ARKGRID_CORE_TYPES[type].find(t => t.id === typeId);
+                        const coreGradeData = ARKGRID_GRADE_DATA[gradeId];
+                        activeCores.push({
+                            id: slotId,
+                            type: type,
+                            coreData: {
+                                name: `${coreTypeData.name} (${coreGradeData.name})`,
+                                willpower: coreGradeData.willpower,
+                            },
+                            targetPoint: parseInt(targetPointStr, 10),
+                            activationPoints: coreGradeData.activationPoints,
+                        });
+                    }
+                }
+            });
+
+            if (activeCores.length === 0) {
+                // If no active cores, just hide spinner and exit.
+                return;
+            }
+
+            // 2. For each active core, find all possible gem combinations that fit willpower
+            const corePossibleCombinations = new Map();
+            for (const core of activeCores) {
+                const availableGems = core.type === 'order' ? orderGems : chaosGems;
+                let combinations = findAllPossibleCombinations(core.coreData, availableGems, selectedCharacterClass);
+
+                // Pruning: Only consider combinations that meet at least the lowest activation tier.
+                if (core.activationPoints.length > 0) {
+                    const lowestTier = Math.min(...core.activationPoints);
+                    combinations = combinations.filter(c => c.points >= lowestTier);
+                }
+
+                // Heuristic: Sort combinations by score to explore best options first.
+                combinations.sort((a, b) => {
+                    const scoreA = getCombinationScore(a, core.activationPoints);
+                    const scoreB = getCombinationScore(b, core.activationPoints);
+                    return scoreB - scoreA;
+                });
+
+                corePossibleCombinations.set(core.id, combinations);
+            }
+
+            // 3. Backtracking solver to find the assignment with the highest total score
+            let bestAssignment = { score: -1, assignment: {} };
+    const CALCULATION_TIMEOUT = 5000; // 5 seconds
+    const startTime = Date.now();
+    let timedOut = false;
+    let iterationCounter = 0;
+
+
+            function solve(coreIndex, currentAssignment, currentScore, usedGemIds) {
+        iterationCounter++;
+        if (iterationCounter % 2000 === 0) { // Check time every 2000 iterations
+            if (Date.now() - startTime > CALCULATION_TIMEOUT) {
+                timedOut = true;
+                return;
+            }
+        }
+
+        if (timedOut) return;
+
+                // Base case: If we have processed all cores, check if this solution is the best one
+                if (coreIndex === activeCores.length) {
+                    if (currentScore > bestAssignment.score) {
+                        bestAssignment = { score: currentScore, assignment: JSON.parse(JSON.stringify(currentAssignment)) };
+                    }
+                    return;
+                }
+
+                const core = activeCores[coreIndex];
+                const combinations = corePossibleCombinations.get(core.id);
+
+                // Path 1: Try to assign a combination to this core
+                for (const combination of combinations) {
+                    const combinationGemIds = combination.gems.map(g => g.id);
+                    const hasConflict = combinationGemIds.some(id => usedGemIds.has(id));
+
+                    if (!hasConflict) {
+                        const newUsedGemIds = new Set([...usedGemIds, ...combinationGemIds]);
+                        const score = getCombinationScore(combination, core.activationPoints);
+                        currentAssignment[core.id] = { ...combination, score: score, achievedTier: Math.floor(score / TIER_SCORE_BONUS) };
+                        solve(coreIndex + 1, currentAssignment, currentScore + score, newUsedGemIds);
+                if (timedOut) return; // Exit early if timeout occurred in a deeper recursion
+                        delete currentAssignment[core.id]; // Backtrack
+                    }
+                }
+
+                // Path 2: Don't assign anything to this core (score for this core is 0)
+                solve(coreIndex + 1, currentAssignment, currentScore, usedGemIds);
+            }
+
+            solve(0, {}, 0, new Set());
+
+    if (timedOut) {
+        showCustomAlert('계산 시간이 5초를 초과하여, 현재까지 찾은 최적의 조합을 표시합니다. 더 많은 젬을 보유한 경우 결과가 완전하지 않을 수 있습니다.');
+    }
+
+            // 4. Render the best found assignment
+            if (bestAssignment.score >= 0) { // Check for >= 0 to handle cases where score is exactly 0
+                for (const core of activeCores) {
+                    const result = bestAssignment.assignment[core.id];
+                    if (result) {
+                        renderResult(core.id, core.coreData, { ...result, achieved: true, targetPoint: core.targetPoint });
+                    } else {
+                        // This core was not part of the best solution
+                        renderResult(core.id, core.coreData, { achieved: false, targetPoint: core.targetPoint });
+                    }
+                }
+            } else {
+                // No solution found at all that satisfies any combination of cores
+                activeCores.forEach(core => {
+                    renderResult(core.id, core.coreData, { achieved: false, targetPoint: core.targetPoint });
                 });
             }
+        } finally {
+            spinnerModal.style.display = 'none';
         }
-    });
-
-    if (activeCores.length === 0) return;
-
-    // 2. For each active core, find all possible gem combinations that fit willpower
-    const corePossibleCombinations = new Map();
-    for (const core of activeCores) {
-        const availableGems = core.type === 'order' ? orderGems : chaosGems;
-        const combinations = findAllPossibleCombinations(core.coreData, availableGems, selectedCharacterClass);
-        corePossibleCombinations.set(core.id, combinations);
-    }
-
-    // 3. Backtracking solver to find the assignment with the highest total score
-    let bestAssignment = { score: -1, assignment: {} };
-
-    function solve(coreIndex, currentAssignment, currentScore, usedGemIds) {
-        // Base case: If we have processed all cores, check if this solution is the best one
-        if (coreIndex === activeCores.length) {
-            if (currentScore > bestAssignment.score) {
-                bestAssignment = { score: currentScore, assignment: JSON.parse(JSON.stringify(currentAssignment)) };
-            }
-            return;
-        }
-
-        const core = activeCores[coreIndex];
-        const combinations = corePossibleCombinations.get(core.id);
-
-        // Path 1: Try to assign a combination to this core
-        for (const combination of combinations) {
-            const combinationGemIds = combination.gems.map(g => g.id);
-            const hasConflict = combinationGemIds.some(id => usedGemIds.has(id));
-
-            if (!hasConflict) {
-                const newUsedGemIds = new Set([...usedGemIds, ...combinationGemIds]);
-                const score = getCombinationScore(combination, core.activationPoints);
-                currentAssignment[core.id] = { ...combination, score: score, achievedTier: Math.floor(score / TIER_SCORE_BONUS) };
-                solve(coreIndex + 1, currentAssignment, currentScore + score, newUsedGemIds);
-                delete currentAssignment[core.id]; // Backtrack
-            }
-        }
-
-        // Path 2: Don't assign anything to this core (score for this core is 0)
-        solve(coreIndex + 1, currentAssignment, currentScore, usedGemIds);
-    }
-
-    solve(0, {}, 0, new Set());
-
-    // 4. Render the best found assignment
-    if (bestAssignment.score > 0) {
-        for (const core of activeCores) {
-            const result = bestAssignment.assignment[core.id];
-            if (result) {
-                renderResult(core.id, core.coreData, { ...result, achieved: true, targetPoint: core.targetPoint });
-            } else {
-                // This core was not part of the best solution
-                renderResult(core.id, core.coreData, { achieved: false, targetPoint: core.targetPoint });
-            }
-        }
-    } else {
-        // No solution found at all that satisfies any combination of cores
-        activeCores.forEach(core => {
-            renderResult(core.id, core.coreData, { achieved: false, targetPoint: core.targetPoint });
-        });
-    }
+    }, 0);
 }
 
 function renderResult(slotId, core, result) {
