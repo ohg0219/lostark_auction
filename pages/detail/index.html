@@ -3,21 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>젬 시세 정보</title>
+    <title>아이템 상세 정보</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../css/style.css?v=1757912465">
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js Datalabels Plugin for displaying values on the chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 </head>
-<body data-page-category="230000">
+<body>
     <main>
-        <h1>젬 현재 시세</h1>
+        <h1 id="item-name-title">아이템 정보</h1>
         <div class="filters">
-            <a href="../../index.html" class="nav-button">메인으로 돌아가기</a>
-            <button id="sort-by-price">가격순</button>
+            <a href="../../" class="nav-button">메인으로</a>
+            <a href="#" id="back-to-list" class="nav-button">목록으로</a>
         </div>
-        <div id="status">데이터를 불러오는 중...</div>
-        <div id="grid-container"></div>
+        <div id="item-detail-container">
+            <!-- 아이템 상세 정보가 여기에 동적으로 채워집니다. -->
+        </div>
+        <div class="chart-container">
+            <canvas id="price-chart"></canvas>
+        </div>
     </main>
     <div class="ad-container">
         <ins class="kakao_ad_area" style="display:none;"
@@ -26,6 +35,6 @@
              data-ad-height = "100"></ins>
         <script type="text/javascript" src="//t1.daumcdn.net/kas/static/ba.min.js" async></script>
     </div>
-    <script type="module" src="../../js/script.js?v=1757912465" defer></script>
+    <script type="module" src="./detail.js?v=1757912465" defer></script>
 </body>
 </html>

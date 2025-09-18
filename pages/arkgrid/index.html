@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>아크그리드 최적화 계산기</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/style.css?v=2">
+    <link rel="stylesheet" href="./arkgrid.css?v=2">
+</head>
+<body>
+    <main>
+        <h1>아크그리드 최적화 계산기</h1>
+
+        <div class="filters">
+            <a href="../../" class="nav-button">메인으로</a>
+            <a href="../arkgrid_v2/" class="nav-button">V2</a>
+            <button id="save-btn" class="nav-button">저장하기</button>
+            <button id="load-btn" class="nav-button">불러오기</button>
+        </div>
+
+        <div class="main-container">
+            <!-- Left side - Core Management with Tabs -->
+            <div class="core-management-container">
+                <div class="tab-container">
+                    <div class="tab-buttons">
+                        <button class="tab-button active" data-tab="order-cores">질서의 코어</button>
+                        <button class="tab-button" data-tab="chaos-cores">혼돈의 코어</button>
+                    </div>
+
+                    <div class="tab-content">
+                        <!-- Order Cores Tab -->
+                        <div class="tab-panel active" id="order-cores">
+                            <div class="core-column" id="order-core-column">
+                                <!-- Order Core Slots will be generated here by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Chaos Cores Tab -->
+                        <div class="tab-panel" id="chaos-cores">
+                            <div class="core-column" id="chaos-core-column">
+                                <!-- Chaos Core Slots will be generated here by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right side - Gem Management -->
+            <div class="gem-management-container">
+                <div class="gem-input-section">
+                    <h2>보유 젬 입력</h2>
+                    <div class="gem-input-form" id="gem-input-form">
+                        <!-- Gem input dropdowns will be generated here by JS -->
+                        <button id="add-gem-btn" class="nav-button">젬 추가</button>
+                    </div>
+                </div>
+
+                <div class="gem-list-section">
+                    <h2>보유 젬 목록</h2>
+                    <div class="gem-lists">
+                        <div id="order-gem-list-container">
+                            <h4>질서의 젬</h4>
+                            <div class="gem-list" id="order-gem-list"></div>
+                        </div>
+                        <div id="chaos-gem-list-container">
+                            <h4>혼돈의 젬</h4>
+                            <div class="gem-list" id="chaos-gem-list"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calculate button spanning full width -->
+        <button id="calculate-btn">최적 조합 계산</button>
+
+        <!-- The results will be displayed inside the core slots directly -->
+
+    </main>
+    <div class="ad-container">
+        <ins class="kakao_ad_area" style="display:none;"
+             data-ad-unit = "DAN-GoULMhh5EJVI30Ir"
+             data-ad-width = "320"
+             data-ad-height = "100"></ins>
+        <script type="text/javascript" src="//t1.daumcdn.net/kas/static/ba.min.js" async></script>
+    </div>
+
+    <!-- Modal for Save/Load -->
+    <div id="data-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2 id="modal-title"></h2>
+            <input type="text" id="modal-character-name" placeholder="캐릭터명">
+            <div class="password-container">
+                <input type="password" id="modal-character-password" placeholder="비밀번호">
+                <p class="password-hint">이 비밀번호는 저장 및 불러오기에 사용됩니다.</p>
+            </div>
+            <div class="modal-buttons">
+                <button id="modal-confirm-btn" class="nav-button"></button>
+                <button id="modal-cancel-btn" class="nav-button">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./arkgrid.js?v=2"></script>
+
+    <!-- Alert Modal -->
+    <div id="alert-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <p id="alert-modal-message"></p>
+            <div class="modal-buttons">
+                <button id="alert-modal-ok-btn" class="nav-button">확인</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
