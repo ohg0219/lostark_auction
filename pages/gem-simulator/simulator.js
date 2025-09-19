@@ -2,9 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DOM Elements ---
     const calculateBtn = document.getElementById('calculate-btn');
     const resultsDisplay = document.getElementById('results-display');
-    const progressContainer = document.querySelector('.progress-container');
-    const progressBar = document.getElementById('progress-bar');
-    const progressText = document.getElementById('progress-text');
+    const loadingIndicator = document.getElementById('loading-indicator');
 
     // --- Constants and Data ---
     const GEM_SETTINGS = {
@@ -271,18 +269,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function startSimulation() {
         calculateBtn.disabled = true;
-        resultsDisplay.innerHTML = '시뮬레이션 진행 중...';
+        resultsDisplay.innerHTML = ''; // Clear previous results
+        loadingIndicator.classList.remove('hidden');
 
-        // Reset progress bar instantly without transition
-        progressBar.style.transition = 'none';
-        progressBar.style.width = '0%';
-        // Force reflow to apply the style change immediately
-        progressBar.offsetHeight;
-        // Re-enable transition for the upcoming progress updates
-        progressBar.style.transition = 'width 0.1s linear';
-
-        progressContainer.classList.add('visible');
-        progressText.textContent = `0%`;
+        // Yield to the event loop so the UI can update to show the loader
+        await new Promise(resolve => setTimeout(resolve, 0));
 
         const initialState = {
             willpower: parseInt(document.getElementById('current-willpower').value),
@@ -294,6 +285,8 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         const simulationCount = parseInt(document.getElementById('simulation-count').value);
         let outcomes = { count45: 0, count54: 0, count55: 0, legendary: 0, relic: 0, ancient: 0 };
+
+        // The simulation can now run without yielding in the loop
         for (let i = 0; i < simulationCount; i++) {
             const finalState = runSingleSimulation(initialState);
             if (finalState.willpower === 4 && finalState.points === 5) outcomes.count45++;
@@ -303,23 +296,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (totalPoints >= 4 && totalPoints <= 15) outcomes.legendary++;
             else if (totalPoints >= 16 && totalPoints <= 18) outcomes.relic++;
             else if (totalPoints >= 19 && totalPoints <= 20) outcomes.ancient++;
-
-            if ((i + 1) % (Math.ceil(simulationCount / 100)) === 0) {
-                await new Promise(resolve => setTimeout(resolve, 0));
-                const percentComplete = Math.round(((i + 1) / simulationCount) * 100);
-                progressText.textContent = `${percentComplete}%`;
-                progressBar.style.width = `${percentComplete}%`;
-            }
         }
+
         displayResults(outcomes, simulationCount);
         calculateBtn.disabled = false;
     }
 
     function displayResults(outcomes, simulationCount) {
-        setTimeout(() => {
-            progressContainer.classList.remove('visible');
-        }, 500); // Hide progress bar after a short delay
-
+        loadingIndicator.classList.add('hidden');
         const toPercent = (count) => ((count / simulationCount) * 100).toFixed(2);
         resultsDisplay.innerHTML = `
             <h3>시뮬레이션 결과 (${simulationCount.toLocaleString()}회)</h3>
