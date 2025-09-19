@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DOM Elements ---
     const calculateBtn = document.getElementById('calculate-btn');
     const resultsDisplay = document.getElementById('results-display');
+    const progressContainer = document.querySelector('.progress-container');
     const progressBar = document.getElementById('progress-bar');
     const progressText = document.getElementById('progress-text');
 
@@ -126,9 +127,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Update main gem name display
         const gemNameDisplay = document.getElementById('gem-name-display');
+        const gradeName = GRADE_SETTINGS[gemGradeValue].name;
         const gemTypeName = GEM_SETTINGS[gemType].name;
         const subTypeName = GEM_SETTINGS[gemType].subTypes[subTypeValue].name;
-        gemNameDisplay.textContent = `${gemTypeName} : ${subTypeName}`;
+        gemNameDisplay.textContent = `[${gradeName}] ${gemTypeName} : ${subTypeName}`;
 
         // Update points label
         const pointsNameDisplay = document.getElementById('points-name-display');
@@ -270,6 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function startSimulation() {
         calculateBtn.disabled = true;
         resultsDisplay.innerHTML = '시뮬레이션 진행 중...';
+        progressContainer.classList.add('visible');
         progressText.textContent = `0%`;
         progressBar.style.width = `0%`;
         const initialState = {
@@ -304,6 +307,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function displayResults(outcomes, simulationCount) {
+        setTimeout(() => {
+            progressContainer.classList.remove('visible');
+        }, 500); // Hide progress bar after a short delay
+
         const toPercent = (count) => ((count / simulationCount) * 100).toFixed(2);
         resultsDisplay.innerHTML = `
             <h3>시뮬레이션 결과 (${simulationCount.toLocaleString()}회)</h3>
@@ -324,10 +331,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Initial Setup ---
-    document.querySelectorAll('.custom-dropdown').forEach(el => {
-        el.addEventListener('change', updateUIGlobally);
+    // Add specific event listeners for reliability
+    document.getElementById('gem-grade').addEventListener('change', () => {
+        updateDefaultsByGrade();
+        updateUIGlobally(); // Also update name display
     });
-    document.getElementById('gem-grade').addEventListener('change', updateDefaultsByGrade);
+    document.getElementById('gem-type').addEventListener('change', () => {
+        updateSubTypeOptions();
+        updateUIGlobally();
+    });
+    // Listeners for other inputs that affect the UI
+    document.getElementById('gem-sub-type').addEventListener('change', updateUIGlobally);
+    document.querySelectorAll('.level-dropdown input').forEach(input => {
+        input.addEventListener('change', updateTotalPoints);
+    });
+    document.querySelectorAll('.effect-type-dropdown input').forEach(input => {
+        input.addEventListener('change', updateAdditionalOptions);
+    });
+
     calculateBtn.addEventListener('click', startSimulation);
 
     setupCustomDropdowns();
