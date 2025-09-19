@@ -168,21 +168,27 @@
     font-weight: 500;
 }
 
-/* New Layout Styles */
+/* Layout Styles */
 .simulator-wrapper {
     display: flex;
     gap: 24px;
-    align-items: flex-start;
+    align-items: stretch; /* Make containers equal height */
 }
 
-.simulator-wrapper .calculator-container {
-    flex: 1;
-    min-width: 300px; /* Prevent it from getting too squished */
-}
-
+.simulator-wrapper .calculator-container,
 .simulator-wrapper .result-container {
-    margin-top: 0; /* Remove margin from when it was a child */
-    position: sticky; /* Make the results stick on screen while scrolling settings */
+    flex: 1;
+    min-width: 300px;
+}
+
+/* Cleaned up result-container style */
+.result-container {
+    padding: 24px;
+    background-color: #1E1E1E;
+    border-radius: 12px;
+    border: 1px solid #333333;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    position: sticky;
     top: 24px;
 }
 
@@ -190,9 +196,8 @@
 @media (max-width: 900px) {
     .simulator-wrapper {
         flex-direction: column;
-        align-items: stretch;
     }
-    .simulator-wrapper .result-container {
+    .result-container {
         position: static; /* Remove sticky positioning on mobile */
     }
 }
