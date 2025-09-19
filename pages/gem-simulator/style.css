@@ -184,49 +184,72 @@
 .dropdown-selected {
     padding: 12px;
     border-radius: 8px;
-    border: 1px solid #333333;
-    background-color: #121212;
+    border: 1px solid #4a4a4a;
+    background-color: #1c1d21;
     color: #E0E0E0;
     font-size: 1rem;
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, background-color 0.2s;
+}
+.custom-dropdown:not(.open) .dropdown-selected:hover {
+    background-color: #2a2a2a;
+    border-color: #666;
+}
+
+.custom-dropdown.open .dropdown-selected {
+    border-color: #C89B3C;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
 }
 .dropdown-options {
     display: none;
     position: absolute;
-    top: 100%;
+    top: 100%; /* Connect seamlessly */
     left: 0;
-    right: 0;
-    background-color: #1E1E1E;
-    border: 1px solid #C89B3C;
-    border-top: none;
-    border-radius: 0 0 8px 8px;
+    width: 100%; /* Make it match the parent's width */
+    box-sizing: border-box; /* Important for width calculation */
+    background-color: #2a2a2a; /* Slightly different background */
+    border: 1px solid #C89B3C; /* Match open selected border */
+    border-top: none; /* Remove top border to merge */
+    border-radius: 0 0 8px 8px; /* Round bottom corners */
     z-index: 10;
     max-height: 200px;
     overflow-y: auto;
+    padding: 4px;
+}
+.custom-dropdown.open {
+    z-index: 11; /* Ensure open dropdown is on top */
+    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    border-radius: 8px;
 }
 .custom-dropdown.open .dropdown-options { display: block; }
 .dropdown-option {
-    padding: 12px;
+    padding: 10px 12px; /* Reduced padding */
     color: #E0E0E0;
     transition: background-color 0.2s;
+    font-size: 0.9rem; /* Smaller font size */
+    border-radius: 6px; /* Rounded corners for options */
 }
 .dropdown-option:hover { background-color: #2a2a2a; }
 .dropdown-option.selected { background-color: #C89B3C; color: #121212; font-weight: 500; }
 .dropdown-option.disabled { color: #555; cursor: not-allowed; }
 
 /* Specific adjustments for dropdowns inside the diamond UI */
-.stat-diamond-content .custom-dropdown .dropdown-options {
-    min-width: 150px; /* Give options more space */
-    left: 50%;
-    transform: translateX(-50%);
-    right: auto; /* Override general rule */
+.stat-diamond-content .effect-type-dropdown {
+    min-width: 100px;
+}
+.stat-diamond-content .level-dropdown {
+    min-width: 65px;
+}
+
+.stat-diamond-content .dropdown-selected {
+    padding: 4px 8px; /* Smaller padding */
 }
 .stat-diamond-content .dropdown-option {
-    font-size: 0.85rem; /* Slightly smaller font for options */
-    padding: 8px 12px;
+    font-size: 0.8rem; /* Even smaller font */
+    padding: 6px 8px; /* And smaller padding */
 }
 
 /* Responsive layout */
