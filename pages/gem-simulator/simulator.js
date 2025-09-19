@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const progressText = document.getElementById('progress-text');
 
     // --- Constants and Data ---
-    const SIMULATION_COUNT = 20000;
     const GEM_SETTINGS = {
         order: { name: '질서의 젬', subTypes: { stable: { name: '안정' }, solid: { name: '견고' }, immutable: { name: '불변' } } },
         chaos: { name: '혼돈의 젬', subTypes: { erosion: { name: '침식' }, distortion: { name: '왜곡' }, collapse: { name: '붕괴' } } }
@@ -200,9 +199,10 @@ document.addEventListener('DOMContentLoaded', () => {
             rerolls: parseInt(document.getElementById('rerolls-left').value),
         };
 
+        const simulationCount = parseInt(document.getElementById('simulation-count').value);
         let outcomes = { count45: 0, count55: 0, legendary: 0, relic: 0, ancient: 0 };
 
-        for (let i = 0; i < SIMULATION_COUNT; i++) {
+        for (let i = 0; i < simulationCount; i++) {
             const finalState = runSingleSimulation(initialState);
             const is45 = (finalState.willpower === 4 && finalState.points === 5) || (finalState.willpower === 5 && finalState.points === 4);
             const is55 = finalState.willpower === 5 && finalState.points === 5;
@@ -213,22 +213,22 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (totalPoints >= 16 && totalPoints <= 18) outcomes.relic++;
             else if (totalPoints >= 19 && totalPoints <= 20) outcomes.ancient++;
 
-            if ((i + 1) % (SIMULATION_COUNT / 100) === 0) {
+            if ((i + 1) % (simulationCount / 100) === 0) {
                 await new Promise(resolve => setTimeout(resolve, 0));
-                const percentComplete = Math.round(((i + 1) / SIMULATION_COUNT) * 100);
+                const percentComplete = Math.round(((i + 1) / simulationCount) * 100);
                 progressText.textContent = `${percentComplete}%`;
                 progressBar.style.width = `${percentComplete}%`;
             }
         }
 
-        displayResults(outcomes);
+        displayResults(outcomes, simulationCount);
         calculateBtn.disabled = false;
     }
 
-    function displayResults(outcomes) {
-        const toPercent = (count) => ((count / SIMULATION_COUNT) * 100).toFixed(2);
+    function displayResults(outcomes, simulationCount) {
+        const toPercent = (count) => ((count / simulationCount) * 100).toFixed(2);
         resultsDisplay.innerHTML = `
-            <h3>시뮬레이션 결과 (${SIMULATION_COUNT.toLocaleString()}회)</h3>
+            <h3>시뮬레이션 결과 (${simulationCount.toLocaleString()}회)</h3>
             <p>45 발사대 확률: <strong>${toPercent(outcomes.count45)}%</strong></p>
             <p>55 발사대 확률: <strong>${toPercent(outcomes.count55)}%</strong></p>
             <hr>

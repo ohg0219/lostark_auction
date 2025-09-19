@@ -167,3 +167,32 @@
     color: #121212;
     font-weight: 500;
 }
+
+/* New Layout Styles */
+.simulator-wrapper {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.simulator-wrapper .calculator-container {
+    flex: 1;
+    min-width: 300px; /* Prevent it from getting too squished */
+}
+
+.simulator-wrapper .result-container {
+    margin-top: 0; /* Remove margin from when it was a child */
+    position: sticky; /* Make the results stick on screen while scrolling settings */
+    top: 24px;
+}
+
+/* Responsive layout for smaller screens */
+@media (max-width: 900px) {
+    .simulator-wrapper {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .simulator-wrapper .result-container {
+        position: static; /* Remove sticky positioning on mobile */
+    }
+}
