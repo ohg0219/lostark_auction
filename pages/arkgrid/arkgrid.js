@@ -632,18 +632,93 @@ function updateCoreTypeOptions(type) {
 }
 
 
-/**
- * `calculate` 함수는 슬롯에 할당된 보석과 핵심 데이터에 따라 최적의 보석 조합을 계산하고 결과를 렌더링합니다.
- * 슬롯별 목표 점수 달성 여부를 확인하며, 사용된 보석은 이후 슬롯 계산에서 제외됩니다.
- *
- * @return {void} 이 함수는 반환값이 없으며, DOM을 업데이트하여 계산 결과를 반영합니다.
- */
 function calculate() {
-    // This function is now a wrapper to call the real calculation logic inside a timeout,
-    // allowing the UI to update with a spinner first.
-    // The actual logic is implemented in runCalculation.
+    // 1. UI 업데이트: 스피너 표시
     showSpinner('최적 조합을 계산 중입니다...');
-    setTimeout(runCalculation, 0);
+
+    // 2. 활성화된 코어 정보 수집
+    const activeCores = [];
+    ['order', 'chaos'].forEach(type => {
+        for (let i = 1; i <= 3; i++) {
+            const slotId = `${type}-${i}`;
+            const slotElement = document.getElementById(`slot-${slotId}`);
+            slotElement.classList.remove('target-failed');
+            clearSlotResults(slotId);
+
+            const typeId = document.getElementById(`type-${slotId}`).dataset.value;
+            const gradeId = document.getElementById(`grade-${slotId}`).dataset.value;
+            const targetPointStr = document.getElementById(`target-${slotId}`).dataset.value;
+
+            if (typeId !== 'none' && gradeId !== 'none' && targetPointStr !== 'none') {
+                const coreTypeData = ARKGRID_CORE_TYPES[type].find(t => t.id === typeId);
+                const coreGradeData = ARKGRID_GRADE_DATA[gradeId];
+                activeCores.push({
+                    id: slotId,
+                    type: type,
+                    coreData: {
+                        name: `${coreTypeData.name} (${coreGradeData.name})`,
+                        willpower: coreGradeData.willpower,
+                    },
+                    targetPoint: parseInt(targetPointStr, 10),
+                });
+            }
+        }
+    });
+
+    if (activeCores.length === 0) {
+        hideSpinner();
+        return;
+    }
+
+    // 3. 웹 워커 생성 및 데이터 전송
+    const worker = new Worker('./arkgrid-worker.js');
+
+    worker.postMessage({
+        activeCores,
+        orderGems,
+        chaosGems,
+        ARKGRID_CORE_TYPES,
+        ARKGRID_GRADE_DATA,
+        CALCULATION_TIMEOUT: 5000 // 5초
+    });
+
+    // 4. 워커로부터 결과 수신 대기
+    worker.onmessage = function(e) {
+        const { success, bestAssignment, timedOut, error, stack } = e.data;
+
+        hideSpinner(); // 계산이 끝나면 스피너 숨기기
+
+        if (success) {
+            if (timedOut) {
+                showCustomAlert('계산 시간이 5초를 초과하여, 현재까지 찾은 최적의 조합을 표시합니다.');
+            }
+
+            // 결과 렌더링
+            if (bestAssignment && bestAssignment.score >= 0) {
+                activeCores.forEach(core => {
+                    const result = bestAssignment.assignment[core.id];
+                    renderResult(core.id, core.coreData, { ...(result || {}), achieved: !!result });
+                });
+            } else {
+                 activeCores.forEach(core => {
+                    renderResult(core.id, core.coreData, { achieved: false });
+                });
+            }
+        } else {
+            console.error('워커에서 오류 발생:', error, stack);
+            showCustomAlert(`계산 중 오류가 발생했습니다: ${error}`);
+        }
+
+        // 워커 종료
+        worker.terminate();
+    };
+
+    worker.onerror = function(e) {
+        hideSpinner();
+        console.error(`워커 오류 발생: ${e.message}`, e);
+        showCustomAlert(`치명적인 워커 오류가 발생했습니다: ${e.message}`);
+        worker.terminate();
+    };
 }
 
 function showSpinner(text) {
@@ -655,143 +730,17 @@ function hideSpinner() {
     spinnerModal.style.display = 'none';
 }
 
-function runCalculation() {
-    try {
-        // 1. Gather all active cores and clear previous results
-        const activeCores = [];
-        ['order', 'chaos'].forEach(type => {
-            for (let i = 1; i <= 3; i++) {
-                const slotId = `${type}-${i}`;
-                const slotElement = document.getElementById(`slot-${slotId}`);
-                slotElement.classList.remove('target-failed');
-                clearSlotResults(slotId);
-
-                const typeId = document.getElementById(`type-${slotId}`).dataset.value;
-                const gradeId = document.getElementById(`grade-${slotId}`).dataset.value;
-                const targetPointStr = document.getElementById(`target-${slotId}`).dataset.value;
-
-                if (typeId !== 'none' && gradeId !== 'none' && targetPointStr !== 'none') {
-                    const coreTypeData = ARKGRID_CORE_TYPES[type].find(t => t.id === typeId);
-                    const coreGradeData = ARKGRID_GRADE_DATA[gradeId];
-                    activeCores.push({
-                        id: slotId,
-                        type: type,
-                        coreData: {
-                            name: `${coreTypeData.name} (${coreGradeData.name})`,
-                            willpower: coreGradeData.willpower,
-                        },
-                        targetPoint: parseInt(targetPointStr, 10),
-                    });
-                }
-            }
-        });
-
-        if (activeCores.length === 0) return;
-
-        // 2. For each active core, find all combinations that meet the specific targetPoint
-        const coreValidCombinations = new Map();
-        for (const core of activeCores) {
-            const availableGems = core.type === 'order' ? orderGems : chaosGems;
-            let combinations = findAllPossibleCombinations(core.coreData, availableGems);
-            combinations = combinations.filter(c => c.points >= core.targetPoint);
-            combinations.sort((a, b) => b.points - a.points); // Sort by points as a heuristic
-            coreValidCombinations.set(core.id, combinations);
-        }
-
-        // 3. Backtracking solver to find the assignment with the highest total points
-        let bestAssignment = { score: -1, assignment: {} };
-        const CALCULATION_TIMEOUT = 5000;
-        const startTime = Date.now();
-        let timedOut = false;
-        let iterationCounter = 0;
-
-        function solve(coreIndex, currentAssignment, currentScore, usedGemIds) {
-            iterationCounter++;
-            if (iterationCounter % 2000 === 0) {
-                if (Date.now() - startTime > CALCULATION_TIMEOUT) {
-                    timedOut = true;
-                    return;
-                }
-            }
-            if (timedOut) return;
-
-            if (coreIndex === activeCores.length) {
-                if (currentScore > bestAssignment.score) {
-                    bestAssignment = { score: currentScore, assignment: JSON.parse(JSON.stringify(currentAssignment)) };
-                }
-                return;
-            }
-
-            const core = activeCores[coreIndex];
-            const combinations = coreValidCombinations.get(core.id);
-
-            if (combinations && combinations.length > 0) {
-                for (const combination of combinations) {
-                    const combinationGemIds = combination.gems.map(g => g.id);
-                    const hasConflict = combinationGemIds.some(id => usedGemIds.has(id));
-
-                    if (!hasConflict) {
-                        const newUsedGemIds = new Set([...usedGemIds, ...combinationGemIds]);
-                        currentAssignment[core.id] = combination;
-                        solve(coreIndex + 1, currentAssignment, currentScore + combination.points, newUsedGemIds);
-                        if (timedOut) return;
-                        delete currentAssignment[core.id];
-                    }
-                }
-            }
-            solve(coreIndex + 1, currentAssignment, currentScore, usedGemIds);
-        }
-
-        solve(0, {}, 0, new Set());
-
-        if (timedOut) {
-            showCustomAlert('계산 시간이 5초를 초과하여, 현재까지 찾은 최적의 조합을 표시합니다.');
-        }
-
-        // 4. Render the best found assignment
-        if (bestAssignment.score >= 0) {
-            for (const core of activeCores) {
-                const result = bestAssignment.assignment[core.id];
-                renderResult(core.id, core.coreData, { ...(result || {}), achieved: !!result });
-            }
-        } else {
-            activeCores.forEach(core => {
-                renderResult(core.id, core.coreData, { achieved: false });
-            });
-        }
-    } finally {
-        hideSpinner();
-    }
-}
-
-/**
- * 주어진 슬롯 ID와 결과값을 기반으로 UI 요소를 업데이트하여 결과를 렌더링합니다.
- *
- * @param {string} slotId - 업데이트할 슬롯의 ID.
- * @param {Object} core - 코어 오브젝트이며, 동작에 필요한 데이터(예: 의지력)를 포함합니다.
- * @param {Object} result - 렌더링할 결과 데이터로, `achieved`, `points`, `gems`, `willpower`를 포함합니다.
- * @param {boolean} result.achieved - 요청된 목표 달성 여부.
- * @param {number} result.points - 결과 포인트 값.
- * @param {Array} result.gems - 보석 정보 배열.
- * @param {number} result.willpower - 계산된 의지력 값.
- * @return {void} 이 메서드는 값을 반환하지 않습니다.
- */
 function renderResult(slotId, core, result) {
     const socketContainer = document.getElementById(`sockets-${slotId}`);
     const summaryEl = document.getElementById(`summary-${slotId}`);
 
-    if (!result.achieved) {
+    if (!result.achieved || result.points === undefined || result.points <= -1) {
         const slotElement = document.getElementById(`slot-${slotId}`);
         slotElement.classList.add('target-failed');
         summaryEl.textContent = '최적 조합을 찾을 수 없습니다.';
         return;
     }
 
-    if (result.points <= -1) {
-        slotElement.classList.add('target-failed');
-        summaryEl.textContent = '최적 조합을 찾을 수 없습니다.';
-        return;
-    }
 
     result.gems.forEach((gem, index) => {
         if (socketContainer.children[index]) {
@@ -813,95 +762,6 @@ function renderResult(slotId, core, result) {
     summaryEl.innerHTML = `[의지력: ${result.willpower} / ${core.willpower}] [포인트: ${result.points}]`;
 }
 
-/**
- * 사용 가능한 보석과 코어의 조건을 기반으로 최적의 보석 조합을 찾습니다. 목표 점수를 달성할 수 있다면 해당 정보를 반환하고,
- * 목표를 달성하지 못할 경우 가장 높은 점수를 얻을 수 있는 조합을 반환합니다.
- *
- * @param {Object} core 코어의 정보를 포함하는 객체. core.willpower는 총 제한 의지력입니다.
- * @param {Array} availableGems 사용 가능한 보석 목록. 각 보석은 point와 willpower 속성을 가진 객체입니다.
- * @param {number} targetPoint 달성해야 할 목표 점수. 0 이하의 값이 주어진 경우 목표 점수 없이 최적 조합을 찾습니다.
- * @return {Object} 최적의 보석 조합을 나타내는 객체. gems, points, willpower, achieved 속성을 포함하며,
- *                  achieved가 true면 목표를 달성했음을 나타냅니다. 달성하지 못했다면 achieved는 false입니다.
- */
-function findBestGemCombination(core, availableGems, targetPoint) {
-    // If no target is specified, find the combination with the maximum possible points.
-    if (targetPoint <= 0) {
-        let bestCombination = { gems: [], points: -1, willpower: 0, achieved: false };
-
-        function findMax(startIndex, currentGems, currentWillpower, currentPoints) {
-            if (currentPoints > bestCombination.points || (currentPoints === bestCombination.points && currentWillpower < bestCombination.willpower)) {
-                bestCombination = { gems: [...currentGems], points: currentPoints, willpower: currentWillpower, achieved: false };
-            }
-            if (currentGems.length >= MAX_GEMS_PER_CORE || startIndex >= availableGems.length) {
-                return;
-            }
-            for (let i = startIndex; i < availableGems.length; i++) {
-                const newGem = availableGems[i];
-                if (currentWillpower + newGem.willpower <= core.willpower) {
-                    currentGems.push(newGem);
-                    findMax(i + 1, currentGems, currentWillpower + newGem.willpower, currentPoints + newGem.point);
-                    currentGems.pop();
-                }
-            }
-        }
-        findMax(0, [], 0, 0);
-        return bestCombination;
-    }
-
-    // --- Logic for when a targetPoint is provided ---
-    // Combination with the highest score BELOW the target
-    let bestUnderTarget = { gems: [], points: -1, willpower: 0, achieved: false };
-    // Combination with the lowest score ABOVE OR EQUAL to the target
-    let bestOverTarget = { gems: [], points: Infinity, willpower: 0, achieved: true };
-
-    function findClosest(startIndex, currentGems, currentWillpower, currentPoints) {
-        // Check if the current combination is a candidate for bestUnderTarget or bestOverTarget
-        if (currentPoints >= targetPoint) {
-            // This combination meets or exceeds the target.
-            // We want the one with the LOWEST score (closest to the target).
-
-            // Tie-breaker: higher willpower to use up budget and leave smaller gems for others.
-            if (currentPoints < bestOverTarget.points || (currentPoints === bestOverTarget.points && currentWillpower > bestOverTarget.willpower)) {
-                bestOverTarget = { gems: [...currentGems], points: currentPoints, willpower: currentWillpower, achieved: true };
-            }
-        } else { // currentPoints < targetPoint
-            // This combination is under the target.
-            // We want the one with the HIGHEST score (closest to the target).
-            if (currentPoints > bestUnderTarget.points || (currentPoints === bestUnderTarget.points && currentWillpower < bestUnderTarget.willpower)) {
-                bestUnderTarget = { gems: [...currentGems], points: currentPoints, willpower: currentWillpower, achieved: false };
-            }
-        }
-
-        // Base case for recursion
-        if (currentGems.length >= MAX_GEMS_PER_CORE || startIndex >= availableGems.length) {
-            return;
-        }
-
-        // Recursive step
-        for (let i = startIndex; i < availableGems.length; i++) {
-            const newGem = availableGems[i];
-            if (currentWillpower + newGem.willpower <= core.willpower) {
-                currentGems.push(newGem);
-                findClosest(i + 1, currentGems, currentWillpower + newGem.willpower, currentPoints + newGem.point);
-                currentGems.pop();
-            }
-        }
-    }
-
-    findClosest(0, [], 0, 0);
-
-    // --- Determine final result ---
-    // If we found a combination that meets/exceeds the target, that's our preferred answer.
-    if (bestOverTarget.points !== Infinity) {
-        return bestOverTarget;
-    }
-    // Otherwise, return the best we found that was under the target.
-    if (bestUnderTarget.points !== -1) {
-        return bestUnderTarget;
-    }
-    // If absolutely no combination was possible, return an empty/failure state.
-    return { gems: [], points: -1, willpower: 0, achieved: false };
-}
 
 async function saveData(characterName, password) {
     if (!characterName || !password) {
