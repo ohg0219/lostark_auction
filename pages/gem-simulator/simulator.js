@@ -272,9 +272,18 @@ document.addEventListener('DOMContentLoaded', () => {
     async function startSimulation() {
         calculateBtn.disabled = true;
         resultsDisplay.innerHTML = '시뮬레이션 진행 중...';
+
+        // Reset progress bar instantly without transition
+        progressBar.style.transition = 'none';
+        progressBar.style.width = '0%';
+        // Force reflow to apply the style change immediately
+        progressBar.offsetHeight;
+        // Re-enable transition for the upcoming progress updates
+        progressBar.style.transition = 'width 0.1s linear';
+
         progressContainer.classList.add('visible');
         progressText.textContent = `0%`;
-        progressBar.style.width = `0%`;
+
         const initialState = {
             willpower: parseInt(document.getElementById('current-willpower').value),
             points: parseInt(document.getElementById('current-points').value),
