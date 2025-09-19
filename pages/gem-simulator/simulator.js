@@ -246,14 +246,13 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         const simulationCount = parseInt(document.getElementById('simulation-count').value);
-        let outcomes = { count45: 0, count55: 0, legendary: 0, relic: 0, ancient: 0 };
+        let outcomes = { count45: 0, count54: 0, count55: 0, legendary: 0, relic: 0, ancient: 0 };
 
         for (let i = 0; i < simulationCount; i++) {
             const finalState = runSingleSimulation(initialState);
-            const is45 = (finalState.willpower === 4 && finalState.points === 5) || (finalState.willpower === 5 && finalState.points === 4);
-            const is55 = finalState.willpower === 5 && finalState.points === 5;
-            if (is45) outcomes.count45++;
-            if (is55) outcomes.count55++;
+            if (finalState.willpower === 4 && finalState.points === 5) outcomes.count45++;
+            if (finalState.willpower === 5 && finalState.points === 4) outcomes.count54++;
+            if (finalState.willpower === 5 && finalState.points === 5) outcomes.count55++;
             const totalPoints = finalState.willpower + finalState.points + finalState.effect1_level + finalState.effect2_level;
             if (totalPoints >= 4 && totalPoints <= 15) outcomes.legendary++;
             else if (totalPoints >= 16 && totalPoints <= 18) outcomes.relic++;
@@ -275,8 +274,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const toPercent = (count) => ((count / simulationCount) * 100).toFixed(2);
         resultsDisplay.innerHTML = `
             <h3>시뮬레이션 결과 (${simulationCount.toLocaleString()}회)</h3>
-            <p>45 발사대 확률: <strong>${toPercent(outcomes.count45)}%</strong></p>
-            <p>55 발사대 확률: <strong>${toPercent(outcomes.count55)}%</strong></p>
+            <div class="tooltip-container">
+                <p>45 발사대 확률 [4/5]: <strong>${toPercent(outcomes.count45)}%</strong></p>
+                <p>54 발사대 확률 [5/4]: <strong>${toPercent(outcomes.count54)}%</strong></p>
+                <p>55 발사대 확률 [5/5]: <strong>${toPercent(outcomes.count55)}%</strong></p>
+                <div class="tooltip-content">
+                    <b>발사대란?</b><br>
+                    부가 옵션을 고려하지 않고, 의지력과 질서/혼돈 포인트를 목표치에 맞추는 것을 의미합니다.
+                </div>
+            </div>
             <hr>
             <p>전설 등급 확률: <strong>${toPercent(outcomes.legendary)}%</strong></p>
             <p>유물 등급 확률: <strong>${toPercent(outcomes.relic)}%</strong></p>
