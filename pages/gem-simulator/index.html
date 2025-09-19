@@ -10,63 +10,97 @@
 <body>
     <main>
         <h1>젬 가공 시뮬레이터</h1>
-        <div class="controls">
+        <div class="filters">
             <a href="../../" class="nav-button">메인으로</a>
         </div>
 
-        <div class="simulator-container">
-            <div class="settings-card">
-                <h2>설정</h2>
-                <div class="setting-group">
-                    <label for="gem-type">젬 종류:</label>
-                    <select id="gem-type">
-                        <option value="order">질서의 젬</option>
-                        <option value="chaos">혼돈의 젬</option>
-                    </select>
+        <div class="calculator-container">
+            <!-- Gem Type -->
+            <div class="input-group">
+                <label>젬 종류</label>
+                <div class="custom-dropdown" data-input-id="gem-type">
+                    <div class="dropdown-selected"><span class="selected-value">질서의 젬</span></div>
+                    <div class="dropdown-options">
+                        <div class="dropdown-option" data-value="order">질서의 젬</div>
+                        <div class="dropdown-option" data-value="chaos">혼돈의 젬</div>
+                    </div>
+                    <input type="hidden" id="gem-type" value="order">
                 </div>
-                <div class="setting-group">
-                    <label for="gem-sub-type">세부 종류:</label>
-                    <select id="gem-sub-type">
-                        <!-- Options will be populated by JS -->
-                    </select>
+            </div>
+            <!-- Gem Sub-type -->
+            <div class="input-group">
+                <label>세부 종류</label>
+                <div class="custom-dropdown" data-input-id="gem-sub-type">
+                    <div class="dropdown-selected"><span class="selected-value"></span></div>
+                    <div class="dropdown-options" id="gem-sub-type-options"></div>
+                    <input type="hidden" id="gem-sub-type">
                 </div>
-                <div class="setting-group">
-                    <label for="gem-grade">젬 등급:</label>
-                    <select id="gem-grade">
-                        <option value="advanced">고급</option>
-                        <option value="rare">희귀</option>
-                        <option value="heroic">영웅</option>
-                    </select>
+            </div>
+            <!-- Gem Grade -->
+            <div class="input-group">
+                <label>젬 등급</label>
+                <div class="custom-dropdown" data-input-id="gem-grade">
+                    <div class="dropdown-selected"><span class="selected-value">고급</span></div>
+                    <div class="dropdown-options">
+                        <div class="dropdown-option" data-value="advanced">고급</div>
+                        <div class="dropdown-option" data-value="rare">희귀</div>
+                        <div class="dropdown-option" data-value="heroic">영웅</div>
+                    </div>
+                    <input type="hidden" id="gem-grade" value="advanced">
                 </div>
-                <div class="setting-group">
-                    <label>기본 의지력:</label>
-                    <span id="base-willpower"></span>
+            </div>
+            <!-- Willpower -->
+            <div class="input-group">
+                <label>현재 의지력 효율</label>
+                <div class="custom-dropdown" data-input-id="current-willpower">
+                    <div class="dropdown-selected"><span class="selected-value">1</span></div>
+                    <div class="dropdown-options">
+                        <div class="dropdown-option" data-value="1">1</div><div class="dropdown-option" data-value="2">2</div><div class="dropdown-option" data-value="3">3</div><div class="dropdown-option" data-value="4">4</div><div class="dropdown-option" data-value="5">5</div>
+                    </div>
+                    <input type="hidden" id="current-willpower" value="1">
                 </div>
-                <div class="setting-group">
-                    <label for="current-willpower">현재 의지력:</label>
-                    <input type="number" id="current-willpower" value="1" min="1" max="10">
+            </div>
+            <!-- Points -->
+            <div class="input-group">
+                <label>현재 포인트</label>
+                <div class="custom-dropdown" data-input-id="current-points">
+                    <div class="dropdown-selected"><span class="selected-value">1</span></div>
+                    <div class="dropdown-options">
+                        <div class="dropdown-option" data-value="1">1</div><div class="dropdown-option" data-value="2">2</div><div class="dropdown-option" data-value="3">3</div><div class="dropdown-option" data-value="4">4</div><div class="dropdown-option" data-value="5">5</div>
+                    </div>
+                    <input type="hidden" id="current-points" value="1">
                 </div>
-                <div class="setting-group">
-                    <label for="current-points">현재 포인트:</label>
-                    <input type="number" id="current-points" value="1" min="1" max="10">
+            </div>
+            <!-- Attempts -->
+            <div class="input-group">
+                <label>남은 가공 횟수</label>
+                <div class="custom-dropdown" data-input-id="attempts-left">
+                    <div class="dropdown-selected"><span class="selected-value">5</span></div>
+                    <div class="dropdown-options">
+                        <div class="dropdown-option" data-value="0">0</div><div class="dropdown-option" data-value="1">1</div><div class="dropdown-option" data-value="2">2</div><div class="dropdown-option" data-value="3">3</div><div class="dropdown-option" data-value="4">4</div><div class="dropdown-option" data-value="5">5</div><div class="dropdown-option" data-value="6">6</div><div class="dropdown-option" data-value="7">7</div><div class="dropdown-option" data-value="8">8</div><div class="dropdown-option" data-value="9">9</div>
+                    </div>
+                    <input type="hidden" id="attempts-left" value="5">
                 </div>
-                <div class="setting-group">
-                    <label for="attempts-left">남은 가공 횟수:</label>
-                    <input type="number" id="attempts-left" value="5" min="0" max="9">
+            </div>
+            <!-- Rerolls -->
+            <div class="input-group">
+                <label>다른 항목 보기</label>
+                <div class="custom-dropdown" data-input-id="rerolls-left">
+                    <div class="dropdown-selected"><span class="selected-value">0</span></div>
+                    <div class="dropdown-options">
+                        <div class="dropdown-option" data-value="0">0</div><div class="dropdown-option" data-value="1">1</div><div class="dropdown-option" data-value="2">2</div><div class="dropdown-option" data-value="3">3</div><div class="dropdown-option" data-value="4">4</div><div class="dropdown-option" data-value="5">5</div>
+                    </div>
+                    <input type="hidden" id="rerolls-left" value="0">
                 </div>
-                <div class="setting-group">
-                    <label for="rerolls-left">다른 항목 보기 횟수:</label>
-                    <input type="number" id="rerolls-left" value="0" min="0" max="2">
-                </div>
-                <button id="calculate-btn">확률 계산</button>
             </div>
 
-            <div class="results-card">
-                <h2>결과</h2>
+            <button id="calculate-btn">확률 계산</button>
+
+            <div class="result-container">
                 <div id="results-display">
-                    <p>설정을 선택하고 "확률 계산" 버튼을 누르세요.</p>
+                     <p>설정을 선택하고 "확률 계산" 버튼을 누르세요.</p>
                 </div>
-                 <div class="progress-container">
+                <div class="progress-container">
                     <div class="progress-bar" id="progress-bar"></div>
                     <div class="progress-text" id="progress-text"></div>
                 </div>
