@@ -132,6 +132,8 @@ p.description {
     border: 1px solid #e9ecef;
     border-radius: 8px;
     max-width: 728px;
+    position: relative;
+    z-index: -1;
 }
 
 .item-card {
