@@ -131,9 +131,9 @@ const SUB_OPTION_DATA = {
     '공격력': [0.00029, 0.00067, 0.00105, 0.00134, 0.00172],
     '추가피해': [0.00060, 0.00119, 0.00187, 0.00239, 0.00299],
     '보스피해': [0.00078, 0.00156, 0.00244, 0.00313, 0.00391],
-    '낙인력': [0.01, 0.02, 0.03, 0.04, 0.05],
-    '아군피해강화': [0.01, 0.02, 0.03, 0.04, 0.05],
-    '아군공격강화': [0.01, 0.02, 0.03, 0.04, 0.05]
+    '아군피해강화': [0.00029, 0.00067, 0.00105, 0.00134, 0.00172],
+    '낙인력': [0.00060, 0.00119, 0.00187, 0.00239, 0.00299],
+    '아군공격강화': [0.00078, 0.00156, 0.00244, 0.00313, 0.00391]
 };
 
 const CLASS_EFFECTIVE_OPTIONS = {
@@ -990,7 +990,7 @@ function renderResult(slotId, core, result) {
             socket.classList.add('gem-equipped');
         }
     });
-    const scoreText = result.effectivenessScore !== undefined ? `[유효효율: ${(result.effectivenessScore * 100).toFixed(4)}%]` : '';
+    const scoreText = result.effectivenessScore !== undefined ? `[예상효율: ${(result.effectivenessScore * 100).toFixed(4)}%]` : '';
     summaryEl.innerHTML = `[의지력: ${result.willpower} / ${core.willpower}] [포인트: ${result.points}] ${scoreText}`;
 }
 
