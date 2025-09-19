@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>젬 가공 시뮬레이터</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main>
+        <h1>젬 가공 시뮬레이터</h1>
+        <div class="controls">
+            <a href="../../" class="nav-button">메인으로</a>
+        </div>
+
+        <div class="simulator-container">
+            <div class="settings-card">
+                <h2>설정</h2>
+                <div class="setting-group">
+                    <label for="gem-type">젬 종류:</label>
+                    <select id="gem-type">
+                        <option value="order">질서의 젬</option>
+                        <option value="chaos">혼돈의 젬</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label for="gem-sub-type">세부 종류:</label>
+                    <select id="gem-sub-type">
+                        <!-- Options will be populated by JS -->
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label for="gem-grade">젬 등급:</label>
+                    <select id="gem-grade">
+                        <option value="advanced">고급</option>
+                        <option value="rare">희귀</option>
+                        <option value="heroic">영웅</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label>기본 의지력:</label>
+                    <span id="base-willpower"></span>
+                </div>
+                <div class="setting-group">
+                    <label for="current-willpower">현재 의지력:</label>
+                    <input type="number" id="current-willpower" value="1" min="1" max="10">
+                </div>
+                <div class="setting-group">
+                    <label for="current-points">현재 포인트:</label>
+                    <input type="number" id="current-points" value="1" min="1" max="10">
+                </div>
+                <div class="setting-group">
+                    <label for="attempts-left">남은 가공 횟수:</label>
+                    <input type="number" id="attempts-left" value="5" min="0" max="9">
+                </div>
+                <div class="setting-group">
+                    <label for="rerolls-left">다른 항목 보기 횟수:</label>
+                    <input type="number" id="rerolls-left" value="0" min="0" max="2">
+                </div>
+                <button id="calculate-btn">확률 계산</button>
+            </div>
+
+            <div class="results-card">
+                <h2>결과</h2>
+                <div id="results-display">
+                    <p>설정을 선택하고 "확률 계산" 버튼을 누르세요.</p>
+                </div>
+                 <div class="progress-container">
+                    <div class="progress-bar" id="progress-bar"></div>
+                    <div class="progress-text" id="progress-text"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script type="module" src="simulator.js"></script>
+</body>
+</html>
