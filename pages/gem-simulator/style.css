@@ -3,6 +3,8 @@
     display: flex;
     gap: 24px;
     align-items: flex-start;
+    position: relative;
+    z-index: 1;
 }
 
 /* Left container for the interactive Gem UI */
