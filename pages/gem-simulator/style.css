@@ -81,17 +81,6 @@
     background-size: contain;
     position: relative;
 }
-.gem-icon-container .custom-dropdown .dropdown-selected {
-    font-size: 0.8rem;
-    padding: 4px;
-    background: rgba(0,0,0,0.5);
-    border: 1px solid #C89B3C;
-    position: absolute;
-    bottom: -8px;
-    left: 50%;
-    transform: translateX(-50%);
-    white-space: nowrap;
-}
 .gem-title h2 {
     margin: 0;
     color: #C89B3C;

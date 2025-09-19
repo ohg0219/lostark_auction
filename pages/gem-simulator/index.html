@@ -18,21 +18,21 @@
             <div class="gem-ui-container">
                 <div class="gem-header">
                     <div class="gem-icon-container">
-                        <!-- Gem Grade Dropdown -->
-                        <div class="custom-dropdown" data-input-id="gem-grade">
-                            <div class="dropdown-selected"><span class="selected-value">고급</span></div>
-                            <div class="dropdown-options">
-                                <div class="dropdown-option" data-value="advanced">고급</div>
-                                <div class="dropdown-option" data-value="rare">희귀</div>
-                                <div class="dropdown-option" data-value="heroic">영웅</div>
-                            </div>
-                            <input type="hidden" id="gem-grade" value="advanced">
-                        </div>
+                        <!-- Gem Grade Dropdown is now moved to .gem-type-selectors -->
                     </div>
                     <div class="gem-title">
                         <h2 id="gem-name-display">혼돈의 젬 : 침식</h2>
                         <!-- Gem Type & Sub-type Dropdowns (hidden but functional) -->
                         <div class="gem-type-selectors">
+                             <div class="custom-dropdown" data-input-id="gem-grade">
+                                <div class="dropdown-selected"><span class="selected-value">고급</span></div>
+                                <div class="dropdown-options">
+                                    <div class="dropdown-option" data-value="advanced">고급</div>
+                                    <div class="dropdown-option" data-value="rare">희귀</div>
+                                    <div class="dropdown-option" data-value="heroic">영웅</div>
+                                </div>
+                                <input type="hidden" id="gem-grade" value="advanced">
+                            </div>
                              <div class="custom-dropdown" data-input-id="gem-type">
                                 <div class="dropdown-selected"><span class="selected-value">혼돈의 젬</span></div>
                                 <div class="dropdown-options">
