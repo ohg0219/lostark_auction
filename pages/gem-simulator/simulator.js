@@ -65,17 +65,25 @@ document.addEventListener('DOMContentLoaded', () => {
         dropdowns.forEach(dropdown => {
             const selected = dropdown.querySelector('.dropdown-selected');
             const optionsContainer = dropdown.querySelector('.dropdown-options');
-            const hiddenInput = document.getElementById(dropdown.dataset.inputId);
+            if (!selected || !optionsContainer) return;
 
-            selected.addEventListener('click', () => {
+            selected.addEventListener('click', (e) => {
+                e.stopPropagation();
                 closeAllDropdowns(dropdown);
                 dropdown.classList.toggle('open');
             });
 
             optionsContainer.addEventListener('click', e => {
+                e.stopPropagation();
                 if (e.target.classList.contains('dropdown-option') && !e.target.classList.contains('disabled')) {
+                    const hiddenInput = document.getElementById(dropdown.dataset.inputId);
                     const newValue = e.target.dataset.value;
-                    const newText = e.target.textContent;
+                    let newText = e.target.textContent;
+
+                    // For level dropdowns, we only want the number part
+                    if (dropdown.classList.contains('level-dropdown')) {
+                        newText = newValue;
+                    }
 
                     if (hiddenInput.value !== newValue) {
                         selected.querySelector('.selected-value').textContent = newText;
@@ -88,19 +96,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
-        window.addEventListener('click', e => { if (!e.target.closest('.custom-dropdown')) closeAllDropdowns(); });
+        window.addEventListener('click', () => closeAllDropdowns());
     }
 
     function closeAllDropdowns(exceptThisOne = null) {
-        document.querySelectorAll('.custom-dropdown.open').forEach(d => { if (d !== exceptThisOne) d.classList.remove('open'); });
+        document.querySelectorAll('.custom-dropdown.open').forEach(d => {
+            if (d !== exceptThisOne) d.classList.remove('open');
+        });
     }
 
-    function updateDropdownValue(inputId, value, text) {
+    function updateDropdownValue(inputId, value, text, isLevel = false) {
         const hiddenInput = document.getElementById(inputId);
         const dropdown = document.querySelector(`.custom-dropdown[data-input-id="${inputId}"]`);
         if (hiddenInput && dropdown) {
             hiddenInput.value = value;
-            dropdown.querySelector('.selected-value').textContent = text;
+            const textToSet = isLevel ? value : text;
+            dropdown.querySelector('.selected-value').textContent = textToSet;
             const optionsContainer = dropdown.querySelector('.dropdown-options');
             optionsContainer.querySelector('.selected')?.classList.remove('selected');
             optionsContainer.querySelector(`[data-value="${value}"]`)?.classList.add('selected');
@@ -108,10 +119,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- UI Update Functions ---
-    function updatePointLabel() {
+    function updateUIGlobally() {
         const gemType = document.getElementById('gem-type').value;
-        const label = document.querySelector('[data-input-id="current-points"]').previousElementSibling;
-        label.textContent = gemType === 'order' ? '현재 질서 포인트' : '현재 혼돈 포인트';
+        const subTypeValue = document.getElementById('gem-sub-type').value;
+        const gemGradeValue = document.getElementById('gem-grade').value;
+
+        // Update main gem name display
+        const gemNameDisplay = document.getElementById('gem-name-display');
+        const gemTypeName = GEM_SETTINGS[gemType].name;
+        const subTypeName = GEM_SETTINGS[gemType].subTypes[subTypeValue].name;
+        gemNameDisplay.textContent = `${gemTypeName} : ${subTypeName}`;
+
+        // Update points label
+        const pointsNameDisplay = document.getElementById('points-name-display');
+        pointsNameDisplay.textContent = gemType === 'order' ? '질서 포인트' : '혼돈 포인트';
+
+        // Update available effect options
+        updateAdditionalOptions();
+
+        // Update total points display
+        updateTotalPoints();
     }
 
     function updateSubTypeOptions() {
@@ -130,7 +157,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             container.appendChild(optionDiv);
         });
-        updateAdditionalOptions();
     }
 
     function updateAdditionalOptions() {
@@ -138,46 +164,49 @@ document.addEventListener('DOMContentLoaded', () => {
         const subType = document.getElementById('gem-sub-type').value;
         if (!gemType || !subType) return;
         const effects = GEM_SETTINGS[gemType].subTypes[subType].effects;
-
         const effect1Type = document.getElementById('effect1-type').value;
         const effect2Type = document.getElementById('effect2-type').value;
 
         // Populate options for effect 1
         const container1 = document.getElementById('effect1-type-options');
         container1.innerHTML = '';
+        let currentEffect1IsValid = effects.includes(effect1Type);
         effects.forEach((effect, index) => {
             const optionDiv = document.createElement('div');
             optionDiv.className = 'dropdown-option';
             optionDiv.dataset.value = effect;
             optionDiv.textContent = effect;
             if (effect === effect2Type) optionDiv.classList.add('disabled');
-            if (index === 0 && (!effect1Type || !effects.includes(effect1Type))) {
-                updateDropdownValue('effect1-type', effect, effect);
-                optionDiv.classList.add('selected');
-            } else if (effect === effect1Type) {
-                optionDiv.classList.add('selected');
-            }
             container1.appendChild(optionDiv);
         });
+        if (!currentEffect1IsValid) {
+            updateDropdownValue('effect1-type', effects[0], effects[0]);
+        }
 
         // Populate options for effect 2
         const container2 = document.getElementById('effect2-type-options');
         container2.innerHTML = '';
+        const selectedEffect1 = document.getElementById('effect1-type').value;
+        let currentEffect2IsValid = effects.includes(effect2Type) && effect2Type !== selectedEffect1;
         effects.forEach((effect, index) => {
             const optionDiv = document.createElement('div');
             optionDiv.className = 'dropdown-option';
             optionDiv.dataset.value = effect;
             optionDiv.textContent = effect;
-            if (effect === document.getElementById('effect1-type').value) optionDiv.classList.add('disabled');
-
-            let defaultEffect2 = effects.find(e => e !== document.getElementById('effect1-type').value);
-            if (effect === defaultEffect2 && (!effect2Type || !effects.includes(effect2Type) || effect1Type === effect2Type)) {
-                 updateDropdownValue('effect2-type', effect, effect);
-                 optionDiv.classList.add('selected');
-            } else if (effect === effect2Type) {
-                optionDiv.classList.add('selected');
-            }
+            if (effect === selectedEffect1) optionDiv.classList.add('disabled');
             container2.appendChild(optionDiv);
+        });
+        if (!currentEffect2IsValid) {
+            const newEffect2 = effects.find(e => e !== selectedEffect1) || '';
+            updateDropdownValue('effect2-type', newEffect2, newEffect2);
+        }
+
+        // Reselect in dropdowns
+        document.querySelectorAll('.effect-type-dropdown').forEach(d => {
+            const id = d.dataset.inputId;
+            const val = document.getElementById(id).value;
+            d.querySelector('.selected')?.classList.remove('selected');
+            d.querySelector(`[data-value="${val}"]`)?.classList.add('selected');
         });
     }
 
@@ -185,9 +214,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const grade = document.getElementById('gem-grade').value;
         const settings = GRADE_SETTINGS[grade];
         if (settings) {
-            updateDropdownValue('attempts-left', settings.attempts, settings.attempts);
-            updateDropdownValue('rerolls-left', settings.rerolls, settings.rerolls);
+            updateDropdownValue('attempts-left', settings.attempts, settings.attempts, true);
+            updateDropdownValue('rerolls-left', settings.rerolls, settings.rerolls, true);
         }
+    }
+
+    function updateTotalPoints() {
+        const willpower = parseInt(document.getElementById('current-willpower').value) || 0;
+        const points = parseInt(document.getElementById('current-points').value) || 0;
+        const effect1 = parseInt(document.getElementById('effect1-level').value) || 0;
+        const effect2 = parseInt(document.getElementById('effect2-level').value) || 0;
+        document.getElementById('total-points-display').textContent = willpower + points + effect1 + effect2;
     }
 
     // --- Simulation Core ---
@@ -235,7 +272,6 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsDisplay.innerHTML = '시뮬레이션 진행 중...';
         progressText.textContent = `0%`;
         progressBar.style.width = `0%`;
-
         const initialState = {
             willpower: parseInt(document.getElementById('current-willpower').value),
             points: parseInt(document.getElementById('current-points').value),
@@ -244,10 +280,8 @@ document.addEventListener('DOMContentLoaded', () => {
             attemptsLeft: parseInt(document.getElementById('attempts-left').value),
             rerolls: parseInt(document.getElementById('rerolls-left').value),
         };
-
         const simulationCount = parseInt(document.getElementById('simulation-count').value);
         let outcomes = { count45: 0, count54: 0, count55: 0, legendary: 0, relic: 0, ancient: 0 };
-
         for (let i = 0; i < simulationCount; i++) {
             const finalState = runSingleSimulation(initialState);
             if (finalState.willpower === 4 && finalState.points === 5) outcomes.count45++;
@@ -258,14 +292,13 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (totalPoints >= 16 && totalPoints <= 18) outcomes.relic++;
             else if (totalPoints >= 19 && totalPoints <= 20) outcomes.ancient++;
 
-            if ((i + 1) % (simulationCount / 100) === 0) {
+            if ((i + 1) % (Math.ceil(simulationCount / 100)) === 0) {
                 await new Promise(resolve => setTimeout(resolve, 0));
                 const percentComplete = Math.round(((i + 1) / simulationCount) * 100);
                 progressText.textContent = `${percentComplete}%`;
                 progressBar.style.width = `${percentComplete}%`;
             }
         }
-
         displayResults(outcomes, simulationCount);
         calculateBtn.disabled = false;
     }
@@ -291,18 +324,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Initial Setup ---
-    document.getElementById('gem-type').addEventListener('change', () => {
-        updatePointLabel();
-        updateSubTypeOptions();
+    document.querySelectorAll('.custom-dropdown').forEach(el => {
+        el.addEventListener('change', updateUIGlobally);
     });
-    document.getElementById('gem-sub-type').addEventListener('change', updateAdditionalOptions);
     document.getElementById('gem-grade').addEventListener('change', updateDefaultsByGrade);
-    document.getElementById('effect1-type').addEventListener('change', updateAdditionalOptions);
-    document.getElementById('effect2-type').addEventListener('change', updateAdditionalOptions);
     calculateBtn.addEventListener('click', startSimulation);
 
     setupCustomDropdowns();
-    updatePointLabel();
     updateSubTypeOptions();
     updateDefaultsByGrade();
+    updateUIGlobally();
 });

@@ -1,105 +1,150 @@
-/* Inherits from main style.css */
-
-/* Specific styles for the simulator */
-.result-container {
-    margin-top: 24px;
-    padding-top: 24px;
-    border-top: 1px solid #333333;
+/* Main wrapper for the entire simulator view */
+.simulator-wrapper {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
 }
 
-#results-display h3 {
-    margin-top: 0;
-    color: #E0E0E0;
+/* Left container for the interactive Gem UI */
+.gem-ui-container {
+    flex: 1.2; /* Give it a bit more space */
+    min-width: 450px;
+    background: #1c1d21; /* Dark background similar to image */
+    border: 1px solid #4a4a4a;
+    border-radius: 12px;
+    padding: 24px;
+    position: relative;
+    /* A pseudo-element for the background pattern if needed */
+}
+
+/* Right container for results and controls */
+.result-container {
+    flex: 1;
+    min-width: 300px;
+    padding: 24px;
+    background-color: #1E1E1E;
+    border-radius: 12px;
+    border: 1px solid #333333;
+    position: sticky;
+    top: 24px;
+}
+
+/* Header section of the Gem UI */
+.gem-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 16px;
+    margin-bottom: 24px;
+}
+.gem-icon-container {
+    width: 64px;
+    height: 64px;
+    background: url(https://cdn-lostark.game.onstove.com/efui_iconatlas/etc/etc_15_187.png) no-repeat center center;
+    background-size: contain;
+    position: relative;
+}
+.gem-icon-container .custom-dropdown .dropdown-selected {
+    font-size: 0.8rem;
+    padding: 4px;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid #C89B3C;
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+}
+.gem-title h2 {
+    margin: 0;
+    color: #C89B3C;
+    font-size: 1.5rem;
+}
+.gem-type-selectors {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+.gem-type-selectors .custom-dropdown .dropdown-selected {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    border: 1px solid #444;
+}
+
+/* Gem Body */
+.gem-body {
+    position: relative;
+}
+.gem-points-display {
     text-align: center;
+    font-size: 1.2rem;
+    color: #FFFFFF;
+    margin-bottom: 40px;
+}
+
+/* Diamond Layout */
+.stat-diamond-layout {
+    position: relative;
+    width: 250px;
+    height: 250px;
+    margin: 60px auto;
+}
+.stat-diamond-wrapper {
+    position: absolute;
+    width: 120px;
+    height: 120px;
+}
+.stat-diamond {
+    width: 100%;
+    height: 100%;
+    transform: rotate(45deg);
+    border-radius: 20px; /* Rounded diamond corners */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid;
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+}
+.stat-diamond-content {
+    transform: rotate(-45deg);
+    text-align: center;
+    color: #FFFFFF;
     font-weight: 500;
 }
-
-#results-display p {
-    font-size: 1rem;
-    line-height: 1.6;
-    margin: 12px 0;
-    color: #888888;
-    display: flex;
-    justify-content: space-between;
-}
-
-#results-display strong {
-    font-size: 1.1rem;
-    color: #C89B3C;
-    font-weight: 600;
-}
-
-.progress-container {
-    width: 100%;
-    background-color: #121212;
-    border-radius: 4px;
-    margin-top: 20px;
-    position: relative;
-    height: 24px;
-    border: 1px solid #333333;
-}
-
-.progress-bar {
-    width: 0%;
-    height: 100%;
-    background-color: #C89B3C;
-    border-radius: 3px;
-    transition: width 0.1s linear;
-}
-
-.progress-text {
-    position: absolute;
-    width: 100%;
-    top: 0;
-    left: 0;
-    text-align: center;
-    color: #121212;
+.stat-diamond-content .stat-name,
+.effect-type-dropdown .dropdown-selected {
+    font-size: 0.9rem;
+    display: block;
+    margin-bottom: 4px;
     font-weight: bold;
-    line-height: 24px;
 }
-
-/* Make standard select and input match the theme better */
-.input-group {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.input-group select,
-.input-group input {
-    width: 60%;
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #333333;
-    background-color: #121212;
-    color: #E0E0E0;
-    font-size: 1rem;
-    box-sizing: border-box;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23888888' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-}
-
-.input-group input {
-    text-align: right;
-    background-image: none; /* No dropdown arrow for number inputs */
-}
-
-.input-group label {
-    flex-shrink: 0;
+.level-dropdown .dropdown-selected {
+    display: inline-block;
+    padding: 2px 6px;
+    border: none;
+    background: rgba(0,0,0,0.4);
+    border-radius: 4px;
     color: #E0E0E0;
 }
 
-/* Custom Dropdown Styles */
+/* Diamond Positioning */
+.stat-diamond-wrapper.top { top: -60px; left: 50%; transform: translateX(-50%); }
+.stat-diamond-wrapper.left { left: -60px; top: 50%; transform: translateY(-50%); }
+.stat-diamond-wrapper.right { right: -60px; top: 50%; transform: translateY(-50%); }
+.stat-diamond-wrapper.bottom { bottom: -60px; left: 50%; transform: translateX(-50%); }
+
+/* Diamond Colors */
+.color-willpower { background-color: #4a1c1c; border-color: #d94f4f; }
+.color-effect1 { background-color: #1c4a2f; border-color: #4fd975; }
+.color-effect2 { background-color: #1c3d4a; border-color: #4fadd9; }
+.color-points { background-color: #4a421c; border-color: #d9c34f; }
+
+/* Custom Dropdown general styling */
 .custom-dropdown {
     position: relative;
-    width: 60%;
     cursor: pointer;
 }
-
 .dropdown-selected {
     padding: 12px;
     border-radius: 8px;
@@ -108,31 +153,10 @@
     color: #E0E0E0;
     font-size: 1rem;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     transition: border-color 0.2s;
 }
-
-.custom-dropdown.open .dropdown-selected {
-    border-color: #C89B3C;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-}
-
-.dropdown-selected::after {
-    content: '';
-    border: solid #888888;
-    border-width: 0 2px 2px 0;
-    display: inline-block;
-    padding: 3px;
-    transform: rotate(45deg);
-    transition: transform 0.2s;
-}
-
-.custom-dropdown.open .dropdown-selected::after {
-    transform: rotate(-135deg);
-}
-
 .dropdown-options {
     display: none;
     position: absolute;
@@ -147,101 +171,18 @@
     max-height: 200px;
     overflow-y: auto;
 }
-
-.custom-dropdown.open .dropdown-options {
-    display: block;
-}
-
+.custom-dropdown.open .dropdown-options { display: block; }
 .dropdown-option {
     padding: 12px;
     color: #E0E0E0;
     transition: background-color 0.2s;
 }
+.dropdown-option:hover { background-color: #2a2a2a; }
+.dropdown-option.selected { background-color: #C89B3C; color: #121212; font-weight: 500; }
+.dropdown-option.disabled { color: #555; cursor: not-allowed; }
 
-.dropdown-option:hover {
-    background-color: #2a2a2a;
-}
-
-.dropdown-option.selected {
-    background-color: #C89B3C;
-    color: #121212;
-    font-weight: 500;
-}
-
-/* Layout Styles */
-.simulator-wrapper {
-    display: flex;
-    gap: 24px;
-    align-items: stretch; /* Make containers equal height */
-}
-
-.simulator-wrapper .calculator-container,
-.simulator-wrapper .result-container {
-    flex: 1;
-    min-width: 300px;
-}
-
-/* Cleaned up result-container style */
-.result-container {
-    padding: 24px;
-    background-color: #1E1E1E;
-    border-radius: 12px;
-    border: 1px solid #333333;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    position: sticky;
-    top: 24px;
-}
-
-/* Responsive layout for smaller screens */
+/* Responsive layout */
 @media (max-width: 900px) {
-    .simulator-wrapper {
-        flex-direction: column;
-    }
-    .result-container {
-        position: static; /* Remove sticky positioning on mobile */
-    }
-}
-
-/* Tooltip Styles */
-.tooltip-container {
-    position: relative;
-    border-bottom: 1px dotted #888888; /* Add a visual cue that it's interactive */
-    cursor: help;
-    padding-bottom: 8px;
-    margin-bottom: 8px;
-}
-
-.tooltip-content {
-    visibility: hidden;
-    opacity: 0;
-    width: 280px;
-    background-color: #121212;
-    color: #E0E0E0;
-    text-align: left;
-    border-radius: 8px;
-    padding: 12px;
-    position: absolute;
-    z-index: 1;
-    bottom: 125%; /* Position above the container */
-    left: 50%;
-    margin-left: -140px; /* Use half of the width to center */
-    transition: opacity 0.3s;
-    border: 1px solid #C89B3C;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-}
-
-.tooltip-content::after {
-    content: "";
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    margin-left: -5px;
-    border-width: 5px;
-    border-style: solid;
-    border-color: #C89B3C transparent transparent transparent;
-}
-
-.tooltip-container:hover .tooltip-content {
-    visibility: visible;
-    opacity: 1;
+    .simulator-wrapper { flex-direction: column; align-items: stretch; }
+    .result-container { position: static; }
 }

@@ -15,67 +15,120 @@
         </div>
 
         <div class="simulator-wrapper">
-            <div class="calculator-container">
-                <!-- Gem Type -->
-                <div class="input-group">
-                    <label>젬 종류</label>
-                    <div class="custom-dropdown" data-input-id="gem-type">
-                        <div class="dropdown-selected"><span class="selected-value">질서의 젬</span></div>
-                        <div class="dropdown-options">
-                            <div class="dropdown-option" data-value="order">질서의 젬</div>
-                            <div class="dropdown-option" data-value="chaos">혼돈의 젬</div>
+            <div class="gem-ui-container">
+                <div class="gem-header">
+                    <div class="gem-icon-container">
+                        <!-- Gem Grade Dropdown -->
+                        <div class="custom-dropdown" data-input-id="gem-grade">
+                            <div class="dropdown-selected"><span class="selected-value">고급</span></div>
+                            <div class="dropdown-options">
+                                <div class="dropdown-option" data-value="advanced">고급</div>
+                                <div class="dropdown-option" data-value="rare">희귀</div>
+                                <div class="dropdown-option" data-value="heroic">영웅</div>
+                            </div>
+                            <input type="hidden" id="gem-grade" value="advanced">
                         </div>
-                        <input type="hidden" id="gem-type" value="order">
                     </div>
-                </div>
-                <!-- Gem Sub-type -->
-                <div class="input-group">
-                    <label>세부 종류</label>
-                    <div class="custom-dropdown" data-input-id="gem-sub-type">
-                        <div class="dropdown-selected"><span class="selected-value"></span></div>
-                        <div class="dropdown-options" id="gem-sub-type-options"></div>
-                        <input type="hidden" id="gem-sub-type">
-                    </div>
-                </div>
-                <!-- Gem Grade -->
-                <div class="input-group">
-                    <label>젬 등급</label>
-                    <div class="custom-dropdown" data-input-id="gem-grade">
-                        <div class="dropdown-selected"><span class="selected-value">고급</span></div>
-                        <div class="dropdown-options">
-                            <div class="dropdown-option" data-value="advanced">고급</div>
-                            <div class="dropdown-option" data-value="rare">희귀</div>
-                            <div class="dropdown-option" data-value="heroic">영웅</div>
+                    <div class="gem-title">
+                        <h2 id="gem-name-display">혼돈의 젬 : 침식</h2>
+                        <!-- Gem Type & Sub-type Dropdowns (hidden but functional) -->
+                        <div class="gem-type-selectors">
+                             <div class="custom-dropdown" data-input-id="gem-type">
+                                <div class="dropdown-selected"><span class="selected-value">혼돈의 젬</span></div>
+                                <div class="dropdown-options">
+                                    <div class="dropdown-option" data-value="order">질서의 젬</div>
+                                    <div class="dropdown-option" data-value="chaos">혼돈의 젬</div>
+                                </div>
+                                <input type="hidden" id="gem-type" value="chaos">
+                            </div>
+                            <div class="custom-dropdown" data-input-id="gem-sub-type">
+                                <div class="dropdown-selected"><span class="selected-value">침식</span></div>
+                                <div class="dropdown-options" id="gem-sub-type-options"></div>
+                                <input type="hidden" id="gem-sub-type" value="erosion">
+                            </div>
                         </div>
-                        <input type="hidden" id="gem-grade" value="advanced">
                     </div>
                 </div>
-                <!-- Willpower -->
-                <div class="input-group">
-                    <label>현재 의지력 효율</label>
-                    <div class="custom-dropdown" data-input-id="current-willpower">
-                        <div class="dropdown-selected"><span class="selected-value">1</span></div>
-                        <div class="dropdown-options">
-                            <div class="dropdown-option" data-value="1">1</div><div class="dropdown-option" data-value="2">2</div><div class="dropdown-option" data-value="3">3</div><div class="dropdown-option" data-value="4">4</div><div class="dropdown-option" data-value="5">5</div>
+
+                <div class="gem-body">
+                    <div class="gem-points-display">젬 포인트 <span id="total-points-display">4</span></div>
+                    <div class="stat-diamond-layout">
+                        <!-- Willpower -->
+                        <div class="stat-diamond-wrapper top">
+                            <div class="stat-diamond color-willpower">
+                                <div class="stat-diamond-content">
+                                    <span class="stat-name">의지력 효율</span>
+                                    <div class="custom-dropdown level-dropdown" data-input-id="current-willpower">
+                                        <div class="dropdown-selected">Lv.<span class="selected-value">1</span></div>
+                                        <div class="dropdown-options">
+                                            <div class="dropdown-option" data-value="1">Lv.1</div><div class="dropdown-option" data-value="2">Lv.2</div><div class="dropdown-option" data-value="3">Lv.3</div><div class="dropdown-option" data-value="4">Lv.4</div><div class="dropdown-option" data-value="5">Lv.5</div>
+                                        </div>
+                                        <input type="hidden" id="current-willpower" value="1">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <input type="hidden" id="current-willpower" value="1">
-                    </div>
-                </div>
-                <!-- Points -->
-                <div class="input-group">
-                    <label>현재 포인트</label>
-                    <div class="custom-dropdown" data-input-id="current-points">
-                        <div class="dropdown-selected"><span class="selected-value">1</span></div>
-                        <div class="dropdown-options">
-                            <div class="dropdown-option" data-value="1">1</div><div class="dropdown-option" data-value="2">2</div><div class="dropdown-option" data-value="3">3</div><div class="dropdown-option" data-value="4">4</div><div class="dropdown-option" data-value="5">5</div>
+                        <!-- Effect 1 -->
+                        <div class="stat-diamond-wrapper left">
+                            <div class="stat-diamond color-effect1">
+                                <div class="stat-diamond-content">
+                                    <div class="custom-dropdown effect-type-dropdown" data-input-id="effect1-type">
+                                        <div class="dropdown-selected"><span class="selected-value"></span></div>
+                                        <div class="dropdown-options" id="effect1-type-options"></div>
+                                        <input type="hidden" id="effect1-type">
+                                    </div>
+                                    <div class="custom-dropdown level-dropdown" data-input-id="effect1-level">
+                                        <div class="dropdown-selected">Lv.<span class="selected-value">1</span></div>
+                                        <div class="dropdown-options">
+                                            <div class="dropdown-option" data-value="1">Lv.1</div><div class="dropdown-option" data-value="2">Lv.2</div><div class="dropdown-option" data-value="3">Lv.3</div><div class="dropdown-option" data-value="4">Lv.4</div><div class="dropdown-option" data-value="5">Lv.5</div>
+                                        </div>
+                                        <input type="hidden" id="effect1-level" value="1">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <input type="hidden" id="current-points" value="1">
+                        <!-- Effect 2 -->
+                        <div class="stat-diamond-wrapper right">
+                            <div class="stat-diamond color-effect2">
+                                <div class="stat-diamond-content">
+                                     <div class="custom-dropdown effect-type-dropdown" data-input-id="effect2-type">
+                                        <div class="dropdown-selected"><span class="selected-value"></span></div>
+                                        <div class="dropdown-options" id="effect2-type-options"></div>
+                                        <input type="hidden" id="effect2-type">
+                                    </div>
+                                    <div class="custom-dropdown level-dropdown" data-input-id="effect2-level">
+                                        <div class="dropdown-selected">Lv.<span class="selected-value">1</span></div>
+                                        <div class="dropdown-options">
+                                            <div class="dropdown-option" data-value="1">Lv.1</div><div class="dropdown-option" data-value="2">Lv.2</div><div class="dropdown-option" data-value="3">Lv.3</div><div class="dropdown-option" data-value="4">Lv.4</div><div class="dropdown-option" data-value="5">Lv.5</div>
+                                        </div>
+                                        <input type="hidden" id="effect2-level" value="1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Order/Chaos Points -->
+                        <div class="stat-diamond-wrapper bottom">
+                            <div class="stat-diamond color-points">
+                                <div class="stat-diamond-content">
+                                    <span class="stat-name" id="points-name-display">혼돈 포인트</span>
+                                    <div class="custom-dropdown level-dropdown" data-input-id="current-points">
+                                        <div class="dropdown-selected">Lv.<span class="selected-value">1</span></div>
+                                        <div class="dropdown-options">
+                                            <div class="dropdown-option" data-value="1">Lv.1</div><div class="dropdown-option" data-value="2">Lv.2</div><div class="dropdown-option" data-value="3">Lv.3</div><div class="dropdown-option" data-value="4">Lv.4</div><div class="dropdown-option" data-value="5">Lv.5</div>
+                                        </div>
+                                        <input type="hidden" id="current-points" value="1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <!-- Attempts -->
-                <div class="input-group">
+            </div>
+
+            <div class="result-container">
+                 <div class="input-group">
                     <label>남은 가공 횟수</label>
-                    <div class="custom-dropdown" data-input-id="attempts-left">
+                     <div class="custom-dropdown" data-input-id="attempts-left">
                         <div class="dropdown-selected"><span class="selected-value">5</span></div>
                         <div class="dropdown-options">
                             <div class="dropdown-option" data-value="0">0</div><div class="dropdown-option" data-value="1">1</div><div class="dropdown-option" data-value="2">2</div><div class="dropdown-option" data-value="3">3</div><div class="dropdown-option" data-value="4">4</div><div class="dropdown-option" data-value="5">5</div><div class="dropdown-option" data-value="6">6</div><div class="dropdown-option" data-value="7">7</div><div class="dropdown-option" data-value="8">8</div><div class="dropdown-option" data-value="9">9</div>
@@ -83,7 +136,6 @@
                         <input type="hidden" id="attempts-left" value="5">
                     </div>
                 </div>
-                <!-- Rerolls -->
                 <div class="input-group">
                     <label>다른 항목 보기</label>
                     <div class="custom-dropdown" data-input-id="rerolls-left">
@@ -94,47 +146,6 @@
                         <input type="hidden" id="rerolls-left" value="0">
                     </div>
                 </div>
-                <!-- Effect 1 -->
-                <div class="input-group">
-                    <label>부가옵션 1</label>
-                    <div class="custom-dropdown effect-type-dropdown" data-input-id="effect1-type">
-                        <div class="dropdown-selected"><span class="selected-value"></span></div>
-                        <div class="dropdown-options" id="effect1-type-options"></div>
-                        <input type="hidden" id="effect1-type">
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label>부가옵션 1 레벨</label>
-                    <div class="custom-dropdown" data-input-id="effect1-level">
-                        <div class="dropdown-selected"><span class="selected-value">1</span></div>
-                        <div class="dropdown-options">
-                            <div class="dropdown-option" data-value="1">1</div><div class="dropdown-option" data-value="2">2</div><div class="dropdown-option" data-value="3">3</div><div class="dropdown-option" data-value="4">4</div><div class="dropdown-option" data-value="5">5</div>
-                        </div>
-                        <input type="hidden" id="effect1-level" value="1">
-                    </div>
-                </div>
-                <!-- Effect 2 -->
-                <div class="input-group">
-                    <label>부가옵션 2</label>
-                    <div class="custom-dropdown effect-type-dropdown" data-input-id="effect2-type">
-                        <div class="dropdown-selected"><span class="selected-value"></span></div>
-                        <div class="dropdown-options" id="effect2-type-options"></div>
-                        <input type="hidden" id="effect2-type">
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label>부가옵션 2 레벨</label>
-                    <div class="custom-dropdown" data-input-id="effect2-level">
-                        <div class="dropdown-selected"><span class="selected-value">1</span></div>
-                        <div class="dropdown-options">
-                            <div class="dropdown-option" data-value="1">1</div><div class="dropdown-option" data-value="2">2</div><div class="dropdown-option" data-value="3">3</div><div class="dropdown-option" data-value="4">4</div><div class="dropdown-option" data-value="5">5</div>
-                        </div>
-                        <input type="hidden" id="effect2-level" value="1">
-                    </div>
-                </div>
-            </div>
-
-            <div class="result-container">
                 <div class="input-group">
                     <label for="simulation-count">시뮬레이션 횟수</label>
                     <input type="number" id="simulation-count" value="20000" min="1" max="1000000" step="1000">
