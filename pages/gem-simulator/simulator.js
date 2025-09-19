@@ -7,8 +7,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Constants and Data ---
     const GEM_SETTINGS = {
-        order: { name: '질서의 젬', subTypes: { stable: { name: '안정' }, solid: { name: '견고' }, immutable: { name: '불변' } } },
-        chaos: { name: '혼돈의 젬', subTypes: { erosion: { name: '침식' }, distortion: { name: '왜곡' }, collapse: { name: '붕괴' } } }
+        order: {
+            name: '질서의 젬',
+            subTypes: {
+                stable: { name: '안정', effects: ['공격력', '추가피해', '낙인력', '아군피해강화'] },
+                solid: { name: '견고', effects: ['공격력', '보스피해', '아군피해강화', '아군공격강화'] },
+                immutable: { name: '불변', effects: ['추가피해', '보스피해', '낙인력', '아군공격강화'] },
+            }
+        },
+        chaos: {
+            name: '혼돈의 젬',
+            subTypes: {
+                erosion: { name: '침식', effects: ['공격력', '추가피해', '낙인력', '아군피해강화'] },
+                distortion: { name: '왜곡', effects: ['공격력', '보스피해', '아군피해강화', '아군공격강화'] },
+                collapse: { name: '붕괴', effects: ['추가피해', '보스피해', '낙인력', '아군공격강화'] },
+            }
+        }
     };
     const GRADE_SETTINGS = {
         advanced: { name: '고급', attempts: 5, rerolls: 0 },
@@ -16,26 +30,26 @@ document.addEventListener('DOMContentLoaded', () => {
         heroic: { name: '영웅', attempts: 9, rerolls: 2 },
     };
     const PROCESSING_OPTIONS = [
-        { name: '의지력 효율 +1 증가', prob: 11.65, effect: { willpower: 1 }, condition: s => s.willpower === 5 },
+        { name: '의지력 효율 +1 증가', prob: 11.65, effect: { willpower: 1 }, condition: s => s.willpower >= 5 },
         { name: '의지력 효율 +2 증가', prob: 4.40, effect: { willpower: 2 }, condition: s => s.willpower >= 4 },
         { name: '의지력 효율 +3 증가', prob: 1.75, effect: { willpower: 3 }, condition: s => s.willpower >= 3 },
         { name: '의지력 효율 +4 증가', prob: 0.45, effect: { willpower: 4 }, condition: s => s.willpower >= 2 },
-        { name: '의지력 효율 -1 감소', prob: 3.00, effect: { willpower: -1 }, condition: s => s.willpower === 1 },
-        { name: '질서/혼돈 포인트 +1 증가', prob: 11.65, effect: { points: 1 }, condition: s => s.points === 5 },
+        { name: '의지력 효율 -1 감소', prob: 3.00, effect: { willpower: -1 }, condition: s => s.willpower <= 1 },
+        { name: '질서/혼돈 포인트 +1 증가', prob: 11.65, effect: { points: 1 }, condition: s => s.points >= 5 },
         { name: '질서/혼돈 포인트 +2 증가', prob: 4.40, effect: { points: 2 }, condition: s => s.points >= 4 },
         { name: '질서/혼돈 포인트 +3 증가', prob: 1.75, effect: { points: 3 }, condition: s => s.points >= 3 },
         { name: '질서/혼돈 포인트 +4 증가', prob: 0.45, effect: { points: 4 }, condition: s => s.points >= 2 },
-        { name: '질서/혼돈 포인트 -1 감소', prob: 3.00, effect: { points: -1 }, condition: s => s.points === 1 },
-        { name: '첫번째 효과 Lv. 1 증가', prob: 11.65, effect: { effect1: 1 }, condition: s => s.effect1 === 5 },
-        { name: '첫번째 효과 Lv. 2 증가', prob: 4.40, effect: { effect1: 2 }, condition: s => s.effect1 >= 4 },
-        { name: '첫번째 효과 Lv. 3 증가', prob: 1.75, effect: { effect1: 3 }, condition: s => s.effect1 >= 3 },
-        { name: '첫번째 효과 Lv. 4 증가', prob: 0.45, effect: { effect1: 4 }, condition: s => s.effect1 >= 2 },
-        { name: '첫번째 효과 Lv. 1 감소', prob: 3.00, effect: { effect1: -1 }, condition: s => s.effect1 === 1 },
-        { name: '두번째 효과 Lv. 1 증가', prob: 11.65, effect: { effect2: 1 }, condition: s => s.effect2 === 5 },
-        { name: '두번째 효과 Lv. 2 증가', prob: 4.40, effect: { effect2: 2 }, condition: s => s.effect2 >= 4 },
-        { name: '두번째 효과 Lv. 3 증가', prob: 1.75, effect: { effect2: 3 }, condition: s => s.effect2 >= 3 },
-        { name: '두번째 효과 Lv. 4 증가', prob: 0.45, effect: { effect2: 4 }, condition: s => s.effect2 >= 2 },
-        { name: '두번째 효과 Lv. 1 감소', prob: 3.00, effect: { effect2: -1 }, condition: s => s.effect2 === 1 },
+        { name: '질서/혼돈 포인트 -1 감소', prob: 3.00, effect: { points: -1 }, condition: s => s.points <= 1 },
+        { name: '첫번째 효과 Lv. 1 증가', prob: 11.65, effect: { effect1_level: 1 }, condition: s => s.effect1_level >= 5 },
+        { name: '첫번째 효과 Lv. 2 증가', prob: 4.40, effect: { effect1_level: 2 }, condition: s => s.effect1_level >= 4 },
+        { name: '첫번째 효과 Lv. 3 증가', prob: 1.75, effect: { effect1_level: 3 }, condition: s => s.effect1_level >= 3 },
+        { name: '첫번째 효과 Lv. 4 증가', prob: 0.45, effect: { effect1_level: 4 }, condition: s => s.effect1_level >= 2 },
+        { name: '첫번째 효과 Lv. 1 감소', prob: 3.00, effect: { effect1_level: -1 }, condition: s => s.effect1_level <= 1 },
+        { name: '두번째 효과 Lv. 1 증가', prob: 11.65, effect: { effect2_level: 1 }, condition: s => s.effect2_level >= 5 },
+        { name: '두번째 효과 Lv. 2 증가', prob: 4.40, effect: { effect2_level: 2 }, condition: s => s.effect2_level >= 4 },
+        { name: '두번째 효과 Lv. 3 증가', prob: 1.75, effect: { effect2_level: 3 }, condition: s => s.effect2_level >= 3 },
+        { name: '두번째 효과 Lv. 4 증가', prob: 0.45, effect: { effect2_level: 4 }, condition: s => s.effect2_level >= 2 },
+        { name: '두번째 효과 Lv. 1 감소', prob: 3.00, effect: { effect2_level: -1 }, condition: s => s.effect2_level <= 1 },
         { name: '첫번째 효과 변경', prob: 3.25, effect: {}, condition: () => false },
         { name: '두번째 효과 변경', prob: 3.25, effect: {}, condition: () => false },
         { name: '가공 비용 +100% 증가', prob: 1.75, effect: {}, condition: s => s.attemptsLeft <= 1 },
@@ -48,7 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Custom Dropdown Logic ---
     function setupCustomDropdowns() {
         const dropdowns = document.querySelectorAll('.custom-dropdown');
-
         dropdowns.forEach(dropdown => {
             const selected = dropdown.querySelector('.dropdown-selected');
             const optionsContainer = dropdown.querySelector('.dropdown-options');
@@ -60,72 +73,26 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             optionsContainer.addEventListener('click', e => {
-                if (e.target.classList.contains('dropdown-option')) {
+                if (e.target.classList.contains('dropdown-option') && !e.target.classList.contains('disabled')) {
                     const newValue = e.target.dataset.value;
                     const newText = e.target.textContent;
 
-                    // Update UI
-                    selected.querySelector('.selected-value').textContent = newText;
-                    optionsContainer.querySelector('.selected')?.classList.remove('selected');
-                    e.target.classList.add('selected');
-
-                    // Update hidden input and trigger change for dependent logic
-                    if(hiddenInput.value !== newValue) {
+                    if (hiddenInput.value !== newValue) {
+                        selected.querySelector('.selected-value').textContent = newText;
+                        optionsContainer.querySelector('.selected')?.classList.remove('selected');
+                        e.target.classList.add('selected');
                         hiddenInput.value = newValue;
                         hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
                     }
-
                     dropdown.classList.remove('open');
                 }
             });
         });
-
-        window.addEventListener('click', e => {
-            if (!e.target.closest('.custom-dropdown')) {
-                closeAllDropdowns();
-            }
-        });
+        window.addEventListener('click', e => { if (!e.target.closest('.custom-dropdown')) closeAllDropdowns(); });
     }
 
     function closeAllDropdowns(exceptThisOne = null) {
-        document.querySelectorAll('.custom-dropdown.open').forEach(dropdown => {
-            if (dropdown !== exceptThisOne) {
-                dropdown.classList.remove('open');
-            }
-        });
-    }
-
-    // --- UI Update Functions ---
-    function updateSubTypeOptions() {
-        const gemTypeInput = document.getElementById('gem-type');
-        const subTypeOptionsContainer = document.getElementById('gem-sub-type-options');
-        const subTypes = GEM_SETTINGS[gemTypeInput.value].subTypes;
-
-        subTypeOptionsContainer.innerHTML = '';
-        let first = true;
-        for (const key in subTypes) {
-            const optionDiv = document.createElement('div');
-            optionDiv.className = 'dropdown-option';
-            optionDiv.dataset.value = key;
-            optionDiv.textContent = subTypes[key].name;
-            if (first) {
-                // Set the first sub-type as the default selection
-                updateDropdownValue('gem-sub-type', key, subTypes[key].name);
-                optionDiv.classList.add('selected');
-                first = false;
-            }
-            subTypeOptionsContainer.appendChild(optionDiv);
-        }
-    }
-
-    function updateDefaultsByGrade() {
-        const gemGradeInput = document.getElementById('gem-grade');
-        const grade = gemGradeInput.value;
-        const settings = GRADE_SETTINGS[grade];
-        if (settings) {
-            updateDropdownValue('attempts-left', settings.attempts, settings.attempts);
-            updateDropdownValue('rerolls-left', settings.rerolls, settings.rerolls);
-        }
+        document.querySelectorAll('.custom-dropdown.open').forEach(d => { if (d !== exceptThisOne) d.classList.remove('open'); });
     }
 
     function updateDropdownValue(inputId, value, text) {
@@ -140,6 +107,89 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- UI Update Functions ---
+    function updatePointLabel() {
+        const gemType = document.getElementById('gem-type').value;
+        const label = document.querySelector('[data-input-id="current-points"]').previousElementSibling;
+        label.textContent = gemType === 'order' ? '현재 질서 포인트' : '현재 혼돈 포인트';
+    }
+
+    function updateSubTypeOptions() {
+        const gemType = document.getElementById('gem-type').value;
+        const subTypes = GEM_SETTINGS[gemType].subTypes;
+        const container = document.getElementById('gem-sub-type-options');
+        container.innerHTML = '';
+        Object.entries(subTypes).forEach(([key, value], index) => {
+            const optionDiv = document.createElement('div');
+            optionDiv.className = 'dropdown-option';
+            optionDiv.dataset.value = key;
+            optionDiv.textContent = value.name;
+            if (index === 0) {
+                updateDropdownValue('gem-sub-type', key, value.name);
+                optionDiv.classList.add('selected');
+            }
+            container.appendChild(optionDiv);
+        });
+        updateAdditionalOptions();
+    }
+
+    function updateAdditionalOptions() {
+        const gemType = document.getElementById('gem-type').value;
+        const subType = document.getElementById('gem-sub-type').value;
+        if (!gemType || !subType) return;
+        const effects = GEM_SETTINGS[gemType].subTypes[subType].effects;
+
+        const effect1Type = document.getElementById('effect1-type').value;
+        const effect2Type = document.getElementById('effect2-type').value;
+
+        // Populate options for effect 1
+        const container1 = document.getElementById('effect1-type-options');
+        container1.innerHTML = '';
+        effects.forEach((effect, index) => {
+            const optionDiv = document.createElement('div');
+            optionDiv.className = 'dropdown-option';
+            optionDiv.dataset.value = effect;
+            optionDiv.textContent = effect;
+            if (effect === effect2Type) optionDiv.classList.add('disabled');
+            if (index === 0 && (!effect1Type || !effects.includes(effect1Type))) {
+                updateDropdownValue('effect1-type', effect, effect);
+                optionDiv.classList.add('selected');
+            } else if (effect === effect1Type) {
+                optionDiv.classList.add('selected');
+            }
+            container1.appendChild(optionDiv);
+        });
+
+        // Populate options for effect 2
+        const container2 = document.getElementById('effect2-type-options');
+        container2.innerHTML = '';
+        effects.forEach((effect, index) => {
+            const optionDiv = document.createElement('div');
+            optionDiv.className = 'dropdown-option';
+            optionDiv.dataset.value = effect;
+            optionDiv.textContent = effect;
+            if (effect === document.getElementById('effect1-type').value) optionDiv.classList.add('disabled');
+
+            let defaultEffect2 = effects.find(e => e !== document.getElementById('effect1-type').value);
+            if (effect === defaultEffect2 && (!effect2Type || !effects.includes(effect2Type) || effect1Type === effect2Type)) {
+                 updateDropdownValue('effect2-type', effect, effect);
+                 optionDiv.classList.add('selected');
+            } else if (effect === effect2Type) {
+                optionDiv.classList.add('selected');
+            }
+            container2.appendChild(optionDiv);
+        });
+    }
+
+    function updateDefaultsByGrade() {
+        const grade = document.getElementById('gem-grade').value;
+        const settings = GRADE_SETTINGS[grade];
+        if (settings) {
+            updateDropdownValue('attempts-left', settings.attempts, settings.attempts);
+            updateDropdownValue('rerolls-left', settings.rerolls, settings.rerolls);
+        }
+    }
+
     // --- Simulation Core ---
     function getProcessingOptions(currentState) {
         const availableOptions = PROCESSING_OPTIONS.filter(opt => !opt.condition(currentState));
@@ -151,11 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let cumulativeWeight = 0;
             for (let j = 0; j < pool.length; j++) {
                 cumulativeWeight += pool[j].prob;
-                if (rand <= cumulativeWeight) {
-                    chosenOptions.push(pool[j]);
-                    pool.splice(j, 1);
-                    break;
-                }
+                if (rand <= cumulativeWeight) { chosenOptions.push(pool.splice(j, 1)[0]); break; }
             }
         }
         return chosenOptions;
@@ -174,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const chosenOption = options[Math.floor(Math.random() * options.length)];
                 for (const key in chosenOption.effect) {
                     state[key] += chosenOption.effect[key];
-                    if (['willpower', 'points', 'effect1', 'effect2'].includes(key)) {
+                    if (['willpower', 'points', 'effect1_level', 'effect2_level'].includes(key)) {
                         state[key] = Math.max(1, Math.min(5, state[key]));
                     }
                 }
@@ -193,8 +239,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const initialState = {
             willpower: parseInt(document.getElementById('current-willpower').value),
             points: parseInt(document.getElementById('current-points').value),
-            effect1: 1,
-            effect2: 1,
+            effect1_level: parseInt(document.getElementById('effect1-level').value),
+            effect2_level: parseInt(document.getElementById('effect2-level').value),
             attemptsLeft: parseInt(document.getElementById('attempts-left').value),
             rerolls: parseInt(document.getElementById('rerolls-left').value),
         };
@@ -208,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const is55 = finalState.willpower === 5 && finalState.points === 5;
             if (is45) outcomes.count45++;
             if (is55) outcomes.count55++;
-            const totalPoints = finalState.willpower + finalState.points + finalState.effect1 + finalState.effect2;
+            const totalPoints = finalState.willpower + finalState.points + finalState.effect1_level + finalState.effect2_level;
             if (totalPoints >= 4 && totalPoints <= 15) outcomes.legendary++;
             else if (totalPoints >= 16 && totalPoints <= 18) outcomes.relic++;
             else if (totalPoints >= 19 && totalPoints <= 20) outcomes.ancient++;
@@ -239,11 +285,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Initial Setup ---
-    document.getElementById('gem-type').addEventListener('change', updateSubTypeOptions);
+    document.getElementById('gem-type').addEventListener('change', () => {
+        updatePointLabel();
+        updateSubTypeOptions();
+    });
+    document.getElementById('gem-sub-type').addEventListener('change', updateAdditionalOptions);
     document.getElementById('gem-grade').addEventListener('change', updateDefaultsByGrade);
+    document.getElementById('effect1-type').addEventListener('change', updateAdditionalOptions);
+    document.getElementById('effect2-type').addEventListener('change', updateAdditionalOptions);
     calculateBtn.addEventListener('click', startSimulation);
 
     setupCustomDropdowns();
+    updatePointLabel();
     updateSubTypeOptions();
     updateDefaultsByGrade();
 });
