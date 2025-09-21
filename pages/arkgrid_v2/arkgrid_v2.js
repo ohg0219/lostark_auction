@@ -148,6 +148,7 @@ const chaosCoreColumn = document.getElementById('chaos-core-column');
 const orderCoreColumn = document.getElementById('order-core-column');
 const addGemBtn = document.getElementById('add-gem-btn');
 const calculateBtn = document.getElementById('calculate-btn');
+const previewBtn = document.getElementById('preview-btn');
 const orderGemList = document.getElementById('order-gem-list');
 const chaosGemList = document.getElementById('chaos-gem-list');
 const saveBtn = document.getElementById('save-btn');
@@ -171,6 +172,10 @@ const gemEditCancelBtn = document.getElementById('gem-edit-cancel-btn');
 // Spinner Modal
 const spinnerModal = document.getElementById('spinner-modal');
 const spinnerText = document.querySelector('#spinner-modal .spinner-text');
+// Preview Notice Modal
+const previewNoticeModal = document.getElementById('preview-notice-modal');
+const previewNoticeDontShowTodayBtn = document.getElementById('preview-notice-dont-show-today-btn');
+const previewNoticeCloseBtn = document.getElementById('preview-notice-close-btn');
 
 
 // --- State ---
@@ -226,7 +231,9 @@ function init() {
 
 
     addGemBtn.addEventListener('click', addGem);
-    calculateBtn.addEventListener('click', calculate);
+    calculateBtn.addEventListener('click', () => calculate(false));
+    previewBtn.addEventListener('click', () => calculate(true));
+
 
     // Main save/load button listeners
     saveBtn.addEventListener('click', () => openPopup('save'));
@@ -261,6 +268,24 @@ function init() {
         }
     });
     gemEditSaveBtn.addEventListener('click', saveGemEdit);
+
+    // Preview Notice Modal Listeners
+    previewNoticeCloseBtn.addEventListener('click', () => {
+        previewNoticeModal.style.display = 'none';
+    });
+
+    previewNoticeDontShowTodayBtn.addEventListener('click', () => {
+        const today = new Date().toISOString().split('T')[0];
+        localStorage.setItem('hidePreviewNoticeUntil', today);
+        previewNoticeModal.style.display = 'none';
+    });
+
+    // Show preview notice if not hidden for today
+    const hideUntil = localStorage.getItem('hidePreviewNoticeUntil');
+    const today = new Date().toISOString().split('T')[0];
+    if (hideUntil !== today) {
+        previewNoticeModal.style.display = 'flex';
+    }
 }
 
 // --- Functions ---
@@ -865,12 +890,13 @@ function hideSpinner() {
     spinnerModal.style.display = 'none';
 }
 
-function calculate() {
+function calculate(isPreview = false) {
     // 1. UI 업데이트: 스피너 표시
-    showSpinner('최적 조합을 계산 중입니다...');
+    const spinnerText = isPreview ? '프리뷰 계산 중입니다...' : '최적 조합을 계산 중입니다...';
+    showSpinner(spinnerText);
 
     // 2. 활성화된 코어 정보 수집
-    const activeCores = [];
+    let activeCores = [];
     ['order', 'chaos'].forEach(type => {
         for (let i = 1; i <= 3; i++) {
             const slotId = `${type}-${i}`;
@@ -885,12 +911,24 @@ function calculate() {
             if (typeId !== 'none' && gradeId !== 'none' && targetPointStr !== 'none') {
                 const coreTypeData = ARKGRID_CORE_TYPES[type].find(t => t.id === typeId);
                 const coreGradeData = ARKGRID_GRADE_DATA[gradeId];
+
+                // *** 프리뷰 로직 시작 ***
+                let willpower = coreGradeData.willpower;
+                if (isPreview) {
+                    if (gradeId === 'heroic') {
+                        willpower += 2;
+                    } else if (gradeId === 'legendary') {
+                        willpower += 1;
+                    }
+                }
+                // *** 프리뷰 로직 끝 ***
+
                 activeCores.push({
                     id: slotId,
                     type: type,
                     coreData: {
                         name: `${coreTypeData.name} (${coreGradeData.name})`,
-                        willpower: coreGradeData.willpower,
+                        willpower: willpower, // 수정된 의지력 적용
                     },
                     targetPoint: parseInt(targetPointStr, 10),
                 });
@@ -908,13 +946,13 @@ function calculate() {
 
     // 워커에 필요한 모든 데이터를 전송합니다. (상수 포함)
     worker.postMessage({
-        activeCores,
+        activeCores, // 수정된 데이터가 포함될 수 있음
         orderGems,
         chaosGems,
         selectedCharacterClass,
         ARKGRID_CORE_TYPES,
-        ARKGRID_GRADE_DATA,
-        GEM_DATA: { // 필요한 데이터만 전달하도록 최적화 가능
+        ARKGRID_GRADE_DATA, // 원본 데이터 전송
+        GEM_DATA: {
             order: GEM_DATA.order,
             chaos: GEM_DATA.chaos
         },
@@ -936,6 +974,7 @@ function calculate() {
             if (bestAssignment && bestAssignment.score >= 0) {
                 activeCores.forEach(core => {
                     const result = bestAssignment.assignment[core.id];
+                    // 결과 렌더링 시에도 수정된 의지력 값을 전달해야 함
                     renderResult(core.id, core.coreData, { ...(result || {}), achieved: !!result });
                 });
             } else {
