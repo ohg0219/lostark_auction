@@ -188,6 +188,7 @@ let selectedCharacterClass = '딜러'; // Default class
 let selectedCores = {};
 let currentModalConfirmAction = null;
 let currentlyEditingGem = null;
+let isPreviewModeActive = false;
 
 
 // --- Main Initialization ---
@@ -231,8 +232,12 @@ function init() {
 
 
     addGemBtn.addEventListener('click', addGem);
-    calculateBtn.addEventListener('click', () => calculate(false));
-    previewBtn.addEventListener('click', () => calculate(true));
+    calculateBtn.addEventListener('click', calculate); // No parameter needed
+    previewBtn.addEventListener('click', () => {
+        isPreviewModeActive = !isPreviewModeActive; // Toggle the state
+        previewBtn.classList.toggle('active', isPreviewModeActive); // Toggle active class for styling
+        updateAllCoreWillpowerDisplays(); // Update UI immediately
+    });
 
 
     // Main save/load button listeners
@@ -648,12 +653,22 @@ function createCoreSlot(type, id) {
         gWrapper.querySelector('.custom-select-trigger').innerHTML = `<span>${gSelected.text}</span>`;
         gWrapper.querySelector('.custom-options').style.display = 'none';
 
-        const gradeData = ARKGRID_GRADE_DATA[gSelected.value];
-        const willpower = gradeData.willpower;
+        const gradeId = gSelected.value;
+        const gradeData = ARKGRID_GRADE_DATA[gradeId];
+        let willpower = gradeData.willpower;
         const activationPoints = gradeData.activationPoints;
 
+        // Check if preview mode is active and adjust willpower
+        if (isPreviewModeActive) {
+            if (gradeId === 'heroic') {
+                willpower += 2;
+            } else if (gradeId === 'legendary') {
+                willpower += 1;
+            }
+        }
+
         document.getElementById(`info-${slotId}`).textContent = `공급 의지력: ${willpower}`;
-        slot.style.borderColor = GRADE_COLORS[gSelected.value];
+        slot.style.borderColor = GRADE_COLORS[gradeId];
 
         // Clear previous calculation results and remove target-failed class
         const slotElement = document.getElementById(`slot-${slotId}`);
@@ -890,9 +905,9 @@ function hideSpinner() {
     spinnerModal.style.display = 'none';
 }
 
-function calculate(isPreview = false) {
+function calculate() {
     // 1. UI 업데이트: 스피너 표시
-    const spinnerText = isPreview ? '프리뷰 계산 중입니다...' : '최적 조합을 계산 중입니다...';
+    const spinnerText = isPreviewModeActive ? '프리뷰 계산 중입니다...' : '최적 조합을 계산 중입니다...';
     showSpinner(spinnerText);
 
     // 2. 활성화된 코어 정보 수집
@@ -914,7 +929,7 @@ function calculate(isPreview = false) {
 
                 // *** 프리뷰 로직 시작 ***
                 let willpower = coreGradeData.willpower;
-                if (isPreview) {
+                if (isPreviewModeActive) {
                     if (gradeId === 'heroic') {
                         willpower += 2;
                     } else if (gradeId === 'legendary') {
@@ -1031,6 +1046,30 @@ function renderResult(slotId, core, result) {
     });
     const scoreText = result.effectivenessScore !== undefined ? `[예상효율: ${(result.effectivenessScore * 100).toFixed(4)}%]` : '';
     summaryEl.innerHTML = `[의지력: ${result.willpower} / ${core.willpower}] [포인트: ${result.points}] ${scoreText}`;
+}
+
+function updateAllCoreWillpowerDisplays() {
+    ['order', 'chaos'].forEach(type => {
+        for (let i = 1; i <= 3; i++) {
+            const slotId = `${type}-${i}`;
+            const gradeId = document.getElementById(`grade-${slotId}`).dataset.value;
+            const infoDisplay = document.getElementById(`info-${slotId}`);
+
+            if (gradeId && gradeId !== 'none') {
+                const gradeData = ARKGRID_GRADE_DATA[gradeId];
+                let willpower = gradeData.willpower;
+
+                if (isPreviewModeActive) {
+                    if (gradeId === 'heroic') {
+                        willpower += 2;
+                    } else if (gradeId === 'legendary') {
+                        willpower += 1;
+                    }
+                }
+                infoDisplay.textContent = `공급 의지력: ${willpower}`;
+            }
+        }
+    });
 }
 
 async function saveData(characterName, password) {
