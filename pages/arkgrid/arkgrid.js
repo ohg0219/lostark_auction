@@ -121,6 +121,7 @@ const chaosCoreColumn = document.getElementById('chaos-core-column');
 const orderCoreColumn = document.getElementById('order-core-column');
 const addGemBtn = document.getElementById('add-gem-btn');
 const calculateBtn = document.getElementById('calculate-btn');
+const previewBtn = document.getElementById('preview-btn');
 const orderGemList = document.getElementById('order-gem-list');
 const chaosGemList = document.getElementById('chaos-gem-list');
 const saveBtn = document.getElementById('save-btn');
@@ -144,9 +145,14 @@ const gemEditCancelBtn = document.getElementById('gem-edit-cancel-btn');
 // Spinner Modal
 const spinnerModal = document.getElementById('spinner-modal');
 const spinnerText = document.querySelector('#spinner-modal .spinner-text');
+// Preview Notice Modal
+const previewNoticeModal = document.getElementById('preview-notice-modal');
+const previewNoticeDontShowTodayBtn = document.getElementById('preview-notice-dont-show-today-btn');
+const previewNoticeCloseBtn = document.getElementById('preview-notice-close-btn');
 
 
 // --- State ---
+let isPreviewModeActive = false;
 let orderGems = [];
 let chaosGems = [];
 let nextGemId = 0;
@@ -223,6 +229,11 @@ function init() {
 
     addGemBtn.addEventListener('click', addGem);
     calculateBtn.addEventListener('click', calculate);
+    previewBtn.addEventListener('click', () => {
+        isPreviewModeActive = !isPreviewModeActive; // Toggle the state
+        previewBtn.classList.toggle('active', isPreviewModeActive); // Toggle active class for styling
+        updateAllCoreWillpowerDisplays(); // Update UI immediately
+    });
 
     // Main save/load button listeners
     saveBtn.addEventListener('click', () => openPopup('save'));
@@ -257,6 +268,24 @@ function init() {
         }
     });
     gemEditSaveBtn.addEventListener('click', saveGemEdit);
+
+    // Preview Notice Modal Listeners
+    previewNoticeCloseBtn.addEventListener('click', () => {
+        previewNoticeModal.style.display = 'none';
+    });
+
+    previewNoticeDontShowTodayBtn.addEventListener('click', () => {
+        const today = new Date().toISOString().split('T')[0];
+        localStorage.setItem('hidePreviewNoticeUntil', today);
+        previewNoticeModal.style.display = 'none';
+    });
+
+    // Show preview notice if not hidden for today
+    const hideUntil = localStorage.getItem('hidePreviewNoticeUntil');
+    const today = new Date().toISOString().split('T')[0];
+    if (hideUntil !== today) {
+        previewNoticeModal.style.display = 'flex';
+    }
 }
 
 // --- Functions ---
@@ -419,12 +448,22 @@ function createCoreSlot(type, id) {
         gWrapper.querySelector('.custom-select-trigger').innerHTML = `<span>${gSelected.text}</span>`;
         gWrapper.querySelector('.custom-options').style.display = 'none';
 
-        const gradeData = ARKGRID_GRADE_DATA[gSelected.value];
-        const willpower = gradeData.willpower;
+        const gradeId = gSelected.value;
+        const gradeData = ARKGRID_GRADE_DATA[gradeId];
+        let willpower = gradeData.willpower;
         const activationPoints = gradeData.activationPoints;
 
+        // Check if preview mode is active and adjust willpower
+        if (isPreviewModeActive) {
+            if (gradeId === 'heroic') {
+                willpower += 2;
+            } else if (gradeId === 'legendary') {
+                willpower += 1;
+            }
+        }
+
         document.getElementById(`info-${slotId}`).textContent = `공급 의지력: ${willpower}`;
-        slot.style.borderColor = GRADE_COLORS[gSelected.value];
+        slot.style.borderColor = GRADE_COLORS[gradeId];
 
         // Clear previous calculation results and remove target-failed class
         const slotElement = document.getElementById(`slot-${slotId}`);
@@ -634,7 +673,8 @@ function updateCoreTypeOptions(type) {
 
 function calculate() {
     // 1. UI 업데이트: 스피너 표시
-    showSpinner('최적 조합을 계산 중입니다...');
+    const spinnerText = isPreviewModeActive ? '프리뷰 계산 중입니다...' : '최적 조합을 계산 중입니다...';
+    showSpinner(spinnerText);
 
     // 2. 활성화된 코어 정보 수집
     const activeCores = [];
@@ -652,12 +692,24 @@ function calculate() {
             if (typeId !== 'none' && gradeId !== 'none' && targetPointStr !== 'none') {
                 const coreTypeData = ARKGRID_CORE_TYPES[type].find(t => t.id === typeId);
                 const coreGradeData = ARKGRID_GRADE_DATA[gradeId];
+
+                // *** 프리뷰 로직 시작 ***
+                let willpower = coreGradeData.willpower;
+                if (isPreviewModeActive) {
+                    if (gradeId === 'heroic') {
+                        willpower += 2;
+                    } else if (gradeId === 'legendary') {
+                        willpower += 1;
+                    }
+                }
+                // *** 프리뷰 로직 끝 ***
+
                 activeCores.push({
                     id: slotId,
                     type: type,
                     coreData: {
                         name: `${coreTypeData.name} (${coreGradeData.name})`,
-                        willpower: coreGradeData.willpower,
+                        willpower: willpower, // 수정된 의지력 적용
                     },
                     targetPoint: parseInt(targetPointStr, 10),
                 });
@@ -760,6 +812,30 @@ function renderResult(slotId, core, result) {
     });
 
     summaryEl.innerHTML = `[의지력: ${result.willpower} / ${core.willpower}] [포인트: ${result.points}]`;
+}
+
+function updateAllCoreWillpowerDisplays() {
+    ['order', 'chaos'].forEach(type => {
+        for (let i = 1; i <= 3; i++) {
+            const slotId = `${type}-${i}`;
+            const gradeId = document.getElementById(`grade-${slotId}`).dataset.value;
+            const infoDisplay = document.getElementById(`info-${slotId}`);
+
+            if (gradeId && gradeId !== 'none') {
+                const gradeData = ARKGRID_GRADE_DATA[gradeId];
+                let willpower = gradeData.willpower;
+
+                if (isPreviewModeActive) {
+                    if (gradeId === 'heroic') {
+                        willpower += 2;
+                    } else if (gradeId === 'legendary') {
+                        willpower += 1;
+                    }
+                }
+                infoDisplay.textContent = `공급 의지력: ${willpower}`;
+            }
+        }
+    });
 }
 
 

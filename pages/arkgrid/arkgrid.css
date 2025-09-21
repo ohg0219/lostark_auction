@@ -525,6 +525,12 @@ button.nav-button:hover {
     background-color: #b58a35;
 }
 
+.nav-button.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #0056b3;
+}
+
 /* Modal Styles */
 .modal-overlay {
     position: fixed;
