@@ -45,3 +45,17 @@ CREATE TRIGGER set_timestamp
 BEFORE UPDATE ON arkgrid_data
 FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
+
+-- 일일 아이템 시세를 저장하는 테이블
+CREATE TABLE market_history (
+    id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    item_id BIGINT REFERENCES items(id) ON DELETE CASCADE,
+    avg_price REAL NOT NULL,
+    trade_count INTEGER NOT NULL,
+    date DATE NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+    UNIQUE(item_id, date)
+);
+
+-- 시세 조회를 빠르게 하기 위해 인덱스 추가
+CREATE INDEX idx_market_history_item_id_date ON market_history(item_id, date DESC);
