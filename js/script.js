@@ -117,32 +117,27 @@ if (gridContainer) {
                     categoryCodes = [parseInt(pageCategory, 10)];
                 }
 
-                // Call the new function for market history categories
-                const { data: marketData, error: marketError } = await supabase.rpc('get_latest_market_prices_by_category', { p_category_code: categoryCodes[0] });
-
-                if (categoryCodes.length > 1) {
-                     const { data: marketData2, error: marketError2 } = await supabase.rpc('get_latest_market_prices_by_category', { p_category_code: categoryCodes[1] });
-                     if(marketData2) marketData.push(...marketData2)
-                }
+                // Call the new, improved function for market history categories
+                const { data: marketData, error: marketError } = await supabase.rpc('get_latest_market_prices_by_category', { p_category_codes: categoryCodes });
 
                 error = marketError;
                 if (marketData) {
-                    // Adapt the new, simpler data structure to what renderItems expects
+                    // Adapt the data structure to what renderItems expects
                     currentItems = marketData.map(item => ({
                         ...item,
                         price: item.avg_price, // map avg_price to price
-                        last_updated: new Date().toISOString(), // The new function doesn't return a timestamp, so use current time
-                        price_change: 0, // No price change data available
-                        change_direction: 'same' // No price change data available
+                        last_updated: new Date().toISOString() // The new function doesn't return a timestamp, so use current time
                     }));
                 }
             } else {
                 // For all other categories, use the old function
+                let categoryCodes;
                 const numericCategory = parseInt(pageCategory, 10);
                 if (isNaN(numericCategory)) {
                     throw new Error("Invalid category code: " + pageCategory);
                 }
-                const { data: legacyData, error: legacyError } = await supabase.rpc('get_latest_prices_by_category', { p_category_codes: [numericCategory] });
+                categoryCodes = [numericCategory];
+                const { data: legacyData, error: legacyError } = await supabase.rpc('get_latest_prices_by_category', { p_category_codes: categoryCodes });
                 error = legacyError;
                 currentItems = legacyData;
             }

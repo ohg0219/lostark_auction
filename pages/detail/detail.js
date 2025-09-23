@@ -134,64 +134,113 @@ function renderPriceChart(historyData) {
 
     const labels = historyData.map(d => new Date(d.history_date).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }));
     const prices = historyData.map(d => d.closing_price);
+    // Check if trade_count data is available
+    const tradeCounts = historyData[0].trade_count !== undefined ? historyData.map(d => d.trade_count) : [];
 
-    // Register the datalabels plugin
-    Chart.register(ChartDataLabels);
+    // Register the datalabels plugin if not already registered
+    if (!Chart.registry.plugins.get('datalabels')) {
+        Chart.register(ChartDataLabels);
+    }
+
+    const datasets = [{
+        type: 'line',
+        label: '평균가',
+        data: prices,
+        borderColor: '#007bff',
+        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+        fill: true,
+        tension: 0.1,
+        yAxisID: 'y-axis-price',
+        datalabels: {
+            align: 'end',
+            anchor: 'end',
+            color: '#e0e0e0',
+            font: { weight: 'bold' },
+            formatter: (value) => value.toLocaleString('ko-KR'),
+        }
+    }];
+
+    // Only add the trade volume dataset if data is available
+    if (tradeCounts.length > 0) {
+        datasets.push({
+            type: 'bar',
+            label: '거래량',
+            data: tradeCounts,
+            backgroundColor: 'rgba(255, 159, 64, 0.2)',
+            borderColor: 'rgba(255, 159, 64, 1)',
+            yAxisID: 'y-axis-volume',
+            datalabels: {
+                display: false // Hide datalabels for bars to avoid clutter
+            }
+        });
+    }
 
     new Chart(priceChartCanvas, {
-        type: 'line',
         data: {
             labels: labels,
-            datasets: [{
-                data: prices,
-                borderColor: '#007bff',
-                backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                fill: true,
-                tension: 0.1
-            }]
+            datasets: datasets
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
             scales: {
-                y: {
-                    beginAtZero: false,
+                'y-axis-price': {
+                    type: 'linear',
+                    position: 'left',
                     ticks: {
-                        callback: function(value, index, values) {
-                            return value.toLocaleString('ko-KR');
-                        }
+                        callback: (value) => value.toLocaleString('ko-KR') + ' G',
+                        color: '#e0e0e0'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                'y-axis-volume': {
+                    type: 'linear',
+                    position: 'right',
+                    ticks: {
+                        callback: (value) => value.toLocaleString('ko-KR'),
+                        color: '#e0e0e0'
+                    },
+                    grid: {
+                        drawOnChartArea: false, // Don't show grid lines for the volume axis
+                    },
+                    display: tradeCounts.length > 0 // Only display if there is data
+                },
+                x: {
+                    ticks: {
+                        color: '#e0e0e0'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
                     }
                 }
             },
             plugins: {
-                // Hide the default legend
                 legend: {
-                    display: false
+                    labels: {
+                        color: '#e0e0e0'
+                    }
                 },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            let label = '가격: ';
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
                             if (context.parsed.y !== null) {
-                                label += context.parsed.y.toLocaleString('ko-KR') + ' 골드';
+                                label += context.parsed.y.toLocaleString('ko-KR');
+                                if (context.dataset.type === 'line') {
+                                    label += ' G';
+                                }
                             }
                             return label;
                         }
-                    }
-                },
-                // Configure the datalabels plugin
-                datalabels: {
-                    align: 'end',
-                    anchor: 'end',
-                    color: '#e0e0e0',
-                    font: {
-                        weight: 'bold'
-                    },
-                    formatter: function(value, context) {
-                        return value.toLocaleString('ko-KR');
-                    },
-                    padding: {
-                        top: 4
                     }
                 }
             }

@@ -15,6 +15,6 @@ BEGIN
     WHERE
         mh.item_id = p_item_id
     ORDER BY
-        mh.date DESC;
+        mh.date ASC;
 END;
 $$ LANGUAGE plpgsql;
