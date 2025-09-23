@@ -66,7 +66,7 @@ async function loadItemDetails() {
         const marketHistoryCategories = ['40000', '230000', '50010', '50020'];
         let historyData, historyError;
 
-        if (marketHistoryCategories.includes(category)) {
+        if (marketHistoryCategories.includes(category) || category === 'refining') {
             // For new categories, call the new function
             const { data, error } = await supabase
                 .rpc('get_market_history_by_item_id', { p_item_id: itemId });
