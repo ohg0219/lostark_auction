@@ -62,9 +62,31 @@ async function loadItemDetails() {
 
         renderItemDetails(itemData);
 
-        // Fetch price history by ID
-        const { data: historyData, error: historyError } = await supabase
-            .rpc('get_item_price_history_by_id', { p_item_id: itemId });
+        // --- Fetch price history (with conditional logic) ---
+        const marketHistoryCategories = ['40000', '230000', '50010', '50020'];
+        let historyData, historyError;
+
+        if (marketHistoryCategories.includes(category)) {
+            // For new categories, call the new function
+            const { data, error } = await supabase
+                .rpc('get_market_history_by_item_id', { p_item_id: itemId });
+
+            historyError = error;
+            // Transform data to match the chart's expected format
+            if (data) {
+                historyData = data.map(d => ({
+                    history_date: d.date,
+                    closing_price: d.avg_price,
+                    trade_count: d.trade_count // Keep trade_count for potential future use
+                }));
+            }
+        } else {
+            // For old categories, call the original function
+            const { data, error } = await supabase
+                .rpc('get_item_price_history_by_id', { p_item_id: itemId });
+            historyData = data;
+            historyError = error;
+        }
 
         if (historyError) throw historyError;
 

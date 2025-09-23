@@ -104,22 +104,50 @@ if (gridContainer) {
         try {
             statusDiv.innerHTML = '데이터를 불러오는 중...';
 
-            let categoryCodes;
-            if (pageCategory === 'refining') {
-                categoryCodes = [50010, 50020];
+            const marketHistoryCategories = ['40000', '230000', '50010', '50020'];
+            const isMarketHistoryCategory = marketHistoryCategories.includes(pageCategory) || pageCategory === 'refining';
+
+            let data, error;
+
+            if (isMarketHistoryCategory) {
+                let categoryCodes;
+                if (pageCategory === 'refining') {
+                    categoryCodes = [50010, 50020];
+                } else {
+                    categoryCodes = [parseInt(pageCategory, 10)];
+                }
+
+                // Call the new function for market history categories
+                const { data: marketData, error: marketError } = await supabase.rpc('get_latest_market_prices_by_category', { p_category_code: categoryCodes[0] });
+
+                if (categoryCodes.length > 1) {
+                     const { data: marketData2, error: marketError2 } = await supabase.rpc('get_latest_market_prices_by_category', { p_category_code: categoryCodes[1] });
+                     if(marketData2) marketData.push(...marketData2)
+                }
+
+                error = marketError;
+                if (marketData) {
+                    // Adapt the new, simpler data structure to what renderItems expects
+                    currentItems = marketData.map(item => ({
+                        ...item,
+                        price: item.avg_price, // map avg_price to price
+                        last_updated: new Date().toISOString(), // The new function doesn't return a timestamp, so use current time
+                        price_change: 0, // No price change data available
+                        change_direction: 'same' // No price change data available
+                    }));
+                }
             } else {
-                // The pageCategory from body.dataset is a string, but the database function expects integers.
+                // For all other categories, use the old function
                 const numericCategory = parseInt(pageCategory, 10);
                 if (isNaN(numericCategory)) {
                     throw new Error("Invalid category code: " + pageCategory);
                 }
-                categoryCodes = [numericCategory];
+                const { data: legacyData, error: legacyError } = await supabase.rpc('get_latest_prices_by_category', { p_category_codes: [numericCategory] });
+                error = legacyError;
+                currentItems = legacyData;
             }
 
-            const { data, error } = await supabase.rpc('get_latest_prices_by_category', { p_category_codes: categoryCodes });
             if (error) throw error;
-
-            currentItems = data;
 
             if (currentItems.length === 0) {
                 statusDiv.innerHTML = '표시할 데이터가 없습니다. Edge Function을 먼저 실행하여 데이터를 수집해주세요.';
