@@ -11,7 +11,7 @@ const corsHeaders = {
 const LOSTARK_API_BASE_URL = 'https://developer-lostark.game.onstove.com';
 
 // 사용자가 요청한 조회 대상 카테고리 코드
-const CATEGORY_CODES = [40000, 230000, 50010, 50020];
+const CATEGORY_CODES = [50010, 50020];
 
 // 오늘 날짜를 'YYYY-MM-DD' 형식으로 반환하는 헬퍼 함수
 const getTodaysDate = () => {
