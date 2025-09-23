@@ -119,42 +119,49 @@ async function processSingleItem(item: any, supabaseClient: SupabaseClient, apiA
     }
 
     // 가장 거래가 활발한(거래량이 가장 많은) 아이템 변형을 찾습니다.
-    let bestStat = null;
+    let mostActiveVariant = null;
     let maxTradeCount = -1;
 
     for (const itemVariant of statsDataArray) {
-      const latestStat = itemVariant?.Stats?.[0]; // 가장 최근 통계는 첫 번째 요소
+      const latestStat = itemVariant?.Stats?.[0]; // 가장 최근 통계로 대표 거래량을 확인
       if (latestStat && latestStat.TradeCount > maxTradeCount) {
         maxTradeCount = latestStat.TradeCount;
-        bestStat = latestStat;
+        mostActiveVariant = itemVariant;
       }
     }
 
-    if (!bestStat) {
+    if (!mostActiveVariant || !mostActiveVariant.Stats || mostActiveVariant.Stats.length === 0) {
       console.log(`[Edge] ${itemName}의 모든 변형에서 유효한 시장 데이터를 찾지 못했습니다.`);
       return null;
     }
 
-    const { AvgPrice: avgPrice, TradeCount: tradeCount } = bestStat;
-    const today = getTodaysDate();
+    // 3. 찾은 아이템 변형의 모든 일별 데이터를 'market_history' 테이블에 저장합니다.
+    const dailyStats = mostActiveVariant.Stats;
+    let upsertCount = 0;
 
-    // 3. 'market_history' 테이블에 새로운 시장 데이터를 삽입합니다. (Upsert 사용)
-    const { error: historyError } = await supabaseClient
-      .from('market_history')
-      .upsert({
-        item_id: itemId,
-        avg_price: avgPrice,
-        trade_count: tradeCount,
-        date: today,
-      }, { onConflict: 'item_id,date' });
+    for (const dailyStat of dailyStats) {
+      if (dailyStat.AvgPrice === undefined || dailyStat.TradeCount === undefined || !dailyStat.Date) {
+        continue; // 필수 데이터가 없으면 건너뜁니다.
+      }
 
-    if (historyError) {
-      console.error(`[Edge] ${itemName}의 시세 정보 삽입 오류: ${historyError.message}`);
-      return null;
+      const { error: historyError } = await supabaseClient
+        .from('market_history')
+        .upsert({
+          item_id: itemId,
+          avg_price: dailyStat.AvgPrice,
+          trade_count: dailyStat.TradeCount,
+          date: dailyStat.Date,
+        }, { onConflict: 'item_id,date' });
+
+      if (historyError) {
+        console.error(`[Edge] ${itemName}의 시세 정보(${dailyStat.Date}) 삽입 오류: ${historyError.message}`);
+      } else {
+        upsertCount++;
+      }
     }
 
-    console.log(`[Edge] ${itemName} 데이터 저장 완료: 평균가=${avgPrice}, 거래량=${tradeCount}`);
-    return { itemName, avgPrice, tradeCount };
+    console.log(`[Edge] ${itemName} 데이터 저장 완료: 총 ${upsertCount}일치 데이터를 upsert했습니다.`);
+    return { itemName, upsertedDays: upsertCount };
 
   } catch (e) {
     console.error(`[Edge] ${itemName} 통계 처리 중 예외 발생: ${e.message}`);
