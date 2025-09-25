@@ -71,28 +71,21 @@ self.onmessage = function(e) {
             const availableGems = core.type === 'order' ? orderGems : chaosGems;
             let combinations = findAllPossibleCombinations(core.coreData, availableGems, selectedCharacterClass);
             combinations = combinations.filter(c => c.points >= core.targetPoint);
-            // 새로운 정렬 우선순위 적용
+
+            // 1. 정렬 로직 수정
             combinations.sort((a, b) => {
-                // 1순위: 의지력 소모가 적은 순 (오름차순)
-                if (a.willpower !== b.willpower) {
-                    return a.willpower - b.willpower;
-                }
-                // 2순위: 포인트가 높은 순 (내림차순)
-                if (a.points !== b.points) {
-                    return b.points - a.points;
-                }
-                // 3순위: 부가옵션 효율이 높은 순 (내림차순)
+                if (a.willpower !== b.willpower) return a.willpower - b.willpower;
+                if (a.points !== b.points) return b.points - a.points;
                 return b.effectivenessScore - a.effectivenessScore;
             });
             coreValidCombinations.set(core.id, combinations);
         }
 
-        // 2. 최적화: '미래 예측 가지치기'를 위한 각 코어의 최대 효율 점수 미리 계산
+        // 2. 가지치기 로직 수정
         const maxScoresPerCore = {};
         activeCores.forEach(core => {
             const combinations = coreValidCombinations.get(core.id);
             if (combinations && combinations.length > 0) {
-                // 정렬 순서와 무관하게 실제 최대 효율 점수를 찾아서 저장
                 maxScoresPerCore[core.id] = Math.max(...combinations.map(c => c.effectivenessScore));
             } else {
                 maxScoresPerCore[core.id] = 0;
@@ -112,13 +105,12 @@ self.onmessage = function(e) {
             }
             if (timedOut) return;
 
-            // '미래 예측 가지치기'
             if (currentScore + maxPossibleFutureScore <= bestAssignment.score) {
                 return;
             }
 
             if (coreIndex === activeCores.length) {
-                if (currentScore > bestAssignment.score) {
+                if (Object.keys(currentAssignment).length === activeCores.length && currentScore > bestAssignment.score) {
                     bestAssignment = { score: currentScore, assignment: JSON.parse(JSON.stringify(currentAssignment)) };
                 }
                 return;
@@ -128,7 +120,6 @@ self.onmessage = function(e) {
             const combinations = coreValidCombinations.get(core.id);
             const remainingMaxScore = maxPossibleFutureScore - maxScoresPerCore[core.id];
 
-            // 경로 1: 현재 코어에 조합을 할당
             if (combinations && combinations.length > 0) {
                 for (const combination of combinations) {
                     const combinationGemIds = combination.gems.map(g => g.id);
@@ -143,9 +134,9 @@ self.onmessage = function(e) {
                     }
                 }
             }
-
-            // 경로 2: 현재 코어를 건너뜀
-            solve(coreIndex + 1, currentAssignment, currentScore, usedGemIds, remainingMaxScore);
+            // 3. 결정적 버그 수정: "코어 건너뛰기" 경로를 완전히 제거함.
+            //    만약 현재 코어에 할당할 조합이 없다면, 이 경로는 더 이상 유효한 완전한 해답이 될 수 없으므로,
+            //    단순히 아무것도 하지 않고 재귀를 종료시켜 해당 탐색 분기를 자연스럽게 중단시킴.
         }
 
         solve(0, {}, 0, new Set(), totalMaxPossibleScore);
