@@ -91,7 +91,12 @@ self.onmessage = function(e) {
         const maxScoresPerCore = {};
         activeCores.forEach(core => {
             const combinations = coreValidCombinations.get(core.id);
-            maxScoresPerCore[core.id] = (combinations && combinations.length > 0) ? combinations[0].effectivenessScore : 0;
+            if (combinations && combinations.length > 0) {
+                // 정렬 순서와 무관하게 실제 최대 효율 점수를 찾아서 저장
+                maxScoresPerCore[core.id] = Math.max(...combinations.map(c => c.effectivenessScore));
+            } else {
+                maxScoresPerCore[core.id] = 0;
+            }
         });
         const totalMaxPossibleScore = activeCores.reduce((sum, core) => sum + maxScoresPerCore[core.id], 0);
 
