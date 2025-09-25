@@ -69,37 +69,10 @@ self.onmessage = function(e) {
         const coreValidCombinations = new Map();
         for (const core of activeCores) {
             const availableGems = core.type === 'order' ? orderGems : chaosGems;
-            let allCombinations = findAllPossibleCombinations(core.coreData, availableGems, selectedCharacterClass);
-
-            // 1단계: 목표 포인트를 만족하는 유효한 조합만 필터링
-            let validCombinations = allCombinations.filter(c => c.points >= core.targetPoint);
-
-            // 2단계: '지배되는 조합' 제거 최적화
-            // 먼저 정렬할 필요 없이, 각 조합을 다른 모든 조합과 비교
-            const nonDominatedCombinations = validCombinations.filter(current => {
-                // current가 다른 어떤 조합(other)에 의해 지배되는지 확인
-                return !validCombinations.some(other => {
-                    if (current === other) return false; // 자기 자신과는 비교하지 않음
-
-                    const isDominated =
-                        other.effectivenessScore >= current.effectivenessScore &&
-                        other.points >= current.points &&
-                        other.willpower <= current.willpower;
-
-                    // '엄격한 지배' 확인: 모든 속성이 같으면 지배 관계가 아님
-                    const isIdentical =
-                        other.effectivenessScore === current.effectivenessScore &&
-                        other.points === current.points &&
-                        other.willpower === current.willpower;
-
-                    return isDominated && !isIdentical;
-                });
-            });
-
-            // 3단계: 최종 조합 목록을 효율성 점수 기준으로 정렬
-            nonDominatedCombinations.sort((a, b) => b.effectivenessScore - a.effectivenessScore);
-
-            coreValidCombinations.set(core.id, nonDominatedCombinations);
+            let combinations = findAllPossibleCombinations(core.coreData, availableGems, selectedCharacterClass);
+            combinations = combinations.filter(c => c.points >= core.targetPoint);
+            combinations.sort((a, b) => b.effectivenessScore - a.effectivenessScore);
+            coreValidCombinations.set(core.id, combinations);
         }
 
         // 2. 최적화: '미래 예측 가지치기'를 위한 각 코어의 최대 효율 점수 미리 계산

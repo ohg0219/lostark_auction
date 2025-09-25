@@ -928,7 +928,7 @@ function calculate() {
         },
         SUB_OPTION_DATA,
         CLASS_EFFECTIVE_OPTIONS,
-        CALCULATION_TIMEOUT: 5000 // 5초
+        CALCULATION_TIMEOUT: 15000 // 15초
     });
 
     // 4. 워커로부터 결과 수신
