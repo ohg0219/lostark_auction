@@ -69,37 +69,22 @@ self.onmessage = function(e) {
         const coreValidCombinations = new Map();
         for (const core of activeCores) {
             const availableGems = core.type === 'order' ? orderGems : chaosGems;
-            let allCombinations = findAllPossibleCombinations(core.coreData, availableGems, selectedCharacterClass);
-
-            // 1단계: 목표 포인트를 만족하는 유효한 조합만 필터링
-            let validCombinations = allCombinations.filter(c => c.points >= core.targetPoint);
-
-            // 2단계: 안전한 최적화 - "더 나은 상위 집합이 있는" 하위 조합 제거
-            const finalCombinations = validCombinations.filter(subSet => {
-                const subSetGemIds = new Set(subSet.gems.map(g => g.id));
-
-                // subSet을 포함하면서, subSet보다 더 나은 superSet이 있는지 확인
-                return !validCombinations.some(superSet => {
-                    if (subSet === superSet) return false;
-
-                    const superSetGemIds = new Set(superSet.gems.map(g => g.id));
-
-                    // superSet이 subSet의 모든 젬을 포함하는지 확인
-                    if (subSetGemIds.size >= superSetGemIds.size) return false;
-                    const isSuperSet = [...subSetGemIds].every(id => superSetGemIds.has(id));
-
-                    if (!isSuperSet) return false;
-
-                    // superSet이 subSet보다 모든 면에서 우월하거나 같은지 확인
-                    return superSet.effectivenessScore >= subSet.effectivenessScore &&
-                           superSet.points >= subSet.points;
-                });
+            let combinations = findAllPossibleCombinations(core.coreData, availableGems, selectedCharacterClass);
+            combinations = combinations.filter(c => c.points >= core.targetPoint);
+            // 새로운 정렬 우선순위 적용
+            combinations.sort((a, b) => {
+                // 1순위: 의지력 소모가 적은 순 (오름차순)
+                if (a.willpower !== b.willpower) {
+                    return a.willpower - b.willpower;
+                }
+                // 2순위: 포인트가 높은 순 (내림차순)
+                if (a.points !== b.points) {
+                    return b.points - a.points;
+                }
+                // 3순위: 부가옵션 효율이 높은 순 (내림차순)
+                return b.effectivenessScore - a.effectivenessScore;
             });
-
-            // 3단계: 최종 조합 목록을 효율성 점수 기준으로 정렬
-            finalCombinations.sort((a, b) => b.effectivenessScore - a.effectivenessScore);
-
-            coreValidCombinations.set(core.id, finalCombinations);
+            coreValidCombinations.set(core.id, combinations);
         }
 
         // 2. 최적화: '미래 예측 가지치기'를 위한 각 코어의 최대 효율 점수 미리 계산
