@@ -69,10 +69,37 @@ self.onmessage = function(e) {
         const coreValidCombinations = new Map();
         for (const core of activeCores) {
             const availableGems = core.type === 'order' ? orderGems : chaosGems;
-            let combinations = findAllPossibleCombinations(core.coreData, availableGems, selectedCharacterClass);
-            combinations = combinations.filter(c => c.points >= core.targetPoint);
-            combinations.sort((a, b) => b.effectivenessScore - a.effectivenessScore);
-            coreValidCombinations.set(core.id, combinations);
+            let allCombinations = findAllPossibleCombinations(core.coreData, availableGems, selectedCharacterClass);
+
+            // 1단계: 목표 포인트를 만족하는 유효한 조합만 필터링
+            let validCombinations = allCombinations.filter(c => c.points >= core.targetPoint);
+
+            // 2단계: 안전한 최적화 - "더 나은 상위 집합이 있는" 하위 조합 제거
+            const finalCombinations = validCombinations.filter(subSet => {
+                const subSetGemIds = new Set(subSet.gems.map(g => g.id));
+
+                // subSet을 포함하면서, subSet보다 더 나은 superSet이 있는지 확인
+                return !validCombinations.some(superSet => {
+                    if (subSet === superSet) return false;
+
+                    const superSetGemIds = new Set(superSet.gems.map(g => g.id));
+
+                    // superSet이 subSet의 모든 젬을 포함하는지 확인
+                    if (subSetGemIds.size >= superSetGemIds.size) return false;
+                    const isSuperSet = [...subSetGemIds].every(id => superSetGemIds.has(id));
+
+                    if (!isSuperSet) return false;
+
+                    // superSet이 subSet보다 모든 면에서 우월하거나 같은지 확인
+                    return superSet.effectivenessScore >= subSet.effectivenessScore &&
+                           superSet.points >= subSet.points;
+                });
+            });
+
+            // 3단계: 최종 조합 목록을 효율성 점수 기준으로 정렬
+            finalCombinations.sort((a, b) => b.effectivenessScore - a.effectivenessScore);
+
+            coreValidCombinations.set(core.id, finalCombinations);
         }
 
         // 2. 최적화: '미래 예측 가지치기'를 위한 각 코어의 최대 효율 점수 미리 계산
