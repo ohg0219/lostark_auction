@@ -1,4 +1,4 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+import { createClient } from '@supabase/supabase-js';
 
 // Supabase 클라이언트 초기화
 const SUPABASE_URL = 'https://ojyiduiquzldbnimulvp.supabase.co';
