@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // Supabase 클라이언트 초기화
 const SUPABASE_URL = 'https://ojyiduiquzldbnimulvp.supabase.co';
